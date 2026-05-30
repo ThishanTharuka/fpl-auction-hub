@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +11,7 @@ import {
   flexRender,
   type SortingState,
   type ColumnDef,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -20,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Info } from "lucide-react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 
 const POSITION_COLORS: Record<string, string> = {
@@ -27,6 +30,35 @@ const POSITION_COLORS: Record<string, string> = {
   DEF: "bg-green-500/20 text-green-400 border-green-500/30",
   MID: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   FWD: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+const COLUMN_TOOLTIPS: Record<string, string> = {
+  price: "Price (£m)",
+  total_points: "Total Points this season",
+  points_per_game: "Points Per Game — season average",
+  selected_by_percent: "Ownership — selected by % of FPL managers",
+  status: "Availability / chance of playing next GW",
+  form: "Form — average points over last 4 gameweeks",
+  ict_index: "ICT Index — combined Influence, Creativity & Threat score",
+  influence: "Influence — player's impact on the match result",
+  creativity: "Creativity — chance creation and assist potential",
+  threat: "Threat — goal scoring threat score",
+  xg: "Expected Goals (xG) — season total",
+  xa: "Expected Assists (xA) — season total",
+  xgi: "Expected Goal Involvements (xG + xA) — season total",
+  xgc: "Expected Goals Conceded (xGC) — season total",
+  goals_scored: "Goals Scored this season",
+  assists: "Assists this season",
+  clean_sheets: "Clean Sheets this season",
+  minutes: "Minutes Played this season",
+  bonus: "Bonus Points this season",
+  bps: "Bonus Points System score — raw BPS this season",
+  yellow_cards: "Yellow Cards this season",
+  red_cards: "Red Cards this season",
+  transfers_in_event: "Transfers In this Gameweek",
+  transfers_out_event: "Transfers Out this Gameweek",
+  avg_fdr_next5:
+    "Average Fixture Difficulty Rating over next 5 Gameweeks (1=easy, 5=hard)",
 };
 
 const FDR_COLORS = [
@@ -37,6 +69,128 @@ const FDR_COLORS = [
   "bg-orange-600",
   "bg-red-700",
 ];
+
+// All toggleable column definitions grouped for the picker UI
+const COLUMN_GROUPS = [
+  {
+    group: "Core",
+    columns: [
+      { id: "price", label: "Price" },
+      { id: "total_points", label: "Pts" },
+      { id: "points_per_game", label: "PPG" },
+      { id: "selected_by_percent", label: "Own %" },
+      { id: "status", label: "Status" },
+    ],
+  },
+  {
+    group: "Form & Index",
+    columns: [
+      { id: "form", label: "Form" },
+      { id: "ict_index", label: "ICT" },
+      { id: "influence", label: "Influence" },
+      { id: "creativity", label: "Creativity" },
+      { id: "threat", label: "Threat" },
+    ],
+  },
+  {
+    group: "Expected Stats",
+    columns: [
+      { id: "xg", label: "xG" },
+      { id: "xa", label: "xA" },
+      { id: "xgi", label: "xGI" },
+      { id: "xgc", label: "xGC" },
+    ],
+  },
+  {
+    group: "Season Stats",
+    columns: [
+      { id: "goals_scored", label: "Goals" },
+      { id: "assists", label: "Assists" },
+      { id: "clean_sheets", label: "CS" },
+      { id: "minutes", label: "Mins" },
+      { id: "bonus", label: "Bonus" },
+      { id: "bps", label: "BPS" },
+      { id: "yellow_cards", label: "YC" },
+      { id: "red_cards", label: "RC" },
+    ],
+  },
+  {
+    group: "Transfers",
+    columns: [
+      { id: "transfers_in_event", label: "GW In" },
+      { id: "transfers_out_event", label: "GW Out" },
+    ],
+  },
+  {
+    group: "Fixtures",
+    columns: [{ id: "avg_fdr_next5", label: "FDR ×5" }],
+  },
+];
+
+const DEFAULT_VISIBLE: VisibilityState = {
+  price: true,
+  total_points: true,
+  points_per_game: false,
+  selected_by_percent: false,
+  status: true,
+  form: true,
+  ict_index: true,
+  influence: false,
+  creativity: false,
+  threat: false,
+  xg: false,
+  xa: false,
+  xgi: true,
+  xgc: false,
+  goals_scored: false,
+  assists: false,
+  clean_sheets: false,
+  minutes: false,
+  bonus: false,
+  bps: false,
+  yellow_cards: false,
+  red_cards: false,
+  transfers_in_event: false,
+  transfers_out_event: false,
+  avg_fdr_next5: true,
+};
+
+function InfoTip({ text }: Readonly<{ text: string }>) {
+  const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  return (
+    <>
+      <span
+        ref={ref}
+        className="inline-flex items-center"
+        onMouseEnter={() => {
+          const r = ref.current?.getBoundingClientRect();
+          if (r) setCoords({ x: r.left + r.width / 2, y: r.top });
+        }}
+        onMouseLeave={() => setCoords(null)}
+      >
+        <Info className="w-3 h-3 text-[#849585] hover:text-[#b9cbb9] cursor-default shrink-0" />
+      </span>
+      {coords &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              left: coords.x,
+              top: coords.y - 8,
+              transform: "translate(-50%, -100%)",
+              zIndex: 9999,
+            }}
+            className="w-48 rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1.5 text-[11px] text-[#d6e4f9] whitespace-normal text-center shadow-lg pointer-events-none"
+          >
+            {text}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
 
 function FdrPip({ diff }: Readonly<{ diff: number }>) {
   return (
@@ -57,10 +211,17 @@ export default function PlayersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [posFilter, setPosFilter] = useState<string>("ALL");
+  const [availFilter, setAvailFilter] = useState<"all" | "available">("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "total_points", desc: true },
   ]);
   const [selected, setSelected] = useState<EnrichedPlayer | null>(null);
+  const [colVisibility, setColVisibility] =
+    useState<VisibilityState>(DEFAULT_VISIBLE);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/fpl/bootstrap")
@@ -72,9 +233,30 @@ export default function PlayersPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Close column picker on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    }
+    if (pickerOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [pickerOpen]);
+
   const filtered = useMemo(() => {
+    const minP = minPrice ? parseFloat(minPrice) : null;
+    const maxP = maxPrice ? parseFloat(maxPrice) : null;
     return players.filter((p) => {
       if (posFilter !== "ALL" && p.position !== posFilter) return false;
+      if (
+        availFilter === "available" &&
+        p.chance_of_playing_next_round !== null &&
+        p.chance_of_playing_next_round < 75
+      )
+        return false;
+      if (minP !== null && p.price < minP) return false;
+      if (maxP !== null && p.price > maxP) return false;
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -85,7 +267,7 @@ export default function PlayersPage() {
       }
       return true;
     });
-  }, [players, posFilter, search]);
+  }, [players, posFilter, availFilter, search, minPrice, maxPrice]);
 
   const columns = useMemo<ColumnDef<EnrichedPlayer>[]>(
     () => [
@@ -93,6 +275,7 @@ export default function PlayersPage() {
         id: "name",
         header: "Player",
         accessorFn: (r) => r.web_name,
+        enableHiding: false,
         cell: ({ row }) => (
           <button
             className="text-left hover:text-[#00e478] transition-colors"
@@ -111,6 +294,7 @@ export default function PlayersPage() {
         id: "position",
         header: "Pos",
         accessorFn: (r) => r.position,
+        enableHiding: false,
         cell: ({ getValue }) => (
           <Badge
             variant="outline"
@@ -141,6 +325,24 @@ export default function PlayersPage() {
         ),
       },
       {
+        id: "points_per_game",
+        header: "PPG",
+        accessorFn: (r) => parseFloat(r.points_per_game),
+        cell: ({ getValue }) => (
+          <span className="font-mono">{(getValue() as number).toFixed(1)}</span>
+        ),
+      },
+      {
+        id: "selected_by_percent",
+        header: "Own %",
+        accessorFn: (r) => parseFloat(r.selected_by_percent),
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[#b9cbb9]">
+            {(getValue() as number).toFixed(1)}%
+          </span>
+        ),
+      },
+      {
         id: "form",
         header: "Form",
         accessorFn: (r) => parseFloat(r.form),
@@ -159,12 +361,154 @@ export default function PlayersPage() {
         ),
       },
       {
+        id: "influence",
+        header: "Inf",
+        accessorFn: (r) => parseFloat(r.influence),
+        cell: ({ getValue }) => (
+          <span className="font-mono">{(getValue() as number).toFixed(1)}</span>
+        ),
+      },
+      {
+        id: "creativity",
+        header: "Cre",
+        accessorFn: (r) => parseFloat(r.creativity),
+        cell: ({ getValue }) => (
+          <span className="font-mono">{(getValue() as number).toFixed(1)}</span>
+        ),
+      },
+      {
+        id: "threat",
+        header: "Thr",
+        accessorFn: (r) => parseFloat(r.threat),
+        cell: ({ getValue }) => (
+          <span className="font-mono">{(getValue() as number).toFixed(1)}</span>
+        ),
+      },
+      {
+        id: "xg",
+        header: "xG",
+        accessorFn: (r) => parseFloat(r.expected_goals),
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[#bbc6e2]">
+            {(getValue() as number).toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        id: "xa",
+        header: "xA",
+        accessorFn: (r) => parseFloat(r.expected_assists),
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[#bbc6e2]">
+            {(getValue() as number).toFixed(2)}
+          </span>
+        ),
+      },
+      {
         id: "xgi",
         header: "xGI",
         accessorFn: (r) => parseFloat(r.expected_goal_involvements),
         cell: ({ getValue }) => (
           <span className="font-mono text-[#bbc6e2]">
             {(getValue() as number).toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        id: "xgc",
+        header: "xGC",
+        accessorFn: (r) => parseFloat(r.expected_goals_conceded),
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[#bbc6e2]">
+            {(getValue() as number).toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        id: "goals_scored",
+        header: "G",
+        accessorFn: (r) => r.goals_scored,
+        cell: ({ getValue }) => (
+          <span className="font-mono">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "assists",
+        header: "A",
+        accessorFn: (r) => r.assists,
+        cell: ({ getValue }) => (
+          <span className="font-mono">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "clean_sheets",
+        header: "CS",
+        accessorFn: (r) => r.clean_sheets,
+        cell: ({ getValue }) => (
+          <span className="font-mono">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "minutes",
+        header: "Mins",
+        accessorFn: (r) => r.minutes,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[#b9cbb9]">
+            {getValue() as number}
+          </span>
+        ),
+      },
+      {
+        id: "bonus",
+        header: "Bon",
+        accessorFn: (r) => r.bonus,
+        cell: ({ getValue }) => (
+          <span className="font-mono">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "bps",
+        header: "BPS",
+        accessorFn: (r) => r.bps,
+        cell: ({ getValue }) => (
+          <span className="font-mono">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "yellow_cards",
+        header: "YC",
+        accessorFn: (r) => r.yellow_cards,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-yellow-400">
+            {getValue() as number}
+          </span>
+        ),
+      },
+      {
+        id: "red_cards",
+        header: "RC",
+        accessorFn: (r) => r.red_cards,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-red-400">{getValue() as number}</span>
+        ),
+      },
+      {
+        id: "transfers_in_event",
+        header: "GW In",
+        accessorFn: (r) => r.transfers_in_event,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-green-400">
+            +{(getValue() as number).toLocaleString()}
+          </span>
+        ),
+      },
+      {
+        id: "transfers_out_event",
+        header: "GW Out",
+        accessorFn: (r) => r.transfers_out_event,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-red-400">
+            -{(getValue() as number).toLocaleString()}
           </span>
         ),
       },
@@ -181,12 +525,22 @@ export default function PlayersPage() {
       {
         id: "status",
         header: "Status",
-        accessorFn: (r) => r.chance_of_playing_next_round,
+        accessorFn: (r) => r.status,
         cell: ({ row }) => {
+          const s = row.original.status;
           const chance = row.original.chance_of_playing_next_round;
-          if (chance === null || chance === 100)
-            return <span className="text-green-400 text-xs">✓</span>;
-          return <span className="text-orange-400 text-xs">{chance}%</span>;
+          const chip = (label: string, color: string) => (
+            <span className={`inline-flex items-center justify-center rounded-full border w-24 py-0.5 text-[11px] font-medium ${color}`}>
+              {label}
+            </span>
+          );
+          if (s === "a") return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
+          if (s === "d") return chip(`Doubt${chance !== null ? ` ${chance}%` : ""}`, "bg-orange-500/15 border-orange-500/30 text-orange-400");
+          if (s === "i") return chip("Injured", "bg-red-500/15 border-red-500/30 text-red-400");
+          if (s === "s") return chip("Suspended", "bg-red-500/15 border-red-500/30 text-red-400");
+          if (s === "n") return chip("Intl", "bg-[#849585]/15 border-[#849585]/30 text-[#849585]");
+          if (s === "u") return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
+          return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
         },
       },
     ],
@@ -196,8 +550,9 @@ export default function PlayersPage() {
   const table = useReactTable({
     data: filtered,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility: colVisibility },
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -215,6 +570,8 @@ export default function PlayersPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-56 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
         />
+
+        {/* Position */}
         <div className="flex gap-1">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
             <Button
@@ -232,9 +589,105 @@ export default function PlayersPage() {
             </Button>
           ))}
         </div>
-        <span className="ml-auto text-xs text-[#849585]">
-          {filtered.length} players
-        </span>
+
+        {/* Availability */}
+        <Button
+          size="sm"
+          variant={availFilter === "available" ? "default" : "outline"}
+          className={
+            availFilter === "available"
+              ? "bg-green-500 text-white border-green-500 hover:bg-green-600 hover:border-green-600"
+              : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
+          }
+          onClick={() =>
+            setAvailFilter((v) => (v === "all" ? "available" : "all"))
+          }
+        >
+          Available only
+        </Button>
+
+        {/* Price range */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-[#849585]">£</span>
+          <Input
+            placeholder="Min"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+          />
+          <span className="text-xs text-[#849585]">–</span>
+          <Input
+            placeholder="Max"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+          />
+          <span className="text-xs text-[#849585]">m</span>
+        </div>
+
+        {/* Column picker */}
+        <div
+          ref={pickerRef}
+          className="relative ml-auto flex items-center gap-3"
+        >
+          <span className="text-xs text-[#849585]">
+            {filtered.length} players
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+            onClick={() => setPickerOpen((o) => !o)}
+          >
+            Columns ▾
+          </Button>
+          {pickerOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50 bg-[#0f1c2c] border border-[#3b4b3d] rounded-lg shadow-xl p-4 w-72 max-h-[min(90vh,680px)] overflow-y-auto">
+              <div className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+                Toggle Columns
+              </div>
+              {COLUMN_GROUPS.map(({ group, columns: cols }) => (
+                <div key={group} className="mb-4">
+                  <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 border-b border-[#3b4b3d] pb-1">
+                    {group}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {cols.map(({ id, label }) => (
+                      <label
+                        key={id}
+                        className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478] py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-[#00e478]"
+                          checked={colVisibility[id] !== false}
+                          onChange={(e) =>
+                            setColVisibility((v) => ({
+                              ...v,
+                              [id]: e.target.checked,
+                            }))
+                          }
+                        />
+                        {label}
+                        {COLUMN_TOOLTIPS[id] && (
+                          <InfoTip text={COLUMN_TOOLTIPS[id]!} />
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full mt-1 border-[#3b4b3d] text-[#849585] text-xs hover:bg-[#1e2b3b]"
+                onClick={() => setColVisibility(DEFAULT_VISIBLE)}
+              >
+                Reset to default
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -247,18 +700,23 @@ export default function PlayersPage() {
                   {hg.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-left text-xs font-semibold text-[#849585] uppercase tracking-wider cursor-pointer select-none hover:text-[#d6e4f9]"
+                      className="px-4 py-3 text-left text-xs font-semibold text-[#849585] uppercase tracking-wider cursor-pointer select-none hover:text-[#d6e4f9] whitespace-nowrap"
                       onClick={header.column.getToggleSortingHandler()}
                     >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {header.column.getIsSorted() === "asc"
-                        ? " ↑"
-                        : header.column.getIsSorted() === "desc"
-                          ? " ↓"
-                          : ""}
+                      <span className="inline-flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                        {header.column.getIsSorted() === "asc"
+                          ? " ↑"
+                          : header.column.getIsSorted() === "desc"
+                            ? " ↓"
+                            : ""}
+                        {header.column.id in COLUMN_TOOLTIPS && (
+                          <InfoTip text={COLUMN_TOOLTIPS[header.column.id]!} />
+                        )}
+                      </span>
                     </th>
                   ))}
                 </tr>
@@ -268,7 +726,7 @@ export default function PlayersPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={columns.length}
+                    colSpan={table.getVisibleLeafColumns().length}
                     className="py-16 text-center text-[#849585]"
                   >
                     Loading players…
@@ -281,7 +739,10 @@ export default function PlayersPage() {
                     className={`border-b border-[#3b4b3d]/50 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2.5">
+                      <td
+                        key={cell.id}
+                        className="px-4 py-2.5 whitespace-nowrap"
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -344,8 +805,25 @@ export default function PlayersPage() {
               <div className="grid grid-cols-2 gap-4 py-4">
                 <Stat label="Price" value={`£${selected.price.toFixed(1)}m`} />
                 <Stat label="Total Points" value={selected.total_points} />
+                <Stat label="PPG" value={selected.points_per_game} />
+                <Stat
+                  label="Own %"
+                  value={`${selected.selected_by_percent}%`}
+                />
                 <Stat label="Form" value={selected.form} highlight />
                 <Stat label="ICT Index" value={selected.ict_index} />
+                <Stat
+                  label="Influence"
+                  value={parseFloat(selected.influence).toFixed(1)}
+                />
+                <Stat
+                  label="Creativity"
+                  value={parseFloat(selected.creativity).toFixed(1)}
+                />
+                <Stat
+                  label="Threat"
+                  value={parseFloat(selected.threat).toFixed(1)}
+                />
                 <Stat
                   label="xG"
                   value={parseFloat(selected.expected_goals).toFixed(2)}
@@ -360,11 +838,27 @@ export default function PlayersPage() {
                     selected.expected_goal_involvements,
                   ).toFixed(2)}
                 />
-                <Stat label="Avg FDR ×5" value={selected.avg_fdr_next5} />
+                <Stat
+                  label="xGC"
+                  value={parseFloat(selected.expected_goals_conceded).toFixed(
+                    2,
+                  )}
+                />
                 <Stat label="Goals" value={selected.goals_scored} />
                 <Stat label="Assists" value={selected.assists} />
                 <Stat label="Clean Sheets" value={selected.clean_sheets} />
                 <Stat label="Minutes" value={selected.minutes} />
+                <Stat label="Bonus" value={selected.bonus} />
+                <Stat label="BPS" value={selected.bps} />
+                <Stat label="Avg FDR ×5" value={selected.avg_fdr_next5} />
+                <Stat
+                  label="GW Transfers In"
+                  value={selected.transfers_in_event.toLocaleString()}
+                />
+                <Stat
+                  label="GW Transfers Out"
+                  value={selected.transfers_out_event.toLocaleString()}
+                />
               </div>
               {selected.news && (
                 <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2">
