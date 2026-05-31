@@ -4,11 +4,30 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PlayerStatsBar } from "@/components/player-stats-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const supabase = createSupabaseBrowserClient();
+
+// Supabase numeric columns can arrive as strings; uuid nulls can arrive as
+// undefined (omitted) in realtime payloads. Normalise before storing in state.
+function normalizeNomination(raw: Record<string, unknown>): Nomination {
+  return {
+    ...(raw as unknown as Nomination),
+    starting_price: Number(raw.starting_price),
+    current_bid: Number(raw.current_bid),
+    current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
+    current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+  };
+}
+
+function resolveBidAmount(nomination: Nomination, increment: number): number {
+  if (!nomination.current_bidder_id) return nomination.starting_price;
+  return Number((nomination.current_bid + increment).toFixed(1));
+}
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -95,6 +114,8 @@ export default function BidPage() {
   const [myTeam, setMyTeam] = useState<Participant | null>(null);
   const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(null);
   const [nomination, setNomination] = useState<Nomination | null>(null);
+  const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(null);
+  const [fplPlayersMap, setFplPlayersMap] = useState<Map<number, EnrichedPlayer>>(new Map());
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [bidding, setBidding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -128,7 +149,7 @@ export default function BidPage() {
       return;
     }
 
-    const [{ data: lg }, { data: participant }, { data: nom }] = await Promise.all([
+    const [{ data: lg }, { data: participant }, { data: nom }, bootstrapRes] = await Promise.all([
       supabase.from("leagues").select("*").eq("id", id).single(),
       supabase.from("participants").select("id,name,color").eq("id", membership.participant_id).single(),
       supabase
@@ -139,6 +160,7 @@ export default function BidPage() {
         .order("created_at", { ascending: false })
         .limit(1)
         .single(),
+      fetch("/api/fpl/bootstrap").then((r) => r.json()).catch(() => ({})),
     ]);
 
     if (!lg || !participant) {
@@ -146,9 +168,17 @@ export default function BidPage() {
       return;
     }
 
+    const playersArr: EnrichedPlayer[] = bootstrapRes?.players ?? [];
+    const pMap = new Map<number, EnrichedPlayer>(playersArr.map((p) => [p.id, p]));
+    setFplPlayersMap(pMap);
+
     setLeague(lg as League);
     setMyTeam(participant as Participant);
-    if (nom) setNomination(nom as Nomination);
+    if (nom) {
+      const n = normalizeNomination(nom as Record<string, unknown>);
+      setNomination(n);
+      setFplPlayer(pMap.get(n.fpl_player_id) ?? null);
+    }
 
     await loadMySquad(membership.participant_id, lg as League);
   }
@@ -176,15 +206,20 @@ export default function BidPage() {
   // ── Realtime ──────────────────────────────────────────────────────────────
   const handleNominationChange = useCallback(
     (payload: RealtimePostgresChangesPayload<Nomination>) => {
-      const row = payload.new as Nomination;
-      if (row.status === "open") { setNomination(row); return; }
+      const row = normalizeNomination(payload.new as Record<string, unknown>);
+      if (row.status === "open") {
+        setNomination(row);
+        setFplPlayer(fplPlayersMap.get(row.fpl_player_id) ?? null);
+        return;
+      }
       setNomination(null);
+      setFplPlayer(null);
       setSecondsLeft(0);
       if (row.status === "sold" && row.current_bidder_id === myTeam?.id) {
         loadMySquad(myTeam.id, league).catch(() => {});
       }
     },
-    [myTeam?.id, league],
+    [myTeam?.id, league, fplPlayersMap],
   );
 
   useEffect(() => {
@@ -226,7 +261,8 @@ export default function BidPage() {
   async function placeBid() {
     if (!nomination || !myTeam || !league) return;
     setBidding(true);
-    const bidAmount = Number((nomination.current_bid + (league.bid_increment ?? 0.5)).toFixed(1));
+    const inc = league.bid_increment ?? 0.5;
+    const bidAmount = resolveBidAmount(nomination, inc);
     const endTime = new Date(Date.now() + (league.timer_seconds ?? 45) * 1000).toISOString();
 
     await Promise.all([
@@ -265,7 +301,8 @@ export default function BidPage() {
   const maxSquad = league.squad_size ?? 15;
   const slotsLeft = maxSquad - squadSize;
   const increment = league.bid_increment ?? 0.5;
-  const myBid = nomination ? Number((nomination.current_bid + increment).toFixed(1)) : 0;
+  // First bid = starting price; subsequent = current_bid + increment
+  const myBid = nomination ? resolveBidAmount(nomination, increment) : 0;
 
   const posKey = nomination?.position.toLowerCase() as "gkp" | "def" | "mid" | "fwd";
   const posLimits = { gkp: league.max_gkp ?? 2, def: league.max_def ?? 5, mid: league.max_mid ?? 5, fwd: league.max_fwd ?? 3 };
@@ -284,6 +321,7 @@ export default function BidPage() {
       myTeam={myTeam}
       teamMeta={teamMeta}
       nomination={nomination}
+      fplPlayer={fplPlayer}
       secondsLeft={secondsLeft}
       bidding={bidding}
       canBid={canBid}
@@ -306,6 +344,7 @@ type BidUIProps = Readonly<{
   myTeam: Participant;
   teamMeta: TeamMeta | null;
   nomination: Nomination | null;
+  fplPlayer: EnrichedPlayer | null;
   secondsLeft: number;
   bidding: boolean;
   canBid: boolean;
@@ -319,7 +358,7 @@ type BidUIProps = Readonly<{
   onBid: () => void;
 }>;
 
-function BidUI({ league, myTeam, teamMeta, nomination, secondsLeft, bidding, canBid, myBid, remaining, maxSquad, squadSize, myPosCount, posLimit, timerColor, onBid }: BidUIProps) {
+function BidUI({ league, myTeam, teamMeta, nomination, fplPlayer, secondsLeft, bidding, canBid, myBid, remaining, maxSquad, squadSize, myPosCount, posLimit, timerColor, onBid }: BidUIProps) {
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
       {/* Header */}
@@ -350,14 +389,18 @@ function BidUI({ league, myTeam, teamMeta, nomination, secondsLeft, bidding, can
             </div>
             <div className="text-right">
               <div className={`text-4xl font-mono font-bold ${timerColor}`}>
-                {nomination.bid_end_time ? secondsLeft : "—"}
+                {nomination.bid_end_time ? secondsLeft : "\u2014"}
               </div>
               <div className="text-xs text-[#849585]">secs</div>
             </div>
           </div>
 
+          {fplPlayer && <PlayerStatsBar player={fplPlayer} className="mb-4" />}
+
           <div className="bg-[#132030] rounded-lg p-4 mb-4">
-            <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">Current Bid</div>
+            <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
+              {nomination.current_bidder_id === null ? "Starting Price" : "Current Bid"}
+            </div>
             <div className="text-3xl font-mono font-bold text-[#00e478]">£{nomination.current_bid}m</div>
             {nomination.current_bidder_name && (
               <div className="text-xs text-[#849585] mt-1">

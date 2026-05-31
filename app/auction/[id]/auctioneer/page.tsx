@@ -7,10 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { PlayerStatsBar } from "@/components/player-stats-bar";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const supabase = createSupabaseBrowserClient();
+
+function normalizeNomination(raw: Record<string, unknown>): Nomination {
+  return {
+    ...(raw as unknown as Nomination),
+    starting_price: Number(raw.starting_price),
+    current_bid: Number(raw.current_bid),
+    current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
+    current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+  };
+}
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -80,6 +91,11 @@ export default function AuctioneerPage() {
   const [search, setSearch] = useState("");
   const [posFilter, setPosFilter] = useState("ALL");
 
+  // Staged = player selected but bidding not yet started
+  const [stagedPlayer, setStagedPlayer] = useState<EnrichedPlayer | null>(null);
+  const [startTimerInput, setStartTimerInput] = useState("45");
+  const [extendInput, setExtendInput] = useState("30");
+
   const [secondsLeft, setSecondsLeft] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -141,7 +157,7 @@ export default function AuctioneerPage() {
         .limit(1)
         .single();
       if (nom) {
-        setNomination(nom as Nomination);
+        setNomination(normalizeNomination(nom as Record<string, unknown>));
         loadBids(nom.id);
       }
     }
@@ -166,11 +182,11 @@ export default function AuctioneerPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "auction_nominations", filter: `league_id=eq.${id}` },
         (payload) => {
-          const row = payload.new as Nomination;
+          const row = normalizeNomination(payload.new as Record<string, unknown>);
           if (row.status === "open") {
             setNomination(row);
             loadBids(row.id);
-          } else if (row.status === "sold" || row.status === "cancelled") {
+          } else if (row.status === "sold" || row.status === "cancelled" || row.status === "unsold") {
             setNomination(null);
             setRecentBids([]);
           }
@@ -225,8 +241,15 @@ export default function AuctioneerPage() {
   }, [nomination?.bid_end_time, nomination?.status, tickTimer]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
-  async function nominatePlayer(player: EnrichedPlayer) {
-    const posKey = player.position.toLowerCase() as "gkp" | "def" | "mid" | "fwd";
+  function stagePlayer(player: EnrichedPlayer) {
+    setStagedPlayer(player);
+    setStartTimerInput(String(Math.min(60, Math.max(10, Math.round((league?.timer_seconds ?? 45) / 10) * 10))));
+    setSearch("");
+  }
+
+  async function startBidding() {
+    if (!stagedPlayer) return;
+    const posKey = stagedPlayer.position.toLowerCase() as "gkp" | "def" | "mid" | "fwd";
     const basePriceMap = {
       gkp: league?.base_price_gkp ?? 4,
       def: league?.base_price_def ?? 4.5,
@@ -234,27 +257,29 @@ export default function AuctioneerPage() {
       fwd: league?.base_price_fwd ?? 5,
     };
     const startingPrice = basePriceMap[posKey] ?? 4;
+    const timerSecs = Math.max(5, Number(startTimerInput) || (league?.timer_seconds ?? 45));
+    const endTime = new Date(Date.now() + timerSecs * 1000).toISOString();
 
     const { data } = await supabase
       .from("auction_nominations")
       .insert({
         league_id: id,
-        fpl_player_id: player.id,
-        player_name: player.web_name,
-        player_team: player.team_short,
-        position: player.position,
+        fpl_player_id: stagedPlayer.id,
+        player_name: stagedPlayer.web_name,
+        player_team: stagedPlayer.team_short,
+        position: stagedPlayer.position,
         starting_price: startingPrice,
         current_bid: startingPrice,
         status: "open",
-        bid_end_time: null, // timer starts on first bid
+        bid_end_time: endTime,
       })
       .select()
       .single();
 
     if (data) {
-      setNomination(data as Nomination);
+      setNomination(normalizeNomination(data as Record<string, unknown>));
       setRecentBids([]);
-      setSearch("");
+      setStagedPlayer(null);
     }
   }
 
@@ -339,12 +364,24 @@ export default function AuctioneerPage() {
 
   async function extendTimer() {
     if (!nomination) return;
-    const newEnd = new Date(Date.now() + (league?.timer_seconds ?? 45) * 1000).toISOString();
+    const secs = Math.max(5, Number(extendInput) || (league?.timer_seconds ?? 45));
+    const newEnd = new Date(Date.now() + secs * 1000).toISOString();
     await supabase
       .from("auction_nominations")
       .update({ bid_end_time: newEnd })
       .eq("id", nomination.id);
     setNomination((prev) => (prev ? { ...prev, bid_end_time: newEnd } : prev));
+  }
+
+  async function markUnsold() {
+    if (!nomination) return;
+    await supabase
+      .from("auction_nominations")
+      .update({ status: "unsold" })
+      .eq("id", nomination.id);
+    setNomination(null);
+    setRecentBids([]);
+    setSecondsLeft(0);
   }
 
   const filteredPlayers = players.filter((p) => {
@@ -401,8 +438,8 @@ export default function AuctioneerPage() {
             {filteredPlayers.slice(0, 20).map((p) => (
               <button
                 key={p.id}
-                disabled={!!nomination}
-                onClick={() => nominatePlayer(p)}
+                disabled={!!nomination || !!stagedPlayer}
+                onClick={() => stagePlayer(p)}
                 className="w-full flex items-center justify-between rounded bg-[#132030] hover:bg-[#1e2b3b] disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-left"
               >
                 <div>
@@ -460,6 +497,49 @@ export default function AuctioneerPage() {
 
       {/* ── Centre: Live nomination ─────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col gap-4 overflow-hidden">
+        {/* Staged: player selected, not yet started */}
+        {!nomination && stagedPlayer && (
+          <div className="rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-6 space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className={POSITION_COLORS[stagedPlayer.position] ?? ""}>{stagedPlayer.position}</Badge>
+                  <span className="text-xs text-[#849585]">{stagedPlayer.team_short}</span>
+                </div>
+                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.web_name}</h2>
+                <p className="text-sm text-[#849585] mt-1">Ready to nominate — set timer and start</p>
+              </div>
+              <button
+                onClick={() => setStagedPlayer(null)}
+                className="text-xs text-[#849585] hover:text-red-400 border border-[#3b4b3d] rounded px-2 py-1"
+              >
+                ✕ Cancel
+              </button>
+            </div>
+            <PlayerStatsBar player={stagedPlayer} />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#849585] whitespace-nowrap">Timer</span>
+                  <select
+                    aria-label="Timer in seconds"
+                    value={startTimerInput}
+                    onChange={(e) => setStartTimerInput(e.target.value)}
+                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] rounded-md h-9 text-sm px-2 outline-none focus:border-[#00e478] cursor-pointer"
+                  >
+                    {[10, 20, 30, 40, 50, 60].map((s) => (
+                      <option key={s} value={String(s)}>{s}s</option>
+                    ))}
+                  </select>
+                </div>
+              <Button
+                onClick={() => startBidding().catch(() => {})}
+                className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-base py-5"
+              >
+                ▶ Start Bidding
+              </Button>
+            </div>
+          </div>
+        )}
         {nomination ? (
           <>
             {/* Player card */}
@@ -493,10 +573,16 @@ export default function AuctioneerPage() {
                 </div>
               </div>
 
+              {/* Stats for nominated player */}
+              {(() => {
+                const p = players.find((pl) => pl.id === nomination.fpl_player_id);
+                return p ? <PlayerStatsBar player={p} className="mb-4" /> : null;
+              })()}
+
               {/* Current bid */}
               <div className="bg-[#132030] rounded-lg p-4 mb-4">
                 <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
-                  Current Bid
+                  {nomination.current_bidder_id === null ? "Starting Price" : "Current Bid"}
                 </div>
                 <div className="text-4xl font-mono font-bold text-[#00e478]">
                   £{nomination.current_bid}m
@@ -520,13 +606,35 @@ export default function AuctioneerPage() {
                 >
                   🔨 SOLD — £{nomination.current_bid}m
                 </Button>
-                <Button
-                  onClick={extendTimer}
-                  variant="outline"
-                  className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-4"
-                >
-                  +{league?.timer_seconds ?? 45}s
-                </Button>
+                {/* Unsold: only shown when timer expired and nobody bid */}
+                {secondsLeft === 0 && !nomination.current_bidder_id && (
+                  <Button
+                    onClick={markUnsold}
+                    variant="outline"
+                    className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30 py-6 px-4"
+                  >
+                    Unsold
+                  </Button>
+                )}
+                {/* Extend with seconds dropdown */}
+                <div className="flex items-stretch gap-1">
+                  <select
+                    value={extendInput}
+                    onChange={(e) => setExtendInput(e.target.value)}
+                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] text-xs rounded-md px-2 outline-none focus:border-[#00e478] cursor-pointer"
+                  >
+                    {[10, 20, 30, 40, 50, 60].map((s) => (
+                      <option key={s} value={String(s)}>{s}s</option>
+                    ))}
+                  </select>
+                  <Button
+                    onClick={extendTimer}
+                    variant="outline"
+                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                  >
+                    +s
+                  </Button>
+                </div>
                 <Button
                   onClick={cancelNomination}
                   variant="outline"
@@ -561,12 +669,14 @@ export default function AuctioneerPage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
-            <div className="text-center">
-              <div className="text-4xl mb-3">🔨</div>
-              <p className="text-[#849585]">Search and nominate a player to start</p>
+          !stagedPlayer && (
+            <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
+              <div className="text-center">
+                <div className="text-4xl mb-3">🔨</div>
+                <p className="text-[#849585]">Search and nominate a player to start</p>
+              </div>
             </div>
-          </div>
+          )
         )}
       </main>
 
