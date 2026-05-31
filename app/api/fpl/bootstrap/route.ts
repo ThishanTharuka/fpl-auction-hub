@@ -14,7 +14,9 @@ const FPL_PHOTO_BASE_URL =
 const FPL_CREST_BASE_URL =
   "https://resources.premierleague.com/premierleague/badges/70/t";
 
-export const revalidate = 3600; // cache for 1 hour at the route level
+// This endpoint intentionally uses no-store upstream fetches.
+// Force dynamic handling so Next does not try to prerender it at build time.
+export const dynamic = "force-dynamic";
 
 const POSITION_MAP: Record<number, "GKP" | "DEF" | "MID" | "FWD"> = {
   1: "GKP",
