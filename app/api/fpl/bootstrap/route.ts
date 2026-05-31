@@ -49,8 +49,8 @@ function computeAvgFdr(
 export async function GET() {
   try {
     const [bootstrapRes, fixturesRes] = await Promise.all([
-      fetch(FPL_BOOTSTRAP_URL, { next: { revalidate: 3600 } }),
-      fetch(FPL_FIXTURES_URL, { next: { revalidate: 3600 } }),
+      fetch(FPL_BOOTSTRAP_URL, { cache: "no-store" }),
+      fetch(FPL_FIXTURES_URL, { cache: "no-store" }),
     ]);
 
     if (!bootstrapRes.ok) {

@@ -36,20 +36,46 @@ function buildStats(p: EnrichedPlayer): Stat[] {
   ];
 }
 
+function metricTone(label: string): string {
+  if (label === "Pts" || label === "PPG" || label === "Form") {
+    return "border-[#00e478]/30 bg-[#00e478]/10 text-[#00e478]";
+  }
+  if (label === "FDR") {
+    return "border-[#3b4b3d] bg-[#162638] text-[#f4d47a]";
+  }
+  return "border-[#1f3042] bg-[#0a1520] text-[#d6e4f9]";
+}
+
 export function PlayerStatsBar({ player, className = "" }: Props) {
   const stats = buildStats(player);
+  const primary = stats.slice(0, 3);
+  const secondary = stats.slice(3);
+
   return (
-    <div className={`grid grid-cols-4 gap-1.5 ${className}`}>
-      {stats.map((s) => (
-        <div key={s.label} className="bg-[#0a1520] rounded px-2 py-1.5 text-center">
-          <div className="text-[9px] text-[#849585] uppercase tracking-wide leading-none mb-0.5">
-            {s.label}
+    <div className={`rounded-lg border border-[#203345] bg-[#0d1928] p-3 ${className}`}>
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        {primary.map((s) => (
+          <div key={s.label} className={`rounded-md border px-2 py-2 text-center ${metricTone(s.label)}`}>
+            <div className="text-[10px] uppercase tracking-[0.08em] leading-none mb-1 opacity-80">
+              {s.label}
+            </div>
+            <div className="text-base font-mono font-bold leading-none">{s.value}</div>
           </div>
-          <div className="text-xs font-mono font-bold text-[#d6e4f9] leading-none">
-            {s.value}
+        ))}
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {secondary.map((s) => (
+          <div
+            key={s.label}
+            className={`rounded-md border px-2 py-1.5 text-center ${metricTone(s.label)}`}
+          >
+            <div className="text-[9px] uppercase tracking-wide leading-none mb-0.5 opacity-80">
+              {s.label}
+            </div>
+            <div className="text-xs font-mono font-bold leading-none">{s.value}</div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

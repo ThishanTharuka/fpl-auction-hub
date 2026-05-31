@@ -21,6 +21,8 @@ function normalizeNomination(raw: Record<string, unknown>): Nomination {
     current_bid: Number(raw.current_bid),
     current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
     current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+    is_paused: Boolean(raw.is_paused),
+    paused_seconds: typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
   };
 }
 
@@ -67,6 +69,8 @@ interface Nomination {
   current_bidder_id: string | null;
   current_bidder_name: string | null;
   bid_end_time: string | null;
+  is_paused: boolean;
+  paused_seconds: number | null;
   status: string;
 }
 
@@ -88,6 +92,7 @@ interface CanBidArgs {
   nomination: Nomination | null;
   myTeamId: string;
   myBid: number;
+  secondsLeft: number;
   remaining: number;
   myPosCount: number;
   posLimit: number;
@@ -99,6 +104,8 @@ interface CanBidArgs {
 
 function checkCanBid(a: CanBidArgs): boolean {
   if (a.nomination?.status !== "open") return false;
+  if (a.nomination.is_paused) return false;
+  if (a.secondsLeft <= 0) return false;
   if (a.nomination.current_bidder_id === a.myTeamId) return false;
   if (a.myBid > a.remaining || a.myPosCount >= a.posLimit) return false;
   if (a.squadSize >= a.maxSquad) return false;
@@ -115,31 +122,48 @@ export default function BidPage() {
   const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(null);
   const [nomination, setNomination] = useState<Nomination | null>(null);
   const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(null);
-  const [fplPlayersMap, setFplPlayersMap] = useState<Map<number, EnrichedPlayer>>(new Map());
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [bidding, setBidding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const fplPlayersMapRef = useRef<Map<number, EnrichedPlayer>>(new Map());
 
-  // ── Load ─────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    loadAll().catch(() => {});
-  }, [id, authLoading, user]);
+  const loadMySquad = useCallback(async (participantId: string, lg: League | null, playerMap?: Map<number, EnrichedPlayer>) => {
+    const { data: results } = await supabase
+      .from("auction_results")
+      .select("*")
+      .eq("league_id", id)
+      .eq("participant_id", participantId);
 
-  async function loadAll() {
+    if (!results) return;
+
+    const effectiveMap = playerMap ?? fplPlayersMapRef.current;
+    const squad: SquadPlayer[] = results.map((r) => {
+      const fpl = effectiveMap.get(r.fpl_player_id);
+      return {
+        id: r.fpl_player_id,
+        name: r.player_name ?? fpl?.web_name ?? "Unknown",
+        position: r.position_slot ?? fpl?.position ?? "?",
+        price: r.price_paid,
+        team: r.player_team ?? fpl?.team_short ?? "",
+      };
+    });
+    const spent = results.reduce((s, r) => s + r.price_paid, 0);
+    setTeamMeta({ budget_per_team: lg?.budget_per_team ?? 200, spent, squad });
+  }, [id]);
+
+  const loadAll = useCallback(async () => {
+    const userId = user?.id;
+    if (!userId) return;
+
     // Find my approved team membership
     const { data: membership } = await supabase
       .from("team_members")
       .select("participant_id")
       .eq("league_id", id)
-      .eq("user_id", user!.id)
+      .eq("user_id", userId)
       .eq("status", "approved")
       .single();
 
@@ -170,7 +194,7 @@ export default function BidPage() {
 
     const playersArr: EnrichedPlayer[] = bootstrapRes?.players ?? [];
     const pMap = new Map<number, EnrichedPlayer>(playersArr.map((p) => [p.id, p]));
-    setFplPlayersMap(pMap);
+    fplPlayersMapRef.current = pMap;
 
     setLeague(lg as League);
     setMyTeam(participant as Participant);
@@ -180,50 +204,44 @@ export default function BidPage() {
       setFplPlayer(pMap.get(n.fpl_player_id) ?? null);
     }
 
-    await loadMySquad(membership.participant_id, lg as League);
-  }
+    await loadMySquad(membership.participant_id, lg as League, pMap);
+  }, [id, router, user?.id, loadMySquad]);
 
-  async function loadMySquad(participantId: string, lg: League | null) {
-    const { data: results } = await supabase
-      .from("auction_results")
-      .select("*")
-      .eq("league_id", id)
-      .eq("participant_id", participantId);
+  // ── Load ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      loadAll().catch(() => {});
+    }, 0);
 
-    if (!results) return;
-
-    const squad: SquadPlayer[] = results.map((r) => ({
-      id: r.fpl_player_id,
-      name: r.player_name ?? "Unknown",
-      position: r.position_slot ?? "?",
-      price: r.price_paid,
-      team: r.player_team ?? "",
-    }));
-    const spent = results.reduce((s, r) => s + r.price_paid, 0);
-    setTeamMeta({ budget_per_team: lg?.budget_per_team ?? 200, spent, squad });
-  }
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [authLoading, user, router, loadAll]);
 
   // ── Realtime ──────────────────────────────────────────────────────────────
-  const handleNominationChange = useCallback(
-    (payload: RealtimePostgresChangesPayload<Nomination>) => {
+  useEffect(() => {
+    if (!myTeam) return;
+
+    const handleNominationChange = (payload: RealtimePostgresChangesPayload<Nomination>) => {
       const row = normalizeNomination(payload.new as Record<string, unknown>);
       if (row.status === "open") {
         setNomination(row);
-        setFplPlayer(fplPlayersMap.get(row.fpl_player_id) ?? null);
+        setFplPlayer(fplPlayersMapRef.current.get(row.fpl_player_id) ?? null);
         return;
       }
       setNomination(null);
       setFplPlayer(null);
       setSecondsLeft(0);
-      if (row.status === "sold" && row.current_bidder_id === myTeam?.id) {
-        loadMySquad(myTeam.id, league).catch(() => {});
+      if (row.status === "sold" && row.current_bidder_id === myTeam.id) {
+        loadMySquad(myTeam.id, league, fplPlayersMapRef.current).catch(() => {});
       }
-    },
-    [myTeam?.id, league, fplPlayersMap],
-  );
+    };
 
-  useEffect(() => {
-    if (!myTeam) return;
     channelRef.current = supabase
       .channel(`bid-${id}-${myTeam.id}`)
       .on(
@@ -236,52 +254,69 @@ export default function BidPage() {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current).catch(() => {});
     };
-  }, [id, myTeam?.id]);
+  }, [id, myTeam, league, loadMySquad]);
 
   // ── Timer ─────────────────────────────────────────────────────────────────
   const tickTimer = useCallback(() => {
-    if (!nomination?.bid_end_time) { setSecondsLeft(0); return; }
+    if (!nomination) { setSecondsLeft(0); return; }
+    if (nomination.is_paused) {
+      setSecondsLeft(nomination.paused_seconds ?? 0);
+      return;
+    }
+    if (!nomination.bid_end_time) { setSecondsLeft(0); return; }
     const remaining = Math.max(
       0,
       Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000),
     );
     setSecondsLeft(remaining);
-  }, [nomination?.bid_end_time]);
+  }, [nomination]);
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    tickTimer();
-    if (nomination?.bid_end_time && nomination.status === "open") {
+    if (nomination?.bid_end_time && nomination.status === "open" && nomination.is_paused === false) {
       timerRef.current = setInterval(tickTimer, 500);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [nomination?.bid_end_time, nomination?.status, tickTimer]);
+  }, [nomination?.bid_end_time, nomination?.status, nomination?.is_paused, nomination?.paused_seconds, tickTimer]);
 
   // ── Bid ───────────────────────────────────────────────────────────────────
   async function placeBid() {
     if (!nomination || !myTeam || !league) return;
+    if (nomination.is_paused || secondsLeft <= 0) return;
     setBidding(true);
     const inc = league.bid_increment ?? 0.5;
     const bidAmount = resolveBidAmount(nomination, inc);
     const endTime = new Date(Date.now() + (league.timer_seconds ?? 45) * 1000).toISOString();
 
-    await Promise.all([
-      supabase.from("auction_bids").insert({
-        nomination_id: nomination.id,
-        participant_id: myTeam.id,
-        participant_name: myTeam.name,
-        amount: bidAmount,
-      }),
-      supabase
-        .from("auction_nominations")
-        .update({
-          current_bid: bidAmount,
-          current_bidder_id: myTeam.id,
-          current_bidder_name: myTeam.name,
-          bid_end_time: endTime,
-        })
-        .eq("id", nomination.id),
-    ]);
+    const nowIso = new Date().toISOString();
+    const { data: updatedRow } = await supabase
+      .from("auction_nominations")
+      .update({
+        current_bid: bidAmount,
+        current_bidder_id: myTeam.id,
+        current_bidder_name: myTeam.name,
+        is_paused: false,
+        paused_seconds: null,
+        bid_end_time: endTime,
+      })
+      .eq("id", nomination.id)
+      .eq("status", "open")
+      .eq("is_paused", false)
+      .gt("bid_end_time", nowIso)
+      .select("id")
+      .maybeSingle();
+
+    if (!updatedRow) {
+      setBidding(false);
+      return;
+    }
+
+    await supabase.from("auction_bids").insert({
+      nomination_id: nomination.id,
+      participant_id: myTeam.id,
+      participant_name: myTeam.name,
+      amount: bidAmount,
+    });
     setBidding(false);
   }
 
@@ -309,7 +344,7 @@ export default function BidPage() {
   const myPosCount = nomination ? (teamMeta?.squad.filter((p) => p.position === nomination.position).length ?? 0) : 0;
   const posLimit = posLimits[posKey] ?? 99;
 
-  const canBid = checkCanBid({ nomination, myTeamId: myTeam.id, myBid, remaining, myPosCount, posLimit, squadSize, maxSquad, slotsLeft, bidIncrement: increment });
+  const canBid = checkCanBid({ nomination, myTeamId: myTeam.id, myBid, secondsLeft, remaining, myPosCount, posLimit, squadSize, maxSquad, slotsLeft, bidIncrement: increment });
 
   let timerColor = "text-red-400";
   if (secondsLeft > 15) timerColor = "text-[#00e478]";
@@ -359,6 +394,15 @@ type BidUIProps = Readonly<{
 }>;
 
 function BidUI({ league, myTeam, teamMeta, nomination, fplPlayer, secondsLeft, bidding, canBid, myBid, remaining, maxSquad, squadSize, myPosCount, posLimit, timerColor, onBid }: BidUIProps) {
+  let timerDisplayValue: number | string = "\u2014";
+  if (nomination) {
+    if (nomination.is_paused) {
+      timerDisplayValue = nomination.paused_seconds ?? 0;
+    } else if (nomination.bid_end_time) {
+      timerDisplayValue = secondsLeft;
+    }
+  }
+
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-4">
       {/* Header */}
@@ -389,9 +433,9 @@ function BidUI({ league, myTeam, teamMeta, nomination, fplPlayer, secondsLeft, b
             </div>
             <div className="text-right">
               <div className={`text-4xl font-mono font-bold ${timerColor}`}>
-                {nomination.bid_end_time ? secondsLeft : "\u2014"}
+                {timerDisplayValue}
               </div>
-              <div className="text-xs text-[#849585]">secs</div>
+              <div className="text-xs text-[#849585]">{nomination.is_paused ? "paused" : "secs"}</div>
             </div>
           </div>
 
@@ -429,6 +473,12 @@ function BidUI({ league, myTeam, teamMeta, nomination, fplPlayer, secondsLeft, b
           )}
           {myBid > remaining && (
             <p className="text-xs text-red-400 text-center mt-2">Insufficient budget</p>
+          )}
+          {nomination.is_paused && (
+            <p className="text-xs text-yellow-400 text-center mt-2">Bidding is paused by the auctioneer</p>
+          )}
+          {secondsLeft <= 0 && (
+            <p className="text-xs text-yellow-400 text-center mt-2">Timer expired. Waiting for auctioneer action.</p>
           )}
         </div>
       ) : (

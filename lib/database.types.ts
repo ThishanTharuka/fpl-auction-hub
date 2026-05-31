@@ -65,7 +65,9 @@ export type Database = {
           current_bidder_name: string | null
           fpl_player_id: number
           id: string
+          is_paused: boolean
           league_id: string
+          paused_seconds: number | null
           player_name: string
           player_team: string | null
           position: string
@@ -82,7 +84,9 @@ export type Database = {
           current_bidder_name?: string | null
           fpl_player_id: number
           id?: string
+          is_paused?: boolean
           league_id: string
+          paused_seconds?: number | null
           player_name: string
           player_team?: string | null
           position: string
@@ -99,7 +103,9 @@ export type Database = {
           current_bidder_name?: string | null
           fpl_player_id?: number
           id?: string
+          is_paused?: boolean
           league_id?: string
+          paused_seconds?: number | null
           player_name?: string
           player_team?: string | null
           position?: string
