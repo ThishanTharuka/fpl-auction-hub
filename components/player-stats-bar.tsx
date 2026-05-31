@@ -29,6 +29,13 @@ const STAT_TOOLTIPS: Record<string, string> = {
   Threat: "FPL threat score — attacking intent",
 };
 
+const POSITION_FULL_LABEL: Record<EnrichedPlayer["position"], string> = {
+  GKP: "Goalkeeper",
+  DEF: "Defender",
+  MID: "Midfielder",
+  FWD: "Forward",
+};
+
 function buildStats(p: EnrichedPlayer): Stat[] {
   const tip = (label: string) => STAT_TOOLTIPS[label] ?? label;
 
@@ -172,6 +179,7 @@ export function PlayerStatsBar({
   wide = false,
 }: Props) {
   const stats = buildStats(player);
+  const positionLabel = POSITION_FULL_LABEL[player.position] ?? player.position;
   // wide (auctioneer): ALL 8 stats in 2-col grid on the right, nothing below
   // narrow (bidder):   Pts+PPG pinned right, 6 position stats in bottom row
   const heroStats = wide ? stats : stats.slice(0, 2);
@@ -202,16 +210,31 @@ export function PlayerStatsBar({
           <div className="text-lg font-bold text-[#f1f6ff] leading-tight">
             {player.full_name}
           </div>
-          <div className="text-sm text-[#7a9dba] mt-0.5 font-medium">
-            {player.team_name}
+          <div className="mt-2 flex items-center gap-2 text-sm text-[#7a9dba] font-medium">
+            {player.team_crest_url ? (
+              <img
+                src={player.team_crest_url}
+                alt={`${player.team_name} crest`}
+                className="h-5 w-5 rounded-sm object-contain"
+              />
+            ) : null}
+            <span>{player.team_name}</span>
           </div>
-          <div className="mt-2 text-[11px] text-[#5e7d99] uppercase tracking-[0.07em] space-y-1">
-            <div className="font-semibold text-[#8ea4be]">
-              {player.position}
+          <div className="mt-2 text-[11px] tracking-[0.05em] space-y-1">
+            <div>
+              <span className="inline-flex items-center rounded-full border border-[#35516f] bg-[#102133] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8fd0ff]">
+                {positionLabel}
+              </span>
             </div>
-            <div>{player.minutes} mins</div>
-            <div>{player.selected_by_percent}% sel.</div>
-            <div>{player.starts} starts</div>
+            <div className="text-[#5e7d99] uppercase mt-1 mb-1">
+              {player.minutes} mins
+            </div>
+            <div className="text-[#5e7d99] uppercase mt-1 mb-1">
+              {player.selected_by_percent}% sel.
+            </div>
+            <div className="text-[#5e7d99] uppercase mt-1 mb-1">
+              {player.starts} starts
+            </div>
           </div>
           {player.news ? (
             <div className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-300 leading-snug">

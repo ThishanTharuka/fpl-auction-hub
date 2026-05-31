@@ -2,6 +2,7 @@
 
 export interface FPLTeam {
   id: number;
+  code: number;
   name: string;
   short_name: string;
   strength: number;
@@ -127,6 +128,7 @@ export interface FPLElementSummary {
 export interface EnrichedPlayer extends FPLPlayer {
   full_name: string;
   image_url: string;
+  team_crest_url: string;
   team_name: string;
   team_short: string;
   position: "GKP" | "DEF" | "MID" | "FWD";

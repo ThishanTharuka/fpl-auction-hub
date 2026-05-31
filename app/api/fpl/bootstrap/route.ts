@@ -11,6 +11,8 @@ const FPL_BOOTSTRAP_URL =
 const FPL_FIXTURES_URL = "https://fantasy.premierleague.com/api/fixtures/";
 const FPL_PHOTO_BASE_URL =
   "https://resources.premierleague.com/premierleague/photos/players/110x140/p";
+const FPL_CREST_BASE_URL =
+  "https://resources.premierleague.com/premierleague/badges/70/t";
 
 export const revalidate = 3600; // cache for 1 hour at the route level
 
@@ -87,6 +89,7 @@ export async function GET() {
         ...p,
         full_name: `${p.first_name} ${p.second_name}`,
         image_url: `${FPL_PHOTO_BASE_URL}${p.code}.png`,
+        team_crest_url: team ? `${FPL_CREST_BASE_URL}${team.code}.png` : "",
         team_name: team?.name ?? "Unknown",
         team_short: team?.short_name ?? "UNK",
         position: POSITION_MAP[p.element_type] ?? "MID",
