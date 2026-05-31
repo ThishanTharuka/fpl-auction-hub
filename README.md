@@ -4,8 +4,8 @@ A Fantasy Premier League auction tool with live bidding, squad management, and a
 
 ## Stack
 
-- **Next.js 15** (App Router, React 19)
-- **Supabase** — auth + database (PostgreSQL, RLS)
+- **Next.js 16** (App Router, React 19)
+- **Supabase** — auth + database (PostgreSQL, RLS) + real-time channels
 - **TanStack Table v8** — sortable/filterable players table
 - **shadcn/ui** + **Tailwind CSS v4** — UI components
 - **TypeScript** — strict mode + `noUncheckedIndexedAccess`
@@ -16,8 +16,12 @@ A Fantasy Premier League auction tool with live bidding, squad management, and a
 |---|---|
 | `/players` | FPL players data table with sorting, filtering, and player details |
 | `/index-builder` | Weighted scoring index builder for auction valuation |
-| `/auction` | Live auction tracker — league setup, bidding, and budget tracking |
-| `/teams` | Pitch view of each participant's squad by formation |
+| `/auction` | Auction lobby — create or join an auction session |
+| `/auction/[id]` | Auction overview for a session |
+| `/auction/[id]/auctioneer` | Auctioneer view — nominate players, manage bids, advance rounds |
+| `/auction/[id]/bid` | Bidder view — live player stats, place bids in real time |
+| `/auction/[id]/teams` | Pitch view of each participant's squad by formation |
+| `/teams` | Global teams overview |
 
 ## Getting Started
 
