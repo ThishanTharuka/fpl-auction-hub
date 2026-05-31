@@ -1,28 +1,180 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { applyIndexToPlayers, DEFAULT_WEIGHTS } from "@/lib/index-calculator";
+import { Info } from "lucide-react";
+import { applyIndexToPlayers } from "@/lib/index-calculator";
 import type {
   EnrichedPlayer,
   WeightConfig,
   IndexedPlayer,
 } from "@/lib/fpl-types";
 
-const STAT_LABELS: Record<keyof WeightConfig, string> = {
-  total_points: "PPG (Points Per Game)",
-  form: "Form (Last 5)",
-  ict_index: "ICT Index",
-  goals_scored: "Goals Scored",
-  assists: "Assists",
-  clean_sheets: "Clean Sheets",
-  bonus: "Bonus Points",
-  minutes: "Minutes Played",
-  xgi: "xGI (Expected Goal Involvements)",
-  value: "Value for Money",
+const STAT_GROUPS: Array<{
+  group: string;
+  stats: Array<{ key: keyof WeightConfig; label: string; inverted?: boolean }>;
+}> = [
+  {
+    group: "Core",
+    stats: [
+      { key: "total_points", label: "Total Points" },
+      { key: "points_per_game", label: "Points Per Game" },
+      { key: "form", label: "Form (Last 5)" },
+      { key: "value", label: "Value for Money" },
+    ],
+  },
+  {
+    group: "ICT",
+    stats: [
+      { key: "ict_index", label: "ICT Index" },
+      { key: "influence", label: "Influence" },
+      { key: "creativity", label: "Creativity" },
+      { key: "threat", label: "Threat" },
+    ],
+  },
+  {
+    group: "Expected Stats",
+    stats: [
+      { key: "xg", label: "xG" },
+      { key: "xa", label: "xA" },
+      { key: "xgi", label: "xGI" },
+      { key: "xgc", label: "xGC", inverted: true },
+    ],
+  },
+  {
+    group: "Season Stats",
+    stats: [
+      { key: "goals_scored", label: "Goals" },
+      { key: "assists", label: "Assists" },
+      { key: "clean_sheets", label: "Clean Sheets" },
+      { key: "goals_conceded", label: "Goals Conceded", inverted: true },
+      { key: "bonus", label: "Bonus" },
+      { key: "bps", label: "BPS" },
+      { key: "minutes", label: "Minutes" },
+    ],
+  },
+  {
+    group: "Other",
+    stats: [
+      { key: "selected_by_percent", label: "Ownership %" },
+      { key: "avg_fdr_next5", label: "Fixture Diff.", inverted: true },
+    ],
+  },
+];
+
+const ALL_STATS = STAT_GROUPS.flatMap((g) => g.stats);
+const ALL_STAT_KEYS = ALL_STATS.map((s) => s.key);
+
+const METRIC_TOOLTIPS: Partial<Record<keyof WeightConfig, string>> = {
+  total_points: "Total FPL points scored this season",
+  points_per_game: "Average FPL points per gameweek played",
+  form: "Average points over the last 5 gameweeks",
+  value: "Total points divided by FPL price — efficiency metric",
+  ict_index: "Combined Influence, Creativity & Threat score",
+  influence: "Player's direct impact on match result",
+  creativity: "Chance creation and assist potential",
+  threat: "Goal scoring threat score",
+  xg: "Expected Goals — season total",
+  xa: "Expected Assists — season total",
+  xgi: "Expected Goal Involvements (xG + xA) — season total",
+  xgc: "Expected Goals Conceded — lower is better, rewards solid defences",
+  goals_scored: "Goals scored this season",
+  assists: "Assists this season",
+  clean_sheets: "Clean sheets this season",
+  goals_conceded: "Goals conceded this season — lower is better, rewards tight defences",
+  bonus: "Bonus points earned this season",
+  bps: "Raw Bonus Points System score this season",
+  minutes: "Minutes played this season — rewards consistent starters",
+  selected_by_percent: "Owned by % of FPL managers — high ownership = popular/reliable pick",
+  avg_fdr_next5: "Average Fixture Difficulty Rating over next 5 GWs — lower means easier run of fixtures",
 };
+
+// ─── Presets ──────────────────────────────────────────────────────────────────
+
+type Preset = {
+  label: string;
+  pos: string;
+  active: Array<keyof WeightConfig>;
+  weights: Partial<Record<keyof WeightConfig, number>>;
+};
+
+const PRESETS: Preset[] = [
+  {
+    label: "All",
+    pos: "ALL",
+    active: ["total_points", "form", "ict_index", "goals_scored", "assists", "clean_sheets", "bonus", "minutes", "xgi"],
+    weights: { total_points: 5, form: 5, ict_index: 5, goals_scored: 5, assists: 5, clean_sheets: 5, bonus: 5, minutes: 5, xgi: 5 },
+  },
+  {
+    label: "GKP",
+    pos: "GKP",
+    active: ["total_points", "form", "clean_sheets", "goals_conceded", "bonus", "minutes", "xgc"],
+    weights: { total_points: 7, form: 6, clean_sheets: 9, goals_conceded: 8, bonus: 4, minutes: 5, xgc: 7 },
+  },
+  {
+    label: "DEF",
+    pos: "DEF",
+    active: ["total_points", "form", "clean_sheets", "goals_conceded", "goals_scored", "assists", "bonus", "minutes", "xgi", "avg_fdr_next5"],
+    weights: { total_points: 7, form: 6, clean_sheets: 8, goals_conceded: 6, goals_scored: 5, assists: 5, bonus: 4, minutes: 5, xgi: 5, avg_fdr_next5: 5 },
+  },
+  {
+    label: "MID",
+    pos: "MID",
+    active: ["total_points", "form", "ict_index", "goals_scored", "assists", "xgi", "creativity", "bonus", "minutes", "avg_fdr_next5"],
+    weights: { total_points: 7, form: 7, ict_index: 5, goals_scored: 7, assists: 7, xgi: 8, creativity: 6, bonus: 4, minutes: 5, avg_fdr_next5: 5 },
+  },
+  {
+    label: "FWD",
+    pos: "FWD",
+    active: ["total_points", "form", "goals_scored", "assists", "xg", "xgi", "threat", "bonus", "minutes", "avg_fdr_next5"],
+    weights: { total_points: 7, form: 7, goals_scored: 9, assists: 6, xg: 8, xgi: 7, threat: 6, bonus: 4, minutes: 5, avg_fdr_next5: 5 },
+  },
+];
+
+const DEFAULT_WEIGHTS: Record<keyof WeightConfig, number> = Object.fromEntries(
+  ALL_STAT_KEYS.map((k) => [k, 1]),
+) as Record<keyof WeightConfig, number>;
+
+function InfoTip({ text }: Readonly<{ text: string }>) {
+  const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  return (
+    <>
+      <span
+        ref={ref}
+        role="img"
+        aria-label="More information"
+        className="inline-flex items-center"
+        onMouseEnter={() => {
+          const r = ref.current?.getBoundingClientRect();
+          if (r) setCoords({ x: r.left + r.width / 2, y: r.top });
+        }}
+        onMouseLeave={() => setCoords(null)}
+      >
+        <Info className="w-3 h-3 text-[#849585] hover:text-[#b9cbb9] cursor-default shrink-0" />
+      </span>
+      {coords &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              left: coords.x,
+              top: coords.y - 8,
+              transform: "translate(-50%, -100%)",
+              zIndex: 9999,
+            }}
+            className="w-52 rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1.5 text-[11px] text-[#d6e4f9] whitespace-normal text-center shadow-lg pointer-events-none"
+          >
+            {text}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400",
@@ -34,8 +186,18 @@ const POSITION_COLORS: Record<string, string> = {
 export default function IndexBuilderPage() {
   const [players, setPlayers] = useState<EnrichedPlayer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [weights, setWeights] = useState<WeightConfig>({ ...DEFAULT_WEIGHTS });
+  const [weights, setWeights] =
+    useState<Record<keyof WeightConfig, number>>(() => ({
+      ...DEFAULT_WEIGHTS,
+      ...PRESETS[0].weights,
+    }));
+  const [activeStats, setActiveStats] = useState<Set<keyof WeightConfig>>(
+    new Set(PRESETS[0].active),
+  );
   const [posFilter, setPosFilter] = useState("ALL");
+  const [metricPickerOpen, setMetricPickerOpen] = useState(false);
+  const [activePreset, setActivePreset] = useState<string>("All");
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/fpl/bootstrap")
@@ -47,27 +209,60 @@ export default function IndexBuilderPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const totalWeight = useMemo(
-    () => Object.values(weights).reduce((s, v) => s + v, 0),
-    [weights],
-  );
+  // Close metric picker on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setMetricPickerOpen(false);
+      }
+    }
+    if (metricPickerOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [metricPickerOpen]);
 
-  const modelStrength = Math.min(100, Math.round(totalWeight * 100));
+  // Build the WeightConfig passed to the scorer: inactive stats get 0
+  const effectiveWeights = useMemo<WeightConfig>(() => {
+    return Object.fromEntries(
+      ALL_STAT_KEYS.map((k) => [k, activeStats.has(k) ? weights[k] : 0]),
+    ) as WeightConfig;
+  }, [weights, activeStats]);
 
   const ranked = useMemo<IndexedPlayer[]>(() => {
     const pool =
       posFilter === "ALL"
         ? players
         : players.filter((p) => p.position === posFilter);
-    return applyIndexToPlayers(pool, weights).slice(0, 50);
-  }, [players, weights, posFilter]);
+    return applyIndexToPlayers(pool, effectiveWeights).slice(0, 50);
+  }, [players, effectiveWeights, posFilter]);
 
-  function setWeight(key: keyof WeightConfig, pct: number) {
-    setWeights((prev) => ({ ...prev, [key]: pct / 100 }));
+  function setWeight(key: keyof WeightConfig, val: number) {
+    setActivePreset("");
+    setWeights((prev) => ({ ...prev, [key]: val }));
   }
 
-  function resetWeights() {
-    setWeights({ ...DEFAULT_WEIGHTS });
+  function toggleStat(key: keyof WeightConfig) {
+    setActivePreset("");
+    setActiveStats((prev) => {
+      if (prev.has(key) && prev.size <= 1) return prev;
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  function applyPreset(preset: Preset) {
+    setActivePreset(preset.label);
+    setPosFilter(preset.pos);
+    setActiveStats(new Set(preset.active));
+    setWeights({ ...DEFAULT_WEIGHTS, ...preset.weights });
+  }
+
+  function resetAll() {
+    applyPreset(PRESETS[0]);
   }
 
   return (
@@ -75,85 +270,125 @@ export default function IndexBuilderPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#d6e4f9]">Index Builder</h1>
         <p className="text-sm text-[#849585] mt-1">
-          Configure weights to generate a custom performance index for auction
-          valuation.
+          Select metrics and adjust weights (1–10) to generate a custom
+          performance index for auction valuation.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
         {/* Left: Weight sliders */}
         <aside className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 h-fit">
-          <div className="flex items-center justify-between mb-5">
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-[#d6e4f9]">Stat Weighting</h2>
             <button
-              onClick={resetWeights}
+              onClick={resetAll}
               className="text-xs text-[#849585] hover:text-[#00e478] transition-colors"
             >
               Reset
             </button>
           </div>
 
-          {/* Position filter */}
-          <div className="flex gap-1 mb-5 flex-wrap">
-            {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-              <Button
-                key={pos}
-                size="sm"
-                variant={posFilter === pos ? "default" : "outline"}
-                className={
-                  posFilter === pos
-                    ? "bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 text-xs"
-                    : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] text-xs"
-                }
-                onClick={() => setPosFilter(pos)}
-              >
-                {pos}
-              </Button>
-            ))}
+          {/* Presets */}
+          <div className="mb-4">
+            <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-2">
+              Presets
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => applyPreset(preset)}
+                  className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+                    activePreset === preset.label
+                      ? "bg-[#00e478] text-[#003919] border-[#00e478]"
+                      : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Metric picker toggle */}
+          <div ref={pickerRef} className="mb-4">
+            <button
+              onClick={() => setMetricPickerOpen((o) => !o)}
+              className="w-full flex items-center justify-between text-xs border border-[#3b4b3d] rounded px-3 py-2 text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] transition-colors"
+            >
+              <span>Metrics ({activeStats.size} active)</span>
+              <span className="text-[#849585]">{metricPickerOpen ? "▴" : "▾"}</span>
+            </button>
+
+            {metricPickerOpen && (
+              <div className="mt-2 border border-[#3b4b3d] rounded-lg bg-[#0a1828] p-3">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                  {STAT_GROUPS.map(({ group, stats }) => (
+                    <div key={group} className="mb-3">
+                      <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 pb-0.5 border-b border-[#3b4b3d]">
+                        {group}
+                      </div>
+                      <div className="space-y-1">
+                        {stats.map(({ key, label, inverted }) => (
+                          <label
+                            key={key}
+                            className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478]"
+                          >
+                            <input
+                              type="checkbox"
+                              className="accent-[#00e478] shrink-0"
+                              checked={activeStats.has(key)}
+                              onChange={() => toggleStat(key)}
+                            />
+                            <span className="leading-tight flex items-center gap-1">
+                              {label}
+                              {inverted && (
+                                <span className="text-[10px] text-[#849585]">↓</span>
+                              )}
+                              {METRIC_TOOLTIPS[key] && (
+                                <InfoTip text={METRIC_TOOLTIPS[key]} />
+                              )}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sliders — only for active stats */}
           <div className="space-y-5">
-            {(Object.keys(weights) as Array<keyof WeightConfig>).map((key) => {
-              const pct = Math.round(weights[key] * 100);
-              return (
+            {ALL_STATS.filter((s) => activeStats.has(s.key)).map(
+              ({ key, label }) => (
                 <div key={key}>
                   <div className="flex justify-between mb-1.5">
-                    <span className="text-xs text-[#b9cbb9]">
-                      {STAT_LABELS[key]}
+                    <span className="text-xs text-[#b9cbb9] flex items-center gap-1">
+                      {label}
+                      {METRIC_TOOLTIPS[key] && (
+                        <InfoTip text={METRIC_TOOLTIPS[key]} />
+                      )}
                     </span>
                     <span className="text-xs font-mono text-[#00e478]">
-                      {pct}
+                      {weights[key]}
                     </span>
                   </div>
                   <Slider
-                    min={0}
-                    max={100}
+                    min={1}
+                    max={10}
                     step={1}
-                    value={[pct]}
+                    value={[weights[key]]}
                     onValueChange={(v) =>
-                      setWeight(key, typeof v === "number" ? v : (v[0] ?? 0))
+                      setWeight(key, typeof v === "number" ? v : (v[0] ?? 1))
                     }
                     className="[&_[role=slider]]:bg-[#00e478] [&_[role=slider]]:border-[#00e478]"
                   />
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Model strength */}
-          <div className="mt-6 rounded bg-[#132030] p-3">
-            <div className="flex justify-between text-xs mb-2">
-              <span className="text-[#849585]">TOTAL MODEL STRENGTH</span>
-              <span className="font-mono font-bold text-[#00e478]">
-                {modelStrength}%
-              </span>
-            </div>
-            <div className="h-1.5 bg-[#283646] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#00e478] rounded-full transition-all"
-                style={{ width: `${Math.min(100, modelStrength)}%` }}
-              />
-            </div>
+              ),
+            )}
           </div>
         </aside>
 

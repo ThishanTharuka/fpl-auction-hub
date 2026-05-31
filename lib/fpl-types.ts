@@ -131,16 +131,33 @@ export interface EnrichedPlayer extends FPLPlayer {
 // ─── Index Builder Types ──────────────────────────────────────────────────────
 
 export interface WeightConfig {
+  // Core scoring
   total_points: number;
+  points_per_game: number;
   form: number;
+  value: number; // points per cost
+  // ICT
   ict_index: number;
+  influence: number;
+  creativity: number;
+  threat: number;
+  // Expected stats
+  xg: number;
+  xa: number;
+  xgi: number;
+  xgc: number; // lower = better (inverted)
+  // Season stats
   goals_scored: number;
   assists: number;
   clean_sheets: number;
+  goals_conceded: number; // lower = better (inverted)
   bonus: number;
+  bps: number;
   minutes: number;
-  xgi: number; // expected goal involvements
-  value: number; // points per cost
+  // Transfer activity
+  selected_by_percent: number;
+  // Fixtures
+  avg_fdr_next5: number; // lower = better (inverted)
 }
 
 export interface IndexedPlayer extends EnrichedPlayer {

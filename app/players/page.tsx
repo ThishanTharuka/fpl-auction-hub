@@ -292,7 +292,7 @@ export default function PlayersPage() {
       },
       {
         id: "position",
-        header: "Pos",
+        header: "Position",
         accessorFn: (r) => r.position,
         enableHiding: false,
         cell: ({ getValue }) => (
@@ -530,17 +530,43 @@ export default function PlayersPage() {
           const s = row.original.status;
           const chance = row.original.chance_of_playing_next_round;
           const chip = (label: string, color: string) => (
-            <span className={`inline-flex items-center justify-center rounded-full border w-24 py-0.5 text-[11px] font-medium ${color}`}>
+            <span
+              className={`inline-flex items-center justify-center rounded-full border w-24 py-0.5 text-[11px] font-medium ${color}`}
+            >
               {label}
             </span>
           );
-          if (s === "a") return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
-          if (s === "d") return chip(`Doubt${chance !== null ? ` ${chance}%` : ""}`, "bg-orange-500/15 border-orange-500/30 text-orange-400");
-          if (s === "i") return chip("Injured", "bg-red-500/15 border-red-500/30 text-red-400");
-          if (s === "s") return chip("Suspended", "bg-red-500/15 border-red-500/30 text-red-400");
-          if (s === "n") return chip("Intl", "bg-[#849585]/15 border-[#849585]/30 text-[#849585]");
-          if (s === "u") return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
-          return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
+          if (s === "a")
+            return chip(
+              "Available",
+              "bg-green-500/15 border-green-500/30 text-green-400",
+            );
+          if (s === "d")
+            return chip(
+              `Doubt${chance !== null ? ` ${chance}%` : ""}`,
+              "bg-orange-500/15 border-orange-500/30 text-orange-400",
+            );
+          if (s === "i")
+            return chip(
+              "Injured",
+              "bg-red-500/15 border-red-500/30 text-red-400",
+            );
+          if (s === "s")
+            return chip(
+              "Suspended",
+              "bg-red-500/15 border-red-500/30 text-red-400",
+            );
+          if (s === "n")
+            return chip(
+              "Intl",
+              "bg-[#849585]/15 border-[#849585]/30 text-[#849585]",
+            );
+          if (s === "u")
+            return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
+          return chip(
+            "Available",
+            "bg-green-500/15 border-green-500/30 text-green-400",
+          );
         },
       },
     ],
@@ -596,7 +622,7 @@ export default function PlayersPage() {
           variant={availFilter === "available" ? "default" : "outline"}
           className={
             availFilter === "available"
-              ? "bg-green-500 text-white border-green-500 hover:bg-green-600 hover:border-green-600"
+              ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
               : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
           }
           onClick={() =>
