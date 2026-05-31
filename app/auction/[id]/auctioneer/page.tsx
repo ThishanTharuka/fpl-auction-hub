@@ -589,9 +589,9 @@ export default function AuctioneerPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Badge variant="outline" className={POSITION_COLORS[stagedPlayer.position] ?? ""}>{stagedPlayer.position}</Badge>
-                  <span className="text-xs text-[#849585]">{stagedPlayer.team_short}</span>
+                  <span className="text-xs text-[#849585]">{stagedPlayer.team_name}</span>
                 </div>
-                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.web_name}</h2>
+                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.full_name}</h2>
                 <p className="text-sm text-[#849585] mt-1">Ready to nominate — set timer and start</p>
               </div>
               <button
@@ -601,7 +601,7 @@ export default function AuctioneerPage() {
                 ✕ Cancel
               </button>
             </div>
-            <PlayerStatsBar player={stagedPlayer} />
+            <PlayerStatsBar player={stagedPlayer} wide />
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                   <span className="text-xs text-[#849585] whitespace-nowrap">Timer</span>
@@ -631,6 +631,12 @@ export default function AuctioneerPage() {
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
+                  {(() => {
+                    const player = players.find((pl) => pl.id === nomination.fpl_player_id);
+                    const clubName = player?.team_name ?? nomination.player_team;
+                    const playerName = player?.full_name ?? nomination.player_name;
+                    return (
+                      <>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge
                       variant="outline"
@@ -639,15 +645,18 @@ export default function AuctioneerPage() {
                       {nomination.position}
                     </Badge>
                     <span className="text-xs text-[#849585]">
-                      {nomination.player_team}
+                      {clubName}
                     </span>
                   </div>
                   <h2 className="text-3xl font-bold text-[#d6e4f9]">
-                    {nomination.player_name}
+                    {playerName}
                   </h2>
                   <p className="text-sm text-[#849585] mt-1">
                     Starting price: £{nomination.starting_price}m
                   </p>
+                      </>
+                    );
+                  })()}
                 </div>
                 {/* Timer */}
                 <div className="text-right">
@@ -661,7 +670,7 @@ export default function AuctioneerPage() {
               {/* Stats for nominated player */}
               {(() => {
                 const p = players.find((pl) => pl.id === nomination.fpl_player_id);
-                return p ? <PlayerStatsBar player={p} className="mb-4" /> : null;
+                return p ? <PlayerStatsBar player={p} className="mb-4" wide /> : null;
               })()}
 
               {/* Current bid */}

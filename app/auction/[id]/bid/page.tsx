@@ -427,9 +427,9 @@ function BidUI({ league, myTeam, teamMeta, nomination, fplPlayer, secondsLeft, b
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge variant="outline" className={POSITION_COLORS[nomination.position] ?? ""}>{nomination.position}</Badge>
-                <span className="text-xs text-[#849585]">{nomination.player_team}</span>
+                <span className="text-xs text-[#849585]">{fplPlayer?.team_name ?? nomination.player_team}</span>
               </div>
-              <h2 className="text-2xl font-bold text-[#d6e4f9]">{nomination.player_name}</h2>
+              <h2 className="text-2xl font-bold text-[#d6e4f9]">{fplPlayer?.full_name ?? nomination.player_name}</h2>
             </div>
             <div className="text-right">
               <div className={`text-4xl font-mono font-bold ${timerColor}`}>
