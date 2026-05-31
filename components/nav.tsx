@@ -25,15 +25,7 @@ export function Nav() {
           href="/"
           className="flex items-center gap-2 font-bold text-[#00e478]"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="9" stroke="#00e478" strokeWidth="2" />
-            <path
-              d="M10 5v10M5 10h10"
-              stroke="#00e478"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+          <img src="/fpl.png" alt="FPL Auction Hub" className="h-8 w-8 object-contain" />
           FPL Auction Hub
         </Link>
 
