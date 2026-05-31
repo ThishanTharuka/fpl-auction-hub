@@ -14,7 +14,7 @@ const supabase = createSupabaseBrowserClient();
 interface LeagueRow {
   id: string;
   name: string;
-  status: string;
+  status: string | null;
   room_password: string | null;
   created_by: string | null;
   created_at: string | null;
@@ -67,6 +67,7 @@ export default function AuctionBrowsePage() {
 
     const countMap: Record<string, number> = {};
     for (const p of partCounts ?? []) {
+      if (!p.league_id) continue;
       countMap[p.league_id] = (countMap[p.league_id] ?? 0) + 1;
     }
 
@@ -132,7 +133,7 @@ export default function AuctionBrowsePage() {
 
       <div className="space-y-3">
         {leagues.map((league) => {
-          const statusInfo = STATUS_LABELS[league.status] ?? STATUS_LABELS["setup"];
+          const statusInfo = STATUS_LABELS[league.status ?? "setup"] ?? { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
           const isOwner = user?.id === league.created_by;
           return (
             <div

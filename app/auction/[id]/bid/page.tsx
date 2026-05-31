@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 const supabase = createSupabaseBrowserClient();
 
@@ -175,8 +175,8 @@ export default function BidPage() {
 
   // ── Realtime ──────────────────────────────────────────────────────────────
   const handleNominationChange = useCallback(
-    (payload: { new: Nomination }) => {
-      const row = payload.new;
+    (payload: RealtimePostgresChangesPayload<Nomination>) => {
+      const row = payload.new as Nomination;
       if (row.status === "open") { setNomination(row); return; }
       setNomination(null);
       setSecondsLeft(0);

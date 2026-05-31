@@ -22,6 +22,7 @@ const POSITION_COLORS: Record<string, string> = {
 interface League {
   id: string;
   name: string;
+  created_by: string | null;
   budget_per_team: number;
   timer_seconds: number | null;
   bid_increment: number | null;
