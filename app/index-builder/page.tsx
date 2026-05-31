@@ -100,13 +100,15 @@ type Preset = {
   weights: Partial<Record<keyof WeightConfig, number>>;
 };
 
+const DEFAULT_PRESET: Preset = {
+  label: "All",
+  pos: "ALL",
+  active: ["total_points", "form", "ict_index", "goals_scored", "assists", "clean_sheets", "bonus", "minutes", "xgi"],
+  weights: { total_points: 5, form: 5, ict_index: 5, goals_scored: 5, assists: 5, clean_sheets: 5, bonus: 5, minutes: 5, xgi: 5 },
+};
+
 const PRESETS: Preset[] = [
-  {
-    label: "All",
-    pos: "ALL",
-    active: ["total_points", "form", "ict_index", "goals_scored", "assists", "clean_sheets", "bonus", "minutes", "xgi"],
-    weights: { total_points: 5, form: 5, ict_index: 5, goals_scored: 5, assists: 5, clean_sheets: 5, bonus: 5, minutes: 5, xgi: 5 },
-  },
+  DEFAULT_PRESET,
   {
     label: "GKP",
     pos: "GKP",
@@ -189,10 +191,10 @@ export default function IndexBuilderPage() {
   const [weights, setWeights] =
     useState<Record<keyof WeightConfig, number>>(() => ({
       ...DEFAULT_WEIGHTS,
-      ...PRESETS[0].weights,
+      ...DEFAULT_PRESET.weights,
     }));
   const [activeStats, setActiveStats] = useState<Set<keyof WeightConfig>>(
-    new Set(PRESETS[0].active),
+    new Set(DEFAULT_PRESET.active),
   );
   const [posFilter, setPosFilter] = useState("ALL");
   const [metricPickerOpen, setMetricPickerOpen] = useState(false);
@@ -224,7 +226,7 @@ export default function IndexBuilderPage() {
   const effectiveWeights = useMemo<WeightConfig>(() => {
     return Object.fromEntries(
       ALL_STAT_KEYS.map((k) => [k, activeStats.has(k) ? weights[k] : 0]),
-    ) as WeightConfig;
+    ) as unknown as WeightConfig;
   }, [weights, activeStats]);
 
   const ranked = useMemo<IndexedPlayer[]>(() => {
@@ -262,7 +264,7 @@ export default function IndexBuilderPage() {
   }
 
   function resetAll() {
-    applyPreset(PRESETS[0]);
+    applyPreset(DEFAULT_PRESET);
   }
 
   return (
