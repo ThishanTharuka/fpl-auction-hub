@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 const links = [
   { href: "/players", label: "Players" },
   { href: "/index-builder", label: "Index Builder" },
-  { href: "/auction", label: "Auction" },
+  { href: "/auction", label: "Auctions" },
+  { href: "/auction/setup", label: "New Auction" },
   { href: "/teams", label: "Teams" },
 ];
 
