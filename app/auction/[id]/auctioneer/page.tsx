@@ -20,6 +20,8 @@ function normalizeNomination(raw: Record<string, unknown>): Nomination {
     current_bid: Number(raw.current_bid),
     current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
     current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+    is_paused: Boolean(raw.is_paused),
+    paused_seconds: typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
   };
 }
 
@@ -55,14 +57,31 @@ interface Nomination {
   current_bidder_id: string | null;
   current_bidder_name: string | null;
   bid_end_time: string | null;
+  is_paused: boolean;
+  paused_seconds: number | null;
   status: string;
 }
 
 interface BidEntry {
   id: string;
+  nomination_id: string;
   participant_name: string;
   amount: number;
   created_at: string | null;
+}
+
+function dedupeRecentBids(bids: BidEntry[]): BidEntry[] {
+  const seen = new Set<string>();
+  const unique: BidEntry[] = [];
+
+  for (const bid of bids) {
+    if (seen.has(bid.id)) continue;
+    seen.add(bid.id);
+    unique.push(bid);
+    if (unique.length === 10) break;
+  }
+
+  return unique;
 }
 
 interface TeamBudget {
@@ -111,7 +130,7 @@ export default function AuctioneerPage() {
           fetch("/api/fpl/bootstrap").then((r) => r.json()),
           supabase
             .from("auction_results")
-            .select("fpl_player_id, price_paid, participant_id")
+            .select("fpl_player_id, price_paid, participant_id, position_slot, player_name, player_team")
             .eq("league_id", id),
         ]);
 
@@ -127,15 +146,29 @@ export default function AuctioneerPage() {
       if (ps && results) {
         const spentMap: Record<string, number> = {};
         const squadMap: Record<string, number> = {};
+        const teamMap = new Map(ps.map((p) => [p.id, p.name]));
+        const playersById = new Map<number, EnrichedPlayer>((playersRes?.players ?? []).map((p: EnrichedPlayer) => [p.id, p]));
         const soldSet = new Set<number>();
+        const restoredSoldLog: { name: string; team: string; price: number; pos: string; playerId: number; participantId: string }[] = [];
         for (const r of results) {
           soldSet.add(r.fpl_player_id);
           if (r.participant_id) {
             spentMap[r.participant_id] = (spentMap[r.participant_id] ?? 0) + r.price_paid;
             squadMap[r.participant_id] = (squadMap[r.participant_id] ?? 0) + 1;
+            const playerInfo = playersById.get(r.fpl_player_id);
+            restoredSoldLog.push({
+              name: r.player_name ?? playerInfo?.web_name ?? "Unknown",
+              team: teamMap.get(r.participant_id) ?? "Unknown",
+              price: r.price_paid,
+              pos: r.position_slot ?? playerInfo?.position ?? "?",
+              playerId: r.fpl_player_id,
+              participantId: r.participant_id,
+            });
           }
         }
+        const soldLogDescending = [...restoredSoldLog].reverse();
         setSoldIds(soldSet);
+        setSoldLog(soldLogDescending);
         setTeams(
           ps.map((p) => ({
             id: p.id,
@@ -162,7 +195,7 @@ export default function AuctioneerPage() {
       }
     }
     void load();
-  }, [id, authLoading]);
+  }, [id, authLoading, router, user?.id]);
 
   async function loadBids(nominationId: string) {
     const { data } = await supabase
@@ -171,7 +204,7 @@ export default function AuctioneerPage() {
       .eq("nomination_id", nominationId)
       .order("created_at", { ascending: false })
       .limit(10);
-    if (data) setRecentBids(data as BidEntry[]);
+    if (data) setRecentBids(dedupeRecentBids(data as BidEntry[]));
   }
 
   // ── Realtime subscription ──────────────────────────────────────────────────
@@ -197,7 +230,7 @@ export default function AuctioneerPage() {
         { event: "INSERT", schema: "public", table: "auction_bids" },
         (payload) => {
           const bid = payload.new as BidEntry;
-          setRecentBids((prev) => [bid, ...prev.slice(0, 9)]);
+          setRecentBids((prev) => dedupeRecentBids([bid, ...prev]));
           setNomination((prev) =>
             prev
               ? {
@@ -218,7 +251,15 @@ export default function AuctioneerPage() {
 
   // ── Timer countdown ────────────────────────────────────────────────────────
   const tickTimer = useCallback(() => {
-    if (!nomination?.bid_end_time) {
+    if (!nomination) {
+      setSecondsLeft(0);
+      return;
+    }
+    if (nomination.is_paused) {
+      setSecondsLeft(nomination.paused_seconds ?? 0);
+      return;
+    }
+    if (!nomination.bid_end_time) {
       setSecondsLeft(0);
       return;
     }
@@ -227,18 +268,17 @@ export default function AuctioneerPage() {
       Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000),
     );
     setSecondsLeft(remaining);
-  }, [nomination?.bid_end_time]);
+  }, [nomination]);
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    tickTimer();
-    if (nomination?.bid_end_time && nomination.status === "open") {
+    if (nomination?.bid_end_time && nomination.status === "open" && nomination.is_paused === false) {
       timerRef.current = setInterval(tickTimer, 500);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [nomination?.bid_end_time, nomination?.status, tickTimer]);
+  }, [nomination?.bid_end_time, nomination?.status, nomination?.is_paused, nomination?.paused_seconds, tickTimer]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
   function stagePlayer(player: EnrichedPlayer) {
@@ -271,6 +311,8 @@ export default function AuctioneerPage() {
         starting_price: startingPrice,
         current_bid: startingPrice,
         status: "open",
+        is_paused: false,
+        paused_seconds: null,
         bid_end_time: endTime,
       })
       .select()
@@ -306,6 +348,8 @@ export default function AuctioneerPage() {
         participant_id: nomination.current_bidder_id,
         fpl_player_id: nomination.fpl_player_id,
         price_paid: nomination.current_bid,
+        player_name: nomination.player_name,
+        player_team: nomination.player_team,
         position_slot: nomination.position,
       }),
     ]);
@@ -365,12 +409,44 @@ export default function AuctioneerPage() {
   async function extendTimer() {
     if (!nomination) return;
     const secs = Math.max(5, Number(extendInput) || (league?.timer_seconds ?? 45));
+    if (nomination.is_paused) {
+      const pausedSeconds = (nomination.paused_seconds ?? 0) + secs;
+      await supabase
+        .from("auction_nominations")
+        .update({ paused_seconds: pausedSeconds })
+        .eq("id", nomination.id);
+      setNomination((prev) => (prev ? { ...prev, paused_seconds: pausedSeconds } : prev));
+      return;
+    }
     const newEnd = new Date(Date.now() + secs * 1000).toISOString();
     await supabase
       .from("auction_nominations")
       .update({ bid_end_time: newEnd })
       .eq("id", nomination.id);
     setNomination((prev) => (prev ? { ...prev, bid_end_time: newEnd } : prev));
+  }
+
+  async function pauseTimer() {
+    if (!nomination || nomination.is_paused) return;
+    const remaining = nomination.bid_end_time
+      ? Math.max(0, Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000))
+      : 0;
+    await supabase
+      .from("auction_nominations")
+      .update({ is_paused: true, paused_seconds: remaining, bid_end_time: null })
+      .eq("id", nomination.id);
+    setNomination((prev) => (prev ? { ...prev, is_paused: true, paused_seconds: remaining, bid_end_time: null } : prev));
+  }
+
+  async function resumeTimer() {
+    if (!nomination || nomination.is_paused === false) return;
+    const secs = Math.max(1, nomination.paused_seconds ?? (league?.timer_seconds ?? 45));
+    const newEnd = new Date(Date.now() + secs * 1000).toISOString();
+    await supabase
+      .from("auction_nominations")
+      .update({ is_paused: false, paused_seconds: null, bid_end_time: newEnd })
+      .eq("id", nomination.id);
+    setNomination((prev) => (prev ? { ...prev, is_paused: false, paused_seconds: null, bid_end_time: newEnd } : prev));
   }
 
   async function markUnsold() {
@@ -398,6 +474,15 @@ export default function AuctioneerPage() {
   let timerColor = "text-red-400";
   if (secondsLeft > 15) timerColor = "text-[#00e478]";
   else if (secondsLeft > 5) timerColor = "text-yellow-400";
+  let timerDisplayValue: number | string = "—";
+  if (nomination) {
+    if (nomination.is_paused) {
+      timerDisplayValue = nomination.paused_seconds ?? 0;
+    } else if (nomination.bid_end_time) {
+      timerDisplayValue = secondsLeft;
+    }
+  }
+  const timerDisplayUnit = nomination?.is_paused ? "paused" : "seconds";
 
   return (
     <div className="flex gap-4 h-screen overflow-hidden px-4 py-4">
@@ -504,9 +589,9 @@ export default function AuctioneerPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Badge variant="outline" className={POSITION_COLORS[stagedPlayer.position] ?? ""}>{stagedPlayer.position}</Badge>
-                  <span className="text-xs text-[#849585]">{stagedPlayer.team_short}</span>
+                  <span className="text-xs text-[#849585]">{stagedPlayer.team_name}</span>
                 </div>
-                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.web_name}</h2>
+                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.full_name}</h2>
                 <p className="text-sm text-[#849585] mt-1">Ready to nominate — set timer and start</p>
               </div>
               <button
@@ -516,7 +601,7 @@ export default function AuctioneerPage() {
                 ✕ Cancel
               </button>
             </div>
-            <PlayerStatsBar player={stagedPlayer} />
+            <PlayerStatsBar player={stagedPlayer} wide />
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                   <span className="text-xs text-[#849585] whitespace-nowrap">Timer</span>
@@ -546,6 +631,12 @@ export default function AuctioneerPage() {
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
+                  {(() => {
+                    const player = players.find((pl) => pl.id === nomination.fpl_player_id);
+                    const clubName = player?.team_name ?? nomination.player_team;
+                    const playerName = player?.full_name ?? nomination.player_name;
+                    return (
+                      <>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge
                       variant="outline"
@@ -554,29 +645,32 @@ export default function AuctioneerPage() {
                       {nomination.position}
                     </Badge>
                     <span className="text-xs text-[#849585]">
-                      {nomination.player_team}
+                      {clubName}
                     </span>
                   </div>
                   <h2 className="text-3xl font-bold text-[#d6e4f9]">
-                    {nomination.player_name}
+                    {playerName}
                   </h2>
                   <p className="text-sm text-[#849585] mt-1">
                     Starting price: £{nomination.starting_price}m
                   </p>
+                      </>
+                    );
+                  })()}
                 </div>
                 {/* Timer */}
                 <div className="text-right">
                   <div className={`text-5xl font-mono font-bold ${timerColor}`}>
-                    {nomination.bid_end_time ? secondsLeft : "—"}
+                    {timerDisplayValue}
                   </div>
-                  <div className="text-xs text-[#849585] mt-1">seconds</div>
+                  <div className="text-xs text-[#849585] mt-1">{timerDisplayUnit}</div>
                 </div>
               </div>
 
               {/* Stats for nominated player */}
               {(() => {
                 const p = players.find((pl) => pl.id === nomination.fpl_player_id);
-                return p ? <PlayerStatsBar player={p} className="mb-4" /> : null;
+                return p ? <PlayerStatsBar player={p} className="mb-4" wide /> : null;
               })()}
 
               {/* Current bid */}
@@ -618,6 +712,13 @@ export default function AuctioneerPage() {
                 )}
                 {/* Extend with seconds dropdown */}
                 <div className="flex items-stretch gap-1">
+                  <Button
+                    onClick={nomination.is_paused ? resumeTimer : pauseTimer}
+                    variant="outline"
+                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                  >
+                    {nomination.is_paused ? "Resume" : "Pause"}
+                  </Button>
                   <select
                     value={extendInput}
                     onChange={(e) => setExtendInput(e.target.value)}

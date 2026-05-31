@@ -9,6 +9,10 @@ import type {
 const FPL_BOOTSTRAP_URL =
   "https://fantasy.premierleague.com/api/bootstrap-static/";
 const FPL_FIXTURES_URL = "https://fantasy.premierleague.com/api/fixtures/";
+const FPL_PHOTO_BASE_URL =
+  "https://resources.premierleague.com/premierleague/photos/players/110x140/p";
+const FPL_CREST_BASE_URL =
+  "https://resources.premierleague.com/premierleague/badges/70/t";
 
 export const revalidate = 3600; // cache for 1 hour at the route level
 
@@ -49,8 +53,8 @@ function computeAvgFdr(
 export async function GET() {
   try {
     const [bootstrapRes, fixturesRes] = await Promise.all([
-      fetch(FPL_BOOTSTRAP_URL, { next: { revalidate: 3600 } }),
-      fetch(FPL_FIXTURES_URL, { next: { revalidate: 3600 } }),
+      fetch(FPL_BOOTSTRAP_URL, { cache: "no-store" }),
+      fetch(FPL_FIXTURES_URL, { cache: "no-store" }),
     ]);
 
     if (!bootstrapRes.ok) {
@@ -83,6 +87,9 @@ export async function GET() {
       const team = teamMap.get(p.team);
       return {
         ...p,
+        full_name: `${p.first_name} ${p.second_name}`,
+        image_url: `${FPL_PHOTO_BASE_URL}${p.code}.png`,
+        team_crest_url: team ? `${FPL_CREST_BASE_URL}${team.code}.png` : "",
         team_name: team?.name ?? "Unknown",
         team_short: team?.short_name ?? "UNK",
         position: POSITION_MAP[p.element_type] ?? "MID",

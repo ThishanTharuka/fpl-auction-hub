@@ -2,6 +2,7 @@
 
 export interface FPLTeam {
   id: number;
+  code: number;
   name: string;
   short_name: string;
   strength: number;
@@ -15,9 +16,11 @@ export interface FPLTeam {
 
 export interface FPLPlayer {
   id: number;
+  code: number;
   first_name: string;
   second_name: string;
   web_name: string;
+  photo: string;
   team: number; // team id
   team_code: number;
   element_type: 1 | 2 | 3 | 4; // 1=GKP 2=DEF 3=MID 4=FWD
@@ -35,6 +38,7 @@ export interface FPLPlayer {
   goals_conceded: number;
   yellow_cards: number;
   red_cards: number;
+  saves: number;
   bonus: number;
   bps: number;
   influence: string;
@@ -45,6 +49,7 @@ export interface FPLPlayer {
   expected_assists: string;
   expected_goal_involvements: string;
   expected_goals_conceded: string;
+  starts: number;
   transfers_in_event: number;
   transfers_out_event: number;
   status: "a" | "d" | "i" | "n" | "s" | "u"; // available/doubtful/injured/not eligible/suspended/unavailable
@@ -121,6 +126,9 @@ export interface FPLElementSummary {
 // ─── Enriched / Computed Types ────────────────────────────────────────────────
 
 export interface EnrichedPlayer extends FPLPlayer {
+  full_name: string;
+  image_url: string;
+  team_crest_url: string;
   team_name: string;
   team_short: string;
   position: "GKP" | "DEF" | "MID" | "FWD";
