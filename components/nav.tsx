@@ -49,12 +49,13 @@ export function Nav() {
         <div className="ml-auto flex items-center gap-3 text-sm text-[#b9cbb9]">
           {user ? (
             <>
-              <span
-                className="text-xs hidden sm:block truncate max-w-[180px]"
+              <Link
+                href="/profile"
+                className="text-xs hidden sm:block truncate max-w-[180px] hover:text-[#00e478] transition-colors"
                 title={user.email}
               >
                 {user.email}
-              </span>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
