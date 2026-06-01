@@ -656,7 +656,7 @@ export default function PlayersPage() {
           ref={pickerRef}
           className="relative ml-auto flex items-center gap-3"
         >
-          <span className="text-xs text-[#849585]">
+          <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
             {filtered.length} players
           </span>
           <Button
@@ -719,7 +719,7 @@ export default function PlayersPage() {
       {/* Table */}
       <div className="rounded-lg border border-[#3b4b3d] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead className="bg-[#0f1c2c] border-b border-[#3b4b3d]">
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id}>
@@ -750,14 +750,21 @@ export default function PlayersPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={table.getVisibleLeafColumns().length}
-                    className="py-16 text-center text-[#849585]"
+                Array.from({ length: 25 }).map((_, i) => (
+                  <tr
+                    key={`skeleton-${i}`}
+                    className={`border-b border-[#3b4b3d]/50 ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
                   >
-                    Loading players…
-                  </td>
-                </tr>
+                    {table.getVisibleLeafColumns().map((col) => (
+                      <td
+                        key={col.id}
+                        className="px-4 py-2.5 whitespace-nowrap"
+                      >
+                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-3/4" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : (
                 table.getRowModel().rows.map((row, i) => (
                   <tr
@@ -785,7 +792,7 @@ export default function PlayersPage() {
 
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between text-sm text-[#849585]">
-        <span>
+        <span className="min-w-[20ch] inline-block">
           Showing {table.getState().pagination.pageIndex * 25 + 1}–
           {Math.min(
             (table.getState().pagination.pageIndex + 1) * 25,

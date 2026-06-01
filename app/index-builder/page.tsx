@@ -401,13 +401,9 @@ export default function IndexBuilderPage() {
               Computed Index Rankings
             </h2>
             <div className="flex items-center gap-3">
-              {loading ? (
-                <span className="text-xs text-[#849585]">Loading…</span>
-              ) : (
-                <span className="text-xs text-[#849585]">
-                  Showing {ranked.length} players
-                </span>
-              )}
+              <span className="text-xs text-[#849585] min-w-[18ch] inline-block text-right">
+                {loading ? "— players" : `Showing ${ranked.length} players`}
+              </span>
               <span className="text-xs text-[#00e478] font-mono">
                 Live Updates
               </span>
@@ -415,7 +411,7 @@ export default function IndexBuilderPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-[#0a1828]">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-10">
@@ -424,62 +420,91 @@ export default function IndexBuilderPage() {
                   <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
                     Player
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
+                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-14">
                     Pos
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
+                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-20">
                     Price
                   </th>
                   <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
                     Key Stats
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] text-[#849585] uppercase">
+                  <th className="px-4 py-2.5 text-right text-[10px] text-[#849585] uppercase w-20">
                     Score
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {ranked.map((p, i) => (
-                  <tr
-                    key={p.id}
-                    className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
-                  >
-                    <td className="px-4 py-3 text-xs font-mono text-[#849585]">
-                      {String(i + 1).padStart(2, "0")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-[#d6e4f9]">
-                        {p.web_name}
-                      </div>
-                      <div className="text-[11px] text-[#849585]">
-                        {p.team_short}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={`text-[10px] ${POSITION_COLORS[p.position]}`}
-                      >
-                        {p.position}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#b9cbb9]">
-                      £{p.price.toFixed(1)}m
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[#849585]">
-                      xGI:{" "}
-                      {Number.parseFloat(p.expected_goal_involvements).toFixed(
-                        2,
-                      )}{" "}
-                      · PPG: {p.points_per_game} · ICT:{" "}
-                      {Number.parseFloat(p.ict_index).toFixed(1)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="font-mono font-bold text-[#00e478] tabular-nums">
-                        {(p.index_score * 100).toFixed(1)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  Array.from({ length: 25 }).map((_, i) => (
+                    <tr
+                      key={`skel-${i}`}
+                      className={`border-b border-[#3b4b3d]/40 ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-6" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-24 mb-1" />
+                        <div className="h-3 bg-[#1e2b3b] rounded animate-pulse w-16" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-10" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-14" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-48" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-12 ml-auto" />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  ranked.map((p, i) => (
+                    <tr
+                      key={p.id}
+                      className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
+                    >
+                      <td className="px-4 py-3 text-xs font-mono text-[#849585]">
+                        {String(i + 1).padStart(2, "0")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-[#d6e4f9]">
+                          {p.web_name}
+                        </div>
+                        <div className="text-[11px] text-[#849585]">
+                          {p.team_short}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          className={`text-[10px] ${POSITION_COLORS[p.position]}`}
+                        >
+                          {p.position}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#b9cbb9]">
+                        £{p.price.toFixed(1)}m
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[#849585]">
+                        xGI:{" "}
+                        {Number.parseFloat(
+                          p.expected_goal_involvements,
+                        ).toFixed(2)}{" "}
+                        · PPG: {p.points_per_game} · ICT:{" "}
+                        {Number.parseFloat(p.ict_index).toFixed(1)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-mono font-bold text-[#00e478] tabular-nums">
+                          {(p.index_score * 100).toFixed(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
