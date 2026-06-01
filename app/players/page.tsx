@@ -817,18 +817,34 @@ export default function PlayersPage() {
 
       {/* Player detail modal */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] max-w-md">
+        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] max-w-3xl">
           {selected && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold">
-                  {selected.web_name}
-                </DialogTitle>
-                <p className="text-sm text-[#b9cbb9]">
-                  {selected.team_name} · {selected.position}
-                </p>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={selected.image_url}
+                    alt={selected.web_name}
+                    className="h-14 w-12 rounded object-cover bg-[#132030]"
+                  />
+                  <div className="flex-1">
+                    <DialogTitle className="text-xl font-bold">
+                      {selected.web_name}
+                    </DialogTitle>
+                    <p className="text-sm text-[#b9cbb9]">
+                      {selected.team_name} · {selected.position}
+                    </p>
+                  </div>
+                  {selected.team_crest_url && (
+                    <img
+                      src={selected.team_crest_url}
+                      alt={selected.team_name}
+                      className="h-8 w-8 object-contain mr-8"
+                    />
+                  )}
+                </div>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-4 gap-2 py-4">
                 <Stat label="Price" value={`£${selected.price.toFixed(1)}m`} />
                 <Stat label="Total Points" value={selected.total_points} />
                 <Stat label="PPG" value={selected.points_per_game} />
@@ -877,14 +893,6 @@ export default function PlayersPage() {
                 <Stat label="Bonus" value={selected.bonus} />
                 <Stat label="BPS" value={selected.bps} />
                 <Stat label="Avg FDR ×5" value={selected.avg_fdr_next5} />
-                <Stat
-                  label="GW Transfers In"
-                  value={selected.transfers_in_event.toLocaleString()}
-                />
-                <Stat
-                  label="GW Transfers Out"
-                  value={selected.transfers_out_event.toLocaleString()}
-                />
               </div>
               {selected.news && (
                 <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2">
