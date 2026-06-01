@@ -28,10 +28,11 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Refresh session — IMPORTANT: do not add any logic between here and this call
+  // Use getSession() to avoid a Supabase network request on every route
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const { pathname } = request.nextUrl;
 
