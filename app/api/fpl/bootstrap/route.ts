@@ -52,11 +52,19 @@ function computeAvgFdr(
   return Math.round((total / upcoming.length) * 10) / 10;
 }
 
+const HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/136.0.0.0 Safari/537.36",
+  Accept: "application/json",
+  Referer: "https://fantasy.premierleague.com/",
+  Origin: "https://fantasy.premierleague.com",
+};
+
 export async function GET() {
   try {
     const [bootstrapRes, fixturesRes] = await Promise.all([
-      fetch(FPL_BOOTSTRAP_URL, { cache: "no-store" }),
-      fetch(FPL_FIXTURES_URL, { cache: "no-store" }),
+      fetch(FPL_BOOTSTRAP_URL, { cache: "no-store", headers: HEADERS }),
+      fetch(FPL_FIXTURES_URL, { cache: "no-store", headers: HEADERS }),
     ]);
 
     if (!bootstrapRes.ok) {
