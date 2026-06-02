@@ -191,11 +191,11 @@ export function PlayerStatsBar({
     >
       {/* ── Top row ─────────────────────────────────────────────────── */}
       <div
-        className={`flex gap-4 ${wide ? "items-stretch min-h-[220px]" : "items-start"}`}
+        className={`flex flex-col sm:flex-row gap-4 ${wide ? "sm:items-stretch sm:min-h-[220px]" : "items-start"}`}
       >
         {/* Player portrait — full body when wide, cropped portrait when narrow */}
         <div
-          className={`relative shrink-0 ${wide ? "w-[210px] min-w-[190px] h-full self-stretch" : "w-[120px] h-[148px]"}`}
+          className={`relative shrink-0 ${wide ? "w-full sm:w-[210px] sm:min-w-[190px] h-48 sm:h-full sm:self-stretch" : "w-[120px] h-[148px]"}`}
         >
           <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#00e478]/10 blur-2xl pointer-events-none" />
           <img
@@ -245,7 +245,7 @@ export function PlayerStatsBar({
 
         {/* Hero stats — wide: 2-col grid of all 8; narrow: single col of Pts+PPG */}
         <div
-          className={`shrink-0 grid gap-2 ${wide ? "grid-cols-2" : "grid-cols-1"}`}
+          className={`shrink-0 grid gap-2 ${wide ? "grid-cols-3 sm:grid-cols-2" : "grid-cols-1"}`}
         >
           {heroStats.map((s) => (
             <StatChip key={s.label} stat={s} size={wide ? "md" : "lg"} />

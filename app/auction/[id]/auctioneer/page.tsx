@@ -116,7 +116,22 @@ export default function AuctioneerPage() {
   const [extendInput, setExtendInput] = useState("30");
 
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetTab, setSheetTab] = useState<"sold" | "budgets">("sold");
+  const [confirmRebid, setConfirmRebid] = useState<{
+    name: string; team: string; price: number; pos: string; playerId: number; participantId: string
+  } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Lock body scroll when bottom sheet is open
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sheetOpen]);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   // ── Load initial data ──────────────────────────────────────────────────────
@@ -395,6 +410,27 @@ export default function AuctioneerPage() {
     );
   }
 
+  async function handleConfirmRebid(stage: boolean) {
+    if (!confirmRebid) return;
+    const player = players.find((p) => p.id === confirmRebid.playerId);
+    await supabase
+      .from("auction_results")
+      .delete()
+      .eq("league_id", id)
+      .eq("fpl_player_id", confirmRebid.playerId);
+    setSoldIds((prev) => { const next = new Set(prev); next.delete(confirmRebid.playerId); return next; });
+    setSoldLog((prev) => (prev ?? []).filter((s) => s.playerId !== confirmRebid.playerId));
+    setTeams((prev) =>
+      prev.map((t) =>
+        t.id === confirmRebid.participantId
+          ? { ...t, spent: t.spent - confirmRebid.price, squad: t.squad - 1 }
+          : t,
+      ),
+    );
+    setConfirmRebid(null);
+    if (stage && player) stagePlayer(player);
+  }
+
   async function cancelNomination() {
     if (!nomination) return;
     await supabase
@@ -485,15 +521,31 @@ export default function AuctioneerPage() {
   const timerDisplayUnit = nomination?.is_paused ? "paused" : "seconds";
 
   return (
-    <div className="flex gap-4 h-screen overflow-hidden px-4 py-4">
-      {/* ── Left: Player search + sold log ─────────────────────────────────── */}
-      <aside className="w-72 flex flex-col gap-4 overflow-hidden">
-        {/* Player search */}
+    <div className="flex flex-col lg:flex-row gap-4 min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden px-4 py-4">
+      {/* ── Left: Player search (always) + sold log (desktop) ─────────────── */}
+      <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
         <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
-          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
-            Nominate Player
-          </h2>
-          <div className="flex gap-1">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+              Nominate Player
+            </h2>
+            {/* Mobile: bottom sheet toggle */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <button
+                onClick={() => { setSheetTab("sold"); setSheetOpen(true); }}
+                className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+              >
+                Sold ({soldIds.size})
+              </button>
+              <button
+                onClick={() => { setSheetTab("budgets"); setSheetOpen(true); }}
+                className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+              >
+                Budgets
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-1 flex-wrap">
             {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
               <button
                 key={pos}
@@ -544,8 +596,8 @@ export default function AuctioneerPage() {
           </div>
         </div>
 
-        {/* Sold log */}
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex flex-col">
+        {/* Sold log (desktop only) */}
+        <div className="hidden lg:flex rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex-col">
           <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
             Sold ({soldIds.size})
           </h2>
@@ -562,7 +614,7 @@ export default function AuctioneerPage() {
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono text-[#00e478]">£{s.price}m</span>
                   <button
-                    onClick={() => rebid(s).catch(() => {})}
+                    onClick={() => setConfirmRebid(s)}
                     className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
                     title="Rebid this player"
                   >
@@ -585,13 +637,13 @@ export default function AuctioneerPage() {
         {/* Staged: player selected, not yet started */}
         {!nomination && stagedPlayer && (
           <div className="rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-6 space-y-4">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Badge variant="outline" className={POSITION_COLORS[stagedPlayer.position] ?? ""}>{stagedPlayer.position}</Badge>
                   <span className="text-xs text-[#849585]">{stagedPlayer.team_name}</span>
                 </div>
-                <h2 className="text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.full_name}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.full_name}</h2>
                 <p className="text-sm text-[#849585] mt-1">Ready to nominate — set timer and start</p>
               </div>
               <button
@@ -602,7 +654,7 @@ export default function AuctioneerPage() {
               </button>
             </div>
             <PlayerStatsBar player={stagedPlayer} wide />
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex items-center gap-2">
                   <span className="text-xs text-[#849585] whitespace-nowrap">Timer</span>
                   <select
@@ -629,7 +681,7 @@ export default function AuctioneerPage() {
           <>
             {/* Player card */}
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
                 <div>
                   {(() => {
                     const player = players.find((pl) => pl.id === nomination.fpl_player_id);
@@ -648,7 +700,7 @@ export default function AuctioneerPage() {
                       {clubName}
                     </span>
                   </div>
-                  <h2 className="text-3xl font-bold text-[#d6e4f9]">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
                     {playerName}
                   </h2>
                   <p className="text-sm text-[#849585] mt-1">
@@ -660,7 +712,7 @@ export default function AuctioneerPage() {
                 </div>
                 {/* Timer */}
                 <div className="text-right">
-                  <div className={`text-5xl font-mono font-bold ${timerColor}`}>
+                  <div className={`text-3xl sm:text-5xl font-mono font-bold ${timerColor}`}>
                     {timerDisplayValue}
                   </div>
                   <div className="text-xs text-[#849585] mt-1">{timerDisplayUnit}</div>
@@ -678,7 +730,7 @@ export default function AuctioneerPage() {
                 <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
                   {nomination.current_bidder_id === null ? "Starting Price" : "Current Bid"}
                 </div>
-                <div className="text-4xl font-mono font-bold text-[#00e478]">
+                <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478]">
                   £{nomination.current_bid}m
                 </div>
                 {nomination.current_bidder_name && (
@@ -692,13 +744,14 @@ export default function AuctioneerPage() {
               </div>
 
               {/* Controls */}
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={gavel}
                   disabled={!nomination.current_bidder_id}
-                  className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
+                  className="flex-1 min-w-[200px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
                 >
-                  🔨 SOLD — £{nomination.current_bid}m
+                  <span className="hidden sm:inline">🔨 SOLD — £{nomination.current_bid}m</span>
+                  <span className="sm:hidden">🔨 £{nomination.current_bid}m</span>
                 </Button>
                 {/* Unsold: only shown when timer expired and nobody bid */}
                 {secondsLeft === 0 && !nomination.current_bidder_id && (
@@ -781,48 +834,159 @@ export default function AuctioneerPage() {
         )}
       </main>
 
-      {/* ── Right: Teams budgets ────────────────────────────────────────────── */}
-      <aside className="w-60 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 overflow-y-auto">
+      {/* ── Right: Teams budgets (desktop only) ─────────────────────────────── */}
+      <aside className="hidden lg:block w-full lg:w-60 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 overflow-y-auto">
         <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
           Budgets
         </h2>
-        <div className="space-y-2">
-          {[...teams]
-            .sort((a, b) => b.spent - a.spent)
-            .map((t) => {
-              const budget = league?.budget_per_team ?? 200;
-              const remaining = budget - t.spent;
-              const pct = Math.round((t.spent / budget) * 100);
-              return (
-                <div key={t.id} className="bg-[#132030] rounded p-2.5">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: t.color ?? "#888" }}
-                      />
-                      <span className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
-                        {t.name}
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono text-[#00e478]">
-                      £{remaining}m
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[#00e478] transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="text-[10px] text-[#849585] mt-1">
-                    {t.squad} players · £{t.spent}m spent
-                  </div>
-                </div>
-              );
-            })}
-        </div>
+        <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
       </aside>
+
+      {/* ── Rebid confirmation modal ────────────────────────────────────────── */}
+      {confirmRebid && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setConfirmRebid(null)} />
+          <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 className="text-sm font-semibold text-[#d6e4f9]">Rebid Player?</h3>
+            <p className="text-sm text-[#849585]">
+              Clear <span className="font-semibold text-[#d6e4f9]">{confirmRebid.name}</span>{" "}
+              (sold for <span className="font-mono text-[#00e478]">£{confirmRebid.price}m</span> to{" "}
+              {confirmRebid.team}) and stage them for nomination?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+              <Button
+                onClick={() => setConfirmRebid(null)}
+                variant="outline"
+                className="border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => { handleConfirmRebid(false).catch(() => {}); }}
+                variant="outline"
+                className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30"
+              >
+                Clear
+              </Button>
+              <Button
+                onClick={() => { handleConfirmRebid(true).catch(() => {}); }}
+                className="bg-yellow-500 text-black hover:bg-yellow-500/90 font-semibold"
+              >
+                Yes, Rebid
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile bottom sheet: Sold + Budgets (tabs) ────────────────────── */}
+      {sheetOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSheetOpen(false)} />
+          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
+            {/* Tab bar */}
+            <div className="flex border-b border-[#3b4b3d] shrink-0">
+              <button
+                onClick={() => setSheetTab("sold")}
+                className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
+                  sheetTab === "sold"
+                    ? "text-[#00e478] border-b-2 border-[#00e478]"
+                    : "text-[#849585]"
+                }`}
+              >
+                Sold ({soldIds.size})
+              </button>
+              <button
+                onClick={() => setSheetTab("budgets")}
+                className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
+                  sheetTab === "budgets"
+                    ? "text-[#00e478] border-b-2 border-[#00e478]"
+                    : "text-[#849585]"
+                }`}
+              >
+                Budgets
+              </button>
+            </div>
+            {/* Tab content */}
+            <div className="overflow-y-auto overscroll-contain flex-1 p-4">
+              {sheetTab === "sold" ? (
+                <div className="space-y-1">
+                  {(soldLog ?? []).map((s, i) => (
+                    <div
+                      key={`sold-mobile-${i}-${s.name}`}
+                      className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                    >
+                      <div>
+                        <span className="text-[#d6e4f9] font-medium">{s.name}</span>
+                        <span className="text-[#849585] ml-1">→ {s.team}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-[#00e478]">£{s.price}m</span>
+                        <button
+                          onClick={() => { setSheetOpen(false); setConfirmRebid(s); }}
+                          className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
+                          title="Rebid this player"
+                        >
+                          ↩
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {(soldLog ?? []).length === 0 && (
+                    <p className="text-xs text-[#849585] italic text-center py-2">
+                      No sales yet
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BudgetList({ teams, budget }: { teams: TeamBudget[]; budget: number }) {
+  return (
+    <div className="space-y-2">
+      {[...teams]
+        .sort((a, b) => b.spent - a.spent)
+        .map((t) => {
+          const remaining = budget - t.spent;
+          const pct = Math.round((t.spent / budget) * 100);
+          return (
+            <div key={t.id} className="bg-[#132030] rounded p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: t.color ?? "#888" }}
+                  />
+                  <span className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
+                    {t.name}
+                  </span>
+                </div>
+                <span className="text-xs font-mono text-[#00e478]">
+                  £{remaining}m
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-[#00e478] transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="text-[10px] text-[#849585] mt-1">
+                {t.squad} players · £{t.spent}m spent
+              </div>
+            </div>
+          );
+        })}
     </div>
   );
 }
