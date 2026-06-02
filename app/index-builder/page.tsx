@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Info } from "lucide-react";
+import { Info, SlidersHorizontal, X } from "lucide-react";
 import { applyIndexToPlayers } from "@/lib/index-calculator";
 import type {
   EnrichedPlayer,
@@ -83,12 +83,15 @@ const METRIC_TOOLTIPS: Partial<Record<keyof WeightConfig, string>> = {
   goals_scored: "Goals scored this season",
   assists: "Assists this season",
   clean_sheets: "Clean sheets this season",
-  goals_conceded: "Goals conceded this season — lower is better, rewards tight defences",
+  goals_conceded:
+    "Goals conceded this season — lower is better, rewards tight defences",
   bonus: "Bonus points earned this season",
   bps: "Raw Bonus Points System score this season",
   minutes: "Minutes played this season — rewards consistent starters",
-  selected_by_percent: "Owned by % of FPL managers — high ownership = popular/reliable pick",
-  avg_fdr_next5: "Average Fixture Difficulty Rating over next 5 GWs — lower means easier run of fixtures",
+  selected_by_percent:
+    "Owned by % of FPL managers — high ownership = popular/reliable pick",
+  avg_fdr_next5:
+    "Average Fixture Difficulty Rating over next 5 GWs — lower means easier run of fixtures",
 };
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
@@ -103,8 +106,28 @@ type Preset = {
 const DEFAULT_PRESET: Preset = {
   label: "All",
   pos: "ALL",
-  active: ["total_points", "form", "ict_index", "goals_scored", "assists", "clean_sheets", "bonus", "minutes", "xgi"],
-  weights: { total_points: 5, form: 5, ict_index: 5, goals_scored: 5, assists: 5, clean_sheets: 5, bonus: 5, minutes: 5, xgi: 5 },
+  active: [
+    "total_points",
+    "form",
+    "ict_index",
+    "goals_scored",
+    "assists",
+    "clean_sheets",
+    "bonus",
+    "minutes",
+    "xgi",
+  ],
+  weights: {
+    total_points: 5,
+    form: 5,
+    ict_index: 5,
+    goals_scored: 5,
+    assists: 5,
+    clean_sheets: 5,
+    bonus: 5,
+    minutes: 5,
+    xgi: 5,
+  },
 };
 
 const PRESETS: Preset[] = [
@@ -112,26 +135,108 @@ const PRESETS: Preset[] = [
   {
     label: "GKP",
     pos: "GKP",
-    active: ["total_points", "form", "clean_sheets", "goals_conceded", "bonus", "minutes", "xgc"],
-    weights: { total_points: 7, form: 6, clean_sheets: 9, goals_conceded: 8, bonus: 4, minutes: 5, xgc: 7 },
+    active: [
+      "total_points",
+      "form",
+      "clean_sheets",
+      "goals_conceded",
+      "bonus",
+      "minutes",
+      "xgc",
+    ],
+    weights: {
+      total_points: 7,
+      form: 6,
+      clean_sheets: 9,
+      goals_conceded: 8,
+      bonus: 4,
+      minutes: 5,
+      xgc: 7,
+    },
   },
   {
     label: "DEF",
     pos: "DEF",
-    active: ["total_points", "form", "clean_sheets", "goals_conceded", "goals_scored", "assists", "bonus", "minutes", "xgi", "avg_fdr_next5"],
-    weights: { total_points: 7, form: 6, clean_sheets: 8, goals_conceded: 6, goals_scored: 5, assists: 5, bonus: 4, minutes: 5, xgi: 5, avg_fdr_next5: 5 },
+    active: [
+      "total_points",
+      "form",
+      "clean_sheets",
+      "goals_conceded",
+      "goals_scored",
+      "assists",
+      "bonus",
+      "minutes",
+      "xgi",
+      "avg_fdr_next5",
+    ],
+    weights: {
+      total_points: 7,
+      form: 6,
+      clean_sheets: 8,
+      goals_conceded: 6,
+      goals_scored: 5,
+      assists: 5,
+      bonus: 4,
+      minutes: 5,
+      xgi: 5,
+      avg_fdr_next5: 5,
+    },
   },
   {
     label: "MID",
     pos: "MID",
-    active: ["total_points", "form", "ict_index", "goals_scored", "assists", "xgi", "creativity", "bonus", "minutes", "avg_fdr_next5"],
-    weights: { total_points: 7, form: 7, ict_index: 5, goals_scored: 7, assists: 7, xgi: 8, creativity: 6, bonus: 4, minutes: 5, avg_fdr_next5: 5 },
+    active: [
+      "total_points",
+      "form",
+      "ict_index",
+      "goals_scored",
+      "assists",
+      "xgi",
+      "creativity",
+      "bonus",
+      "minutes",
+      "avg_fdr_next5",
+    ],
+    weights: {
+      total_points: 7,
+      form: 7,
+      ict_index: 5,
+      goals_scored: 7,
+      assists: 7,
+      xgi: 8,
+      creativity: 6,
+      bonus: 4,
+      minutes: 5,
+      avg_fdr_next5: 5,
+    },
   },
   {
     label: "FWD",
     pos: "FWD",
-    active: ["total_points", "form", "goals_scored", "assists", "xg", "xgi", "threat", "bonus", "minutes", "avg_fdr_next5"],
-    weights: { total_points: 7, form: 7, goals_scored: 9, assists: 6, xg: 8, xgi: 7, threat: 6, bonus: 4, minutes: 5, avg_fdr_next5: 5 },
+    active: [
+      "total_points",
+      "form",
+      "goals_scored",
+      "assists",
+      "xg",
+      "xgi",
+      "threat",
+      "bonus",
+      "minutes",
+      "avg_fdr_next5",
+    ],
+    weights: {
+      total_points: 7,
+      form: 7,
+      goals_scored: 9,
+      assists: 6,
+      xg: 8,
+      xgi: 7,
+      threat: 6,
+      bonus: 4,
+      minutes: 5,
+      avg_fdr_next5: 5,
+    },
   },
 ];
 
@@ -188,17 +293,19 @@ const POSITION_COLORS: Record<string, string> = {
 export default function IndexBuilderPage() {
   const [players, setPlayers] = useState<EnrichedPlayer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [weights, setWeights] =
-    useState<Record<keyof WeightConfig, number>>(() => ({
+  const [weights, setWeights] = useState<Record<keyof WeightConfig, number>>(
+    () => ({
       ...DEFAULT_WEIGHTS,
       ...DEFAULT_PRESET.weights,
-    }));
+    }),
+  );
   const [activeStats, setActiveStats] = useState<Set<keyof WeightConfig>>(
     new Set(DEFAULT_PRESET.active),
   );
   const [posFilter, setPosFilter] = useState("ALL");
   const [metricPickerOpen, setMetricPickerOpen] = useState(false);
   const [activePreset, setActivePreset] = useState<string>("All");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -221,6 +328,18 @@ export default function IndexBuilderPage() {
     if (metricPickerOpen) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [metricPickerOpen]);
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
 
   // Build the WeightConfig passed to the scorer: inactive stats get 0
   const effectiveWeights = useMemo<WeightConfig>(() => {
@@ -267,150 +386,161 @@ export default function IndexBuilderPage() {
     applyPreset(DEFAULT_PRESET);
   }
 
+  const sidebarContent = (
+    <>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-[#d6e4f9]">Stat Weighting</h2>
+        <button
+          onClick={resetAll}
+          className="text-xs text-[#849585] hover:text-[#00e478] transition-colors"
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* Presets */}
+      <div className="mb-4">
+        <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-2">
+          Presets
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => applyPreset(preset)}
+              className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+                activePreset === preset.label
+                  ? "bg-[#00e478] text-[#003919] border-[#00e478]"
+                  : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Metric picker toggle */}
+      <div ref={pickerRef} className="mb-4">
+        <button
+          onClick={() => setMetricPickerOpen((o) => !o)}
+          className="w-full flex items-center justify-between text-xs border border-[#3b4b3d] rounded px-3 py-2 text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] transition-colors"
+        >
+          <span>Metrics ({activeStats.size} active)</span>
+          <span className="text-[#849585]">{metricPickerOpen ? "▴" : "▾"}</span>
+        </button>
+
+        {metricPickerOpen && (
+          <div className="mt-2 border border-[#3b4b3d] rounded-lg bg-[#0a1828] p-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+              {STAT_GROUPS.map(({ group, stats }) => (
+                <div key={group} className="mb-3">
+                  <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 pb-0.5 border-b border-[#3b4b3d]">
+                    {group}
+                  </div>
+                  <div className="space-y-1">
+                    {stats.map(({ key, label, inverted }) => (
+                      <label
+                        key={key}
+                        className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478]"
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-[#00e478] shrink-0"
+                          checked={activeStats.has(key)}
+                          onChange={() => toggleStat(key)}
+                        />
+                        <span className="leading-tight flex items-center gap-1">
+                          {label}
+                          {inverted && (
+                            <span className="text-[10px] text-[#849585]">
+                              ↓
+                            </span>
+                          )}
+                          {METRIC_TOOLTIPS[key] && (
+                            <InfoTip text={METRIC_TOOLTIPS[key]} />
+                          )}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sliders — only for active stats */}
+      <div className="space-y-5">
+        {ALL_STATS.filter((s) => activeStats.has(s.key)).map(
+          ({ key, label }) => (
+            <div key={key}>
+              <div className="flex justify-between mb-1.5">
+                <span className="text-xs text-[#b9cbb9] flex items-center gap-1">
+                  {label}
+                  {METRIC_TOOLTIPS[key] && (
+                    <InfoTip text={METRIC_TOOLTIPS[key]} />
+                  )}
+                </span>
+                <span className="text-xs font-mono text-[#00e478]">
+                  {weights[key]}
+                </span>
+              </div>
+              <Slider
+                min={1}
+                max={10}
+                step={1}
+                value={[weights[key]]}
+                onValueChange={(v) =>
+                  setWeight(key, typeof v === "number" ? v : (v[0] ?? 1))
+                }
+                className="[&_[role=slider]]:bg-[#00e478] [&_[role=slider]]:border-[#00e478]"
+              />
+            </div>
+          ),
+        )}
+      </div>
+    </>
+  );
+
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#d6e4f9]">Index Builder</h1>
-        <p className="text-sm text-[#849585] mt-1">
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 pb-14 lg:pb-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#d6e4f9]">
+          Index Builder
+        </h1>
+        <p className="text-xs sm:text-sm text-[#849585] mt-1">
           Select metrics and adjust weights (1–10) to generate a custom
           performance index for auction valuation.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
-        {/* Left: Weight sliders */}
-        <aside className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 h-fit">
-          {/* Header row */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-[#d6e4f9]">Stat Weighting</h2>
-            <button
-              onClick={resetAll}
-              className="text-xs text-[#849585] hover:text-[#00e478] transition-colors"
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* Presets */}
-          <div className="mb-4">
-            <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-2">
-              Presets
-            </div>
-            <div className="flex gap-1 flex-wrap">
-              {PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => applyPreset(preset)}
-                  className={`text-xs px-2.5 py-1 rounded border transition-colors ${
-                    activePreset === preset.label
-                      ? "bg-[#00e478] text-[#003919] border-[#00e478]"
-                      : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Metric picker toggle */}
-          <div ref={pickerRef} className="mb-4">
-            <button
-              onClick={() => setMetricPickerOpen((o) => !o)}
-              className="w-full flex items-center justify-between text-xs border border-[#3b4b3d] rounded px-3 py-2 text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] transition-colors"
-            >
-              <span>Metrics ({activeStats.size} active)</span>
-              <span className="text-[#849585]">{metricPickerOpen ? "▴" : "▾"}</span>
-            </button>
-
-            {metricPickerOpen && (
-              <div className="mt-2 border border-[#3b4b3d] rounded-lg bg-[#0a1828] p-3">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-                  {STAT_GROUPS.map(({ group, stats }) => (
-                    <div key={group} className="mb-3">
-                      <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 pb-0.5 border-b border-[#3b4b3d]">
-                        {group}
-                      </div>
-                      <div className="space-y-1">
-                        {stats.map(({ key, label, inverted }) => (
-                          <label
-                            key={key}
-                            className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478]"
-                          >
-                            <input
-                              type="checkbox"
-                              className="accent-[#00e478] shrink-0"
-                              checked={activeStats.has(key)}
-                              onChange={() => toggleStat(key)}
-                            />
-                            <span className="leading-tight flex items-center gap-1">
-                              {label}
-                              {inverted && (
-                                <span className="text-[10px] text-[#849585]">↓</span>
-                              )}
-                              {METRIC_TOOLTIPS[key] && (
-                                <InfoTip text={METRIC_TOOLTIPS[key]} />
-                              )}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sliders — only for active stats */}
-          <div className="space-y-5">
-            {ALL_STATS.filter((s) => activeStats.has(s.key)).map(
-              ({ key, label }) => (
-                <div key={key}>
-                  <div className="flex justify-between mb-1.5">
-                    <span className="text-xs text-[#b9cbb9] flex items-center gap-1">
-                      {label}
-                      {METRIC_TOOLTIPS[key] && (
-                        <InfoTip text={METRIC_TOOLTIPS[key]} />
-                      )}
-                    </span>
-                    <span className="text-xs font-mono text-[#00e478]">
-                      {weights[key]}
-                    </span>
-                  </div>
-                  <Slider
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={[weights[key]]}
-                    onValueChange={(v) =>
-                      setWeight(key, typeof v === "number" ? v : (v[0] ?? 1))
-                    }
-                    className="[&_[role=slider]]:bg-[#00e478] [&_[role=slider]]:border-[#00e478]"
-                  />
-                </div>
-              ),
-            )}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 sm:gap-6">
+        {/* Left: Weight sliders — desktop */}
+        <aside className="hidden lg:block rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 sm:p-5 h-fit">
+          {sidebarContent}
         </aside>
 
         {/* Right: Rankings */}
         <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#3b4b3d]">
-            <h2 className="font-semibold text-[#d6e4f9]">
-              Computed Index Rankings
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-[#3b4b3d]">
+            <h2 className="font-semibold text-sm sm:text-base text-[#d6e4f9]">
+              Rankings
             </h2>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-[#849585] min-w-[18ch] inline-block text-right">
-                {loading ? "— players" : `Showing ${ranked.length} players`}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-[11px] sm:text-xs text-[#849585]">
+                {loading ? "—" : `${ranked.length} players`}
               </span>
-              <span className="text-xs text-[#00e478] font-mono">
-                Live Updates
+              <span className="text-[11px] sm:text-xs text-[#00e478] font-mono">
+                Live
               </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm table-fixed">
               <thead className="bg-[#0a1828]">
                 <tr>
@@ -423,8 +553,8 @@ export default function IndexBuilderPage() {
                   <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-14">
                     Pos
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-20">
-                    Price
+                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-16">
+                    Pts
                   </th>
                   <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
                     Key Stats
@@ -435,81 +565,163 @@ export default function IndexBuilderPage() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  Array.from({ length: 25 }).map((_, i) => (
-                    <tr
-                      key={`skel-${i}`}
-                      className={`border-b border-[#3b4b3d]/40 ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-6" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-24 mb-1" />
-                        <div className="h-3 bg-[#1e2b3b] rounded animate-pulse w-16" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-10" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-14" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-48" />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-12 ml-auto" />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  ranked.map((p, i) => (
-                    <tr
-                      key={p.id}
-                      className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
-                    >
-                      <td className="px-4 py-3 text-xs font-mono text-[#849585]">
-                        {String(i + 1).padStart(2, "0")}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-[#d6e4f9]">
-                          {p.web_name}
-                        </div>
-                        <div className="text-[11px] text-[#849585]">
-                          {p.team_short}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={`text-[10px] ${POSITION_COLORS[p.position]}`}
-                        >
-                          {p.position}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#b9cbb9]">
-                        £{p.price.toFixed(1)}m
-                      </td>
-                      <td className="px-4 py-3 text-xs text-[#849585]">
-                        xGI:{" "}
-                        {Number.parseFloat(
-                          p.expected_goal_involvements,
-                        ).toFixed(2)}{" "}
-                        · PPG: {p.points_per_game} · ICT:{" "}
-                        {Number.parseFloat(p.ict_index).toFixed(1)}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-mono font-bold text-[#00e478] tabular-nums">
-                          {(p.index_score * 100).toFixed(1)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                {loading
+                  ? Array.from({ length: 25 }).map((_, i) => (
+                      <tr
+                        key={`skel-${i}`}
+                        className={`border-b border-[#3b4b3d]/40 ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-6" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-24 mb-1" />
+                          <div className="h-3 bg-[#1e2b3b] rounded animate-pulse w-16" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-10" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-14" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-48" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-5 bg-[#1e2b3b] rounded animate-pulse w-12 ml-auto" />
+                        </td>
+                      </tr>
+                    ))
+                  : ranked.map((p, i) => (
+                      <tr
+                        key={p.id}
+                        className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
+                      >
+                        <td className="px-4 py-3 text-xs font-mono text-[#849585]">
+                          {String(i + 1).padStart(2, "0")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-[#d6e4f9]">
+                            {p.web_name}
+                          </div>
+                          <div className="text-[11px] text-[#849585]">
+                            {p.team_short}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            className={`text-[10px] ${POSITION_COLORS[p.position]}`}
+                          >
+                            {p.position}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-[#d6e4f9]">
+                          {p.total_points}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-[#849585]">
+                          xGI:{" "}
+                          {Number.parseFloat(
+                            p.expected_goal_involvements,
+                          ).toFixed(2)}{" "}
+                          · PPG: {p.points_per_game} · ICT:{" "}
+                          {Number.parseFloat(p.ict_index).toFixed(1)}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-mono font-bold text-[#00e478] tabular-nums">
+                            {(p.index_score * 100).toFixed(1)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
+
+          {/* Mobile card list */}
+          <div className="lg:hidden">
+            {loading
+              ? Array.from({ length: 15 }).map((_, i) => (
+                  <div
+                    key={`skel-card-${i}`}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-[#3b4b3d]/40 animate-pulse"
+                  >
+                    <div className="h-4 bg-[#1e2b3b] rounded w-6" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-4 bg-[#1e2b3b] rounded w-32" />
+                      <div className="h-3 bg-[#1e2b3b] rounded w-20" />
+                    </div>
+                    <div className="h-5 bg-[#1e2b3b] rounded w-12" />
+                    <div className="h-4 bg-[#1e2b3b] rounded w-10" />
+                  </div>
+                ))
+              : ranked.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 px-4 py-3 border-b border-[#3b4b3d]/40"
+                  >
+                    <span className="text-xs font-mono text-[#849585] w-6 shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-[#d6e4f9] text-sm truncate">
+                        {p.web_name}
+                      </div>
+                      <div className="text-[11px] text-[#b9cbb9]">
+                        {p.team_short} · {p.total_points} pts
+                      </div>
+                    </div>
+                    <Badge
+                      className={`text-[10px] shrink-0 ${POSITION_COLORS[p.position]}`}
+                    >
+                      {p.position}
+                    </Badge>
+                    <span className="font-mono font-bold text-[#00e478] text-sm tabular-nums w-14 text-right shrink-0">
+                      {(p.index_score * 100).toFixed(1)}
+                    </span>
+                  </div>
+                ))}
+          </div>
         </div>
       </div>
+
+      {/* Mobile weight sliders trigger */}
+      <button
+        className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-[#0f1c2c] border border-[#00e478]/60 rounded-full px-4 py-2.5 text-xs text-[#d6e4f9] hover:text-[#00e478] hover:border-[#00e478] shadow-[0_0_12px_rgba(0,228,120,0.25)] transition-all"
+        onClick={() => setDrawerOpen(true)}
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5 text-[#00e478]" />
+        <span>Sliders ({activeStats.size})</span>
+        <span className="text-[#00e478]">▴</span>
+      </button>
+
+      {/* Mobile weight sliders drawer */}
+      {drawerOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 z-50 lg:hidden"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-[#0f1c2c] rounded-t-xl border border-[#3b4b3d] max-h-[75vh] overflow-y-auto overscroll-contain shadow-2xl">
+            <div className="sticky top-0 bg-[#0f1c2c] z-10 rounded-t-xl">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#3b4b3d]">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-1 rounded-full bg-[#3b4b3d] mx-auto" />
+                  <h3 className="text-sm font-semibold text-[#d6e4f9]">
+                    Stat Weighting
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="p-1 text-[#849585] hover:text-[#d6e4f9]"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">{sidebarContent}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

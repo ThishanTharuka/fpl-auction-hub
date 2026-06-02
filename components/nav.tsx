@@ -32,22 +32,24 @@ export function Nav() {
           <span className="hidden sm:inline">FPL Auction Hub</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1 ml-4">
-          {links.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                pathname.startsWith(href)
-                  ? "bg-[#1e2b3b] text-[#00e478]"
-                  : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        {user && (
+          <nav className="hidden md:flex items-center gap-1 ml-4">
+            {links.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                  pathname.startsWith(href)
+                    ? "bg-[#1e2b3b] text-[#00e478]"
+                    : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3 text-sm text-[#b9cbb9]">
           {user ? (
@@ -80,13 +82,15 @@ export function Nav() {
             </Link>
           )}
 
-          <button
-            className="md:hidden p-1.5 text-[#b9cbb9] hover:text-[#d6e4f9]"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Toggle navigation menu"
-          >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {user && (
+            <button
+              className="md:hidden p-1.5 text-[#b9cbb9] hover:text-[#d6e4f9]"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Toggle navigation menu"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          )}
         </div>
       </div>
 
@@ -96,23 +100,23 @@ export function Nav() {
             className="fixed inset-0 top-14 bg-black/50 md:hidden z-40"
             onClick={() => setMenuOpen(false)}
           />
-          <nav className="absolute top-full left-0 right-0 bg-[#020f1e] border-b border-[#3b4b3d] md:hidden z-50 px-4 pb-3 pt-2">
-            {links.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "block rounded px-3 py-2.5 text-sm font-medium transition-colors",
-                  pathname.startsWith(href)
-                    ? "bg-[#1e2b3b] text-[#00e478]"
-                    : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
-                )}
-                onClick={() => setMenuOpen(false)}
-              >
-                {label}
-              </Link>
-            ))}
-            {user && (
+          {user && (
+            <nav className="absolute top-full left-0 right-0 bg-[#020f1e] border-b border-[#3b4b3d] md:hidden z-50 px-4 pb-3 pt-2">
+              {links.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "block rounded px-3 py-2.5 text-sm font-medium transition-colors",
+                    pathname.startsWith(href)
+                      ? "bg-[#1e2b3b] text-[#00e478]"
+                      : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
+                  )}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {label}
+                </Link>
+              ))}
               <Link
                 href="/profile"
                 className="block sm:hidden rounded px-3 py-2.5 text-sm font-medium text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030] transition-colors"
@@ -120,8 +124,8 @@ export function Nav() {
               >
                 Profile
               </Link>
-            )}
-          </nav>
+            </nav>
+          )}
         </>
       )}
     </header>
