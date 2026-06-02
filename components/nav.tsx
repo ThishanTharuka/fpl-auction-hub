@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 
 const links = [
   { href: "/players", label: "Players" },
@@ -17,19 +19,20 @@ const links = [
 export function Nav() {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#3b4b3d] bg-[#020f1e]/95 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-8 px-6">
+      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 sm:gap-8 px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-[#00e478]"
+          className="flex items-center gap-2 font-bold text-[#00e478] shrink-0"
         >
-          <img src="/fpl.png" alt="FPL Auction Hub" className="h-8 w-8 object-contain" />
-          FPL Auction Hub
+          <img src="/fpl.png" alt="FPL Auction Hub" className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
+          <span className="hidden sm:inline">FPL Auction Hub</span>
         </Link>
 
-        <nav className="flex items-center gap-1 ml-4">
+        <nav className="hidden md:flex items-center gap-1 ml-4">
           {links.map(({ href, label }) => (
             <Link
               key={href}
@@ -46,7 +49,7 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3 text-sm text-[#b9cbb9]">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3 text-sm text-[#b9cbb9]">
           {user ? (
             <>
               <Link
@@ -76,8 +79,51 @@ export function Nav() {
               </Button>
             </Link>
           )}
+
+          <button
+            className="md:hidden p-1.5 text-[#b9cbb9] hover:text-[#d6e4f9]"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Toggle navigation menu"
+          >
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <>
+          <div
+            className="fixed inset-0 top-14 bg-black/50 md:hidden z-40"
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav className="absolute top-full left-0 right-0 bg-[#020f1e] border-b border-[#3b4b3d] md:hidden z-50 px-4 pb-3 pt-2">
+            {links.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "block rounded px-3 py-2.5 text-sm font-medium transition-colors",
+                  pathname.startsWith(href)
+                    ? "bg-[#1e2b3b] text-[#00e478]"
+                    : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
+                )}
+                onClick={() => setMenuOpen(false)}
+              >
+                {label}
+              </Link>
+            ))}
+            {user && (
+              <Link
+                href="/profile"
+                className="block sm:hidden rounded px-3 py-2.5 text-sm font-medium text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030] transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                Profile
+              </Link>
+            )}
+          </nav>
+        </>
+      )}
     </header>
   );
 }

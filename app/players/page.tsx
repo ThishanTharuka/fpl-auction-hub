@@ -32,6 +32,20 @@ const POSITION_COLORS: Record<string, string> = {
   FWD: "bg-red-500/20 text-red-400 border-red-500/30",
 };
 
+const POSITION_LABELS: Record<string, string> = {
+  GKP: "Goalkeeper",
+  DEF: "Defender",
+  MID: "Midfielder",
+  FWD: "Forward",
+};
+
+const POSITION_STAT: Record<string, { key: keyof EnrichedPlayer; label: string }> = {
+  GKP: { key: "clean_sheets", label: "CS" },
+  DEF: { key: "clean_sheets", label: "CS" },
+  MID: { key: "goals_scored", label: "Goals" },
+  FWD: { key: "goals_scored", label: "Goals" },
+};
+
 const COLUMN_TOOLTIPS: Record<string, string> = {
   price: "Price (£m)",
   total_points: "Total Points this season",
@@ -70,7 +84,6 @@ const FDR_COLORS = [
   "bg-red-700",
 ];
 
-// All toggleable column definitions grouped for the picker UI
 const COLUMN_GROUPS = [
   {
     group: "Core",
@@ -202,9 +215,227 @@ function FdrPip({ diff }: Readonly<{ diff: number }>) {
   );
 }
 
+function getStatusInfo(status: string, chance: number | null) {
+  switch (status) {
+    case "a":
+      return { label: "Available", dot: "bg-green-400", text: "text-green-400", ring: "ring-green-400/30" };
+    case "d":
+      return { label: `Doubt${chance !== null ? ` ${chance}%` : ""}`, dot: "bg-orange-400", text: "text-orange-400", ring: "ring-orange-400/30" };
+    case "i":
+      return { label: "Injured", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
+    case "s":
+      return { label: "Suspended", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
+    case "n":
+      return { label: "Intl", dot: "bg-[#849585]", text: "text-[#849585]", ring: "ring-[#849585]/30" };
+    case "u":
+      return { label: "Unavailable", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
+    default:
+      return { label: "Available", dot: "bg-green-400", text: "text-green-400", ring: "ring-green-400/30" };
+  }
+}
+
+function StatusDot({
+  status,
+  chance,
+}: {
+  status: string;
+  chance: number | null;
+}) {
+  const info = getStatusInfo(status, chance);
+  const [showTip, setShowTip] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
+
+  return (
+    <>
+      <span
+        ref={ref}
+        className="inline-flex items-center cursor-help"
+        onMouseEnter={() => {
+          const r = ref.current?.getBoundingClientRect();
+          if (r) setCoords({ x: r.left + r.width / 2, y: r.top });
+          setShowTip(true);
+        }}
+        onMouseLeave={() => { setShowTip(false); setCoords(null); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          const r = ref.current?.getBoundingClientRect();
+          if (r) {
+            if (showTip) { setShowTip(false); setCoords(null); }
+            else { setCoords({ x: r.left + r.width / 2, y: r.top }); setShowTip(true); }
+          }
+        }}
+      >
+        <span
+          className={`inline-block w-2.5 h-2.5 rounded-full ring-2 ${info.dot} ${info.ring}`}
+        />
+      </span>
+      {showTip && coords &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              left: coords.x,
+              top: coords.y - 6,
+              transform: "translate(-50%, -100%)",
+              zIndex: 9999,
+            }}
+            className="rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1 text-[11px] text-[#d6e4f9] whitespace-nowrap text-center shadow-lg pointer-events-none"
+          >
+            {info.label}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+function StatusChip({
+  status,
+  chance,
+}: {
+  status: string;
+  chance: number | null;
+}) {
+  const info = getStatusInfo(status, chance);
+  const chip = (label: string, color: string) => (
+    <span
+      className={`inline-flex items-center justify-center rounded-full border w-20 sm:w-24 py-0.5 text-[10px] sm:text-[11px] font-medium ${color}`}
+    >
+      {label}
+    </span>
+  );
+  if (status === "a")
+    return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
+  if (status === "d")
+    return chip(
+      `Doubt${chance !== null ? ` ${chance}%` : ""}`,
+      "bg-orange-500/15 border-orange-500/30 text-orange-400",
+    );
+  if (status === "i")
+    return chip("Injured", "bg-red-500/15 border-red-500/30 text-red-400");
+  if (status === "s")
+    return chip("Suspended", "bg-red-500/15 border-red-500/30 text-red-400");
+  if (status === "n")
+    return chip("Intl", "bg-[#849585]/15 border-[#849585]/30 text-[#849585]");
+  if (status === "u")
+    return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
+  return chip(
+    "Available",
+    "bg-green-500/15 border-green-500/30 text-green-400",
+  );
+}
+
+function ColumnPickerContent({
+  colVisibility,
+  setColVisibility,
+  setPickerOpen,
+}: {
+  colVisibility: VisibilityState;
+  setColVisibility: (
+    v: VisibilityState | ((prev: VisibilityState) => VisibilityState),
+  ) => void;
+  setPickerOpen: (o: boolean) => void;
+}) {
+  return (
+    <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-lg shadow-xl p-4 overflow-y-auto w-72 max-h-[min(90vh,680px)]">
+      <div className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+        Toggle Columns
+      </div>
+      {COLUMN_GROUPS.map(({ group, columns: cols }) => (
+        <div key={group} className="mb-4">
+          <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 border-b border-[#3b4b3d] pb-1">
+            {group}
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            {cols.map(({ id, label }) => (
+              <label
+                key={id}
+                className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478] py-0.5"
+              >
+                <input
+                  type="checkbox"
+                  className="accent-[#00e478]"
+                  checked={colVisibility[id] !== false}
+                  onChange={(e) =>
+                    setColVisibility((v) => ({
+                      ...v,
+                      [id]: e.target.checked,
+                    }))
+                  }
+                />
+                {label}
+                {COLUMN_TOOLTIPS[id] && <InfoTip text={COLUMN_TOOLTIPS[id]!} />}
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full mt-1 border-[#3b4b3d] text-[#849585] text-xs hover:bg-[#1e2b3b]"
+        onClick={() => setColVisibility(DEFAULT_VISIBLE)}
+      >
+        Reset to default
+      </Button>
+    </div>
+  );
+}
+
+function PlayerCard({
+  player,
+  onSelect,
+}: {
+  player: EnrichedPlayer;
+  onSelect: () => void;
+}) {
+  const statInfo = POSITION_STAT[player.position]!;
+  const posStatValue = String(player[statInfo.key] ?? 0);
+  const statusInfo = getStatusInfo(player.status, player.chance_of_playing_next_round);
+
+  return (
+    <button
+      className="w-full text-left bg-[#0a1828] rounded-lg border border-[#3b4b3d]/50 px-3.5 py-3 hover:bg-[#132030] active:bg-[#132030] transition-colors cursor-pointer"
+      onClick={onSelect}
+    >
+      <div className="flex items-center justify-between gap-3 mb-1.5">
+        <div className="min-w-0 flex-1 truncate">
+          <span className="font-medium text-[#d6e4f9] text-sm">{player.web_name}</span>
+          <span className="text-xs text-[#b9cbb9] ml-1">({player.team_short})</span>
+        </div>
+        <Badge
+          variant="outline"
+          className={`text-[9px] font-bold w-[74px] justify-center shrink-0 ${POSITION_COLORS[player.position]}`}
+        >
+          {POSITION_LABELS[player.position] ?? player.position}
+        </Badge>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center text-xs min-w-0">
+          <span className="w-[52px] shrink-0 flex justify-between font-mono text-[#bbc6e2]">
+            <span>{statInfo.label}</span>
+            <span>{posStatValue}</span>
+          </span>
+          <span className="text-[#3b4b3d] w-[10px] text-center shrink-0">·</span>
+          <span className="font-mono font-semibold text-[#d6e4f9] w-[36px] text-right shrink-0">
+            {player.total_points}
+          </span>
+          <span className="text-[#3b4b3d] w-[10px] text-center shrink-0">·</span>
+          <span className="font-mono text-[#00e478] w-[28px] text-right shrink-0">
+            {parseFloat(player.form).toFixed(1)}
+          </span>
+        </div>
+        <span className="flex items-center gap-1.5 text-[11px] w-[74px] justify-end shrink-0">
+          <span className={`inline-block w-2 h-2 rounded-full ${statusInfo.dot}`} />
+          <span className={statusInfo.text}>{statusInfo.label}</span>
+        </span>
+      </div>
+    </button>
+  );
+}
+
 export default function PlayersPage() {
-  // TanStack Table returns functions that React Compiler cannot safely memoize.
-  // Opting this component out of compilation is the correct escape hatch.
   "use no memo";
 
   const [players, setPlayers] = useState<EnrichedPlayer[]>([]);
@@ -233,7 +464,6 @@ export default function PlayersPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Close column picker on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
@@ -278,7 +508,7 @@ export default function PlayersPage() {
         enableHiding: false,
         cell: ({ row }) => (
           <button
-            className="text-left hover:text-[#00e478] transition-colors"
+            className="text-left hover:text-[#00e478] transition-colors underline-offset-2 hover:underline cursor-pointer"
             onClick={() => setSelected(row.original)}
           >
             <div className="font-medium text-[#d6e4f9]">
@@ -527,45 +757,11 @@ export default function PlayersPage() {
         header: "Status",
         accessorFn: (r) => r.status,
         cell: ({ row }) => {
-          const s = row.original.status;
-          const chance = row.original.chance_of_playing_next_round;
-          const chip = (label: string, color: string) => (
-            <span
-              className={`inline-flex items-center justify-center rounded-full border w-24 py-0.5 text-[11px] font-medium ${color}`}
-            >
-              {label}
-            </span>
-          );
-          if (s === "a")
-            return chip(
-              "Available",
-              "bg-green-500/15 border-green-500/30 text-green-400",
-            );
-          if (s === "d")
-            return chip(
-              `Doubt${chance !== null ? ` ${chance}%` : ""}`,
-              "bg-orange-500/15 border-orange-500/30 text-orange-400",
-            );
-          if (s === "i")
-            return chip(
-              "Injured",
-              "bg-red-500/15 border-red-500/30 text-red-400",
-            );
-          if (s === "s")
-            return chip(
-              "Suspended",
-              "bg-red-500/15 border-red-500/30 text-red-400",
-            );
-          if (s === "n")
-            return chip(
-              "Intl",
-              "bg-[#849585]/15 border-[#849585]/30 text-[#849585]",
-            );
-          if (s === "u")
-            return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
-          return chip(
-            "Available",
-            "bg-green-500/15 border-green-500/30 text-green-400",
+          return (
+            <StatusChip
+              status={row.original.status}
+              chance={row.original.chance_of_playing_next_round}
+            />
           );
         },
       },
@@ -587,18 +783,17 @@ export default function PlayersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[1440px] px-6 py-6">
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
       {/* Filters */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-start sm:items-center gap-2 sm:gap-3">
         <Input
           placeholder="Search player or team…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-56 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
+          className="w-full sm:w-56 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
         />
 
-        {/* Position */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
             <Button
               key={pos}
@@ -606,8 +801,8 @@ export default function PlayersPage() {
               variant={posFilter === pos ? "default" : "outline"}
               className={
                 posFilter === pos
-                  ? "bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
-                  : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                  ? "bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 shrink-0"
+                  : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] shrink-0"
               }
               onClick={() => setPosFilter(pos)}
             >
@@ -616,108 +811,79 @@ export default function PlayersPage() {
           ))}
         </div>
 
-        {/* Availability */}
-        <Button
-          size="sm"
-          variant={availFilter === "available" ? "default" : "outline"}
-          className={
-            availFilter === "available"
-              ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
-              : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
-          }
-          onClick={() =>
-            setAvailFilter((v) => (v === "all" ? "available" : "all"))
-          }
-        >
-          Available only
-        </Button>
-
-        {/* Price range */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[#849585]">£</span>
-          <Input
-            placeholder="Min"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
-          />
-          <span className="text-xs text-[#849585]">–</span>
-          <Input
-            placeholder="Max"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
-          />
-          <span className="text-xs text-[#849585]">m</span>
-        </div>
-
-        {/* Column picker */}
-        <div
-          ref={pickerRef}
-          className="relative ml-auto flex items-center gap-3"
-        >
-          <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
-            {filtered.length} players
-          </span>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <Button
             size="sm"
-            variant="outline"
-            className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
-            onClick={() => setPickerOpen((o) => !o)}
+            variant={availFilter === "available" ? "default" : "outline"}
+            className={
+              availFilter === "available"
+                ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
+                : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
+            }
+            onClick={() =>
+              setAvailFilter((v) => (v === "all" ? "available" : "all"))
+            }
           >
-            Columns ▾
+            <span className="hidden sm:inline">Available only</span>
+            <span className="sm:hidden">Available only</span>
           </Button>
-          {pickerOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 bg-[#0f1c2c] border border-[#3b4b3d] rounded-lg shadow-xl p-4 w-72 max-h-[min(90vh,680px)] overflow-y-auto">
-              <div className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
-                Toggle Columns
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[#849585]">£</span>
+            <Input
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="w-14 sm:w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+            />
+            <span className="text-xs text-[#849585]">–</span>
+            <Input
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="w-14 sm:w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+            />
+            <span className="text-xs text-[#849585]">m</span>
+          </div>
+
+          <span className="hidden sm:inline text-xs text-[#849585]">
+            {filtered.length} players
+          </span>
+
+          <div
+            ref={pickerRef}
+            className="relative hidden sm:flex items-center gap-3 ml-auto"
+          >
+            <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
+              {filtered.length} players
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+              onClick={() => setPickerOpen((o) => !o)}
+            >
+              Columns ▾
+            </Button>
+            {pickerOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50">
+                <ColumnPickerContent
+                  colVisibility={colVisibility}
+                  setColVisibility={setColVisibility}
+                  setPickerOpen={setPickerOpen}
+                />
               </div>
-              {COLUMN_GROUPS.map(({ group, columns: cols }) => (
-                <div key={group} className="mb-4">
-                  <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 border-b border-[#3b4b3d] pb-1">
-                    {group}
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {cols.map(({ id, label }) => (
-                      <label
-                        key={id}
-                        className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478] py-0.5"
-                      >
-                        <input
-                          type="checkbox"
-                          className="accent-[#00e478]"
-                          checked={colVisibility[id] !== false}
-                          onChange={(e) =>
-                            setColVisibility((v) => ({
-                              ...v,
-                              [id]: e.target.checked,
-                            }))
-                          }
-                        />
-                        {label}
-                        {COLUMN_TOOLTIPS[id] && (
-                          <InfoTip text={COLUMN_TOOLTIPS[id]!} />
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full mt-1 border-[#3b4b3d] text-[#849585] text-xs hover:bg-[#1e2b3b]"
-                onClick={() => setColVisibility(DEFAULT_VISIBLE)}
-              >
-                Reset to default
-              </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border border-[#3b4b3d] overflow-hidden">
+      <div className="sm:hidden text-xs text-[#849585] mb-2">
+        {filtered.length} players
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-lg border border-[#3b4b3d] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
             <thead className="bg-[#0f1c2c] border-b border-[#3b4b3d]">
@@ -749,50 +915,78 @@ export default function PlayersPage() {
               ))}
             </thead>
             <tbody>
-              {loading ? (
-                Array.from({ length: 25 }).map((_, i) => (
-                  <tr
-                    key={`skeleton-${i}`}
-                    className={`border-b border-[#3b4b3d]/50 ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
-                  >
-                    {table.getVisibleLeafColumns().map((col) => (
-                      <td
-                        key={col.id}
-                        className="px-4 py-2.5 whitespace-nowrap"
-                      >
-                        <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-3/4" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                table.getRowModel().rows.map((row, i) => (
-                  <tr
-                    key={row.id}
-                    className={`border-b border-[#3b4b3d]/50 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className="px-4 py-2.5 whitespace-nowrap"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
+              {loading
+                ? Array.from({ length: 25 }).map((_, i) => (
+                    <tr
+                      key={`skeleton-${i}`}
+                      className={`border-b border-[#3b4b3d]/50 ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
+                    >
+                      {table.getVisibleLeafColumns().map((col) => (
+                        <td
+                          key={col.id}
+                          className="px-4 py-2.5 whitespace-nowrap"
+                        >
+                          <div className="h-4 bg-[#1e2b3b] rounded animate-pulse w-3/4" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                : table.getRowModel().rows.map((row, i) => (
+                    <tr
+                      key={row.id}
+                      className={`border-b border-[#3b4b3d]/50 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="px-4 py-2.5 whitespace-nowrap"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-2">
+        {loading ? (
+          Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={`skeleton-card-${i}`}
+              className="bg-[#0a1828] rounded-lg border border-[#3b4b3d]/50 p-4 animate-pulse"
+            >
+              <div className="h-4 bg-[#1e2b3b] rounded w-1/2 mb-3" />
+              <div className="h-3 bg-[#1e2b3b] rounded w-1/3 mb-2" />
+              <div className="h-3 bg-[#1e2b3b] rounded w-2/3" />
+            </div>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8 text-[#849585] text-sm">
+            No players match your filters
+          </div>
+        ) : (
+          table
+            .getRowModel()
+            .rows.map((row) => (
+              <PlayerCard
+                key={row.id}
+                player={row.original}
+                onSelect={() => setSelected(row.original)}
+              />
+            ))
+        )}
+      </div>
+
       {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between text-sm text-[#849585]">
-        <span className="min-w-[20ch] inline-block">
+      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-[#849585]">
+        <span className="text-xs sm:text-sm">
           Showing {table.getState().pagination.pageIndex * 25 + 1}–
           {Math.min(
             (table.getState().pagination.pageIndex + 1) * 25,
@@ -804,7 +998,7 @@ export default function PlayersPage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+            className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
           >
@@ -813,7 +1007,7 @@ export default function PlayersPage() {
           <Button
             size="sm"
             variant="outline"
-            className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+            className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
           >
@@ -824,7 +1018,7 @@ export default function PlayersPage() {
 
       {/* Player detail modal */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] max-w-3xl">
+        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
           {selected && (
             <>
               <DialogHeader>
@@ -832,13 +1026,13 @@ export default function PlayersPage() {
                   <img
                     src={selected.image_url}
                     alt={selected.web_name}
-                    className="h-14 w-12 rounded object-cover bg-[#132030]"
+                    className="h-12 w-10 sm:h-14 sm:w-12 rounded object-cover bg-[#132030]"
                   />
-                  <div className="flex-1">
-                    <DialogTitle className="text-xl font-bold">
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-lg sm:text-xl font-bold truncate">
                       {selected.web_name}
                     </DialogTitle>
-                    <p className="text-sm text-[#b9cbb9]">
+                    <p className="text-xs sm:text-sm text-[#b9cbb9] truncate">
                       {selected.team_name} · {selected.position}
                     </p>
                   </div>
@@ -846,12 +1040,12 @@ export default function PlayersPage() {
                     <img
                       src={selected.team_crest_url}
                       alt={selected.team_name}
-                      className="h-8 w-8 object-contain mr-8"
+                      className="h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8"
                     />
                   )}
                 </div>
               </DialogHeader>
-              <div className="grid grid-cols-4 gap-2 py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-4">
                 <Stat label="Price" value={`£${selected.price.toFixed(1)}m`} />
                 <Stat label="Total Points" value={selected.total_points} />
                 <Stat label="PPG" value={selected.points_per_game} />
@@ -920,12 +1114,12 @@ function Stat({
   highlight,
 }: Readonly<{ label: string; value: string | number; highlight?: boolean }>) {
   return (
-    <div className="bg-[#132030] rounded p-3">
-      <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1">
+    <div className="bg-[#132030] rounded p-2 sm:p-3">
+      <div className="text-[9px] sm:text-[10px] text-[#849585] uppercase tracking-wider mb-0.5 sm:mb-1">
         {label}
       </div>
       <div
-        className={`font-mono font-semibold text-lg ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
+        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
       >
         {value}
       </div>
