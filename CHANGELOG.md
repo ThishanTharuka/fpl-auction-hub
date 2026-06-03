@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.1...v1.3.2) (2026-06-03)
+
+
+### Bug Fixes
+
+* update changelog configuration for consistent header formatting ([92e643f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/92e643f176ee1ab72081bbed7d0226231f49396e))
+
 ## [1.3.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.0...v1.3.1) (2026-06-03)
 
 ### Bug Fixes
