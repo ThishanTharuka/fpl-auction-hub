@@ -1,11 +1,10 @@
-## [1.3.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.0...v1.3.1) (2026-06-03)
+# Changelog
 
+## [1.3.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.0...v1.3.1) (2026-06-03)
 
 ### Bug Fixes
 
 * correct changelog header formatting for version 1.3.0 ([3bad83a](https://github.com/ThishanTharuka/fpl-auction-hub/commit/3bad83aff0b04c31d80d967af641cc0fd2e95726))
-
-# Changelog
 
 ## [1.3.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.2.2...v1.3.0) (2026-06-03)
 
