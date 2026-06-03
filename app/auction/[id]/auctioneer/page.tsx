@@ -298,7 +298,7 @@ export default function AuctioneerPage() {
   // ── Actions ────────────────────────────────────────────────────────────────
   function stagePlayer(player: EnrichedPlayer) {
     setStagedPlayer(player);
-    setStartTimerInput(String(Math.min(60, Math.max(10, Math.round((league?.timer_seconds ?? 45) / 10) * 10))));
+    setStartTimerInput(String(Math.min(60, Math.max(5, Math.round((league?.timer_seconds ?? 45) / 5) * 5))));
     setSearch("");
   }
 
@@ -522,433 +522,516 @@ export default function AuctioneerPage() {
 
   return (
     <div className="min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden">
-    <div className="mx-auto max-w-[1440px] flex flex-col lg:flex-row gap-4 h-full px-4 py-4">
-      {/* ── Left: Player search (always) + sold log (desktop) ─────────────── */}
-      <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
-              Nominate Player
-            </h2>
-            {/* Mobile: bottom sheet toggle */}
-            <div className="flex items-center gap-2 lg:hidden">
-              <button
-                onClick={() => { setSheetTab("sold"); setSheetOpen(true); }}
-                className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
-              >
-                Sold ({soldIds.size})
-              </button>
-              <button
-                onClick={() => { setSheetTab("budgets"); setSheetOpen(true); }}
-                className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
-              >
-                Budgets
-              </button>
-            </div>
-          </div>
-          <div className="flex gap-1 flex-wrap">
-            {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-              <button
-                key={pos}
-                onClick={() => setPosFilter(pos)}
-                className={`flex-1 text-[10px] font-bold rounded py-1 border ${
-                  posFilter === pos
-                    ? "bg-[#00e478] text-[#003919] border-[#00e478]"
-                    : "border-[#3b4b3d] text-[#849585] hover:text-[#d6e4f9]"
-                }`}
-              >
-                {pos}
-              </button>
-            ))}
-          </div>
-          <Input
-            placeholder="Search player or club…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] h-8 text-xs"
-          />
-          <div className="space-y-1 max-h-64 overflow-y-auto">
-            {search.length > 0 && filteredPlayers.length === 0 && (
-              <p className="text-xs text-[#849585] italic text-center py-2">
-                No players found
-              </p>
-            )}
-            {filteredPlayers.slice(0, 20).map((p) => (
-              <button
-                key={p.id}
-                disabled={!!nomination || !!stagedPlayer}
-                onClick={() => stagePlayer(p)}
-                className="w-full flex items-center justify-between rounded bg-[#132030] hover:bg-[#1e2b3b] disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-left"
-              >
-                <div>
-                  <div className="text-xs font-medium text-[#d6e4f9]">
-                    {p.web_name}
-                  </div>
-                  <div className="text-[10px] text-[#849585]">{p.team_short}</div>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={`text-[9px] ${POSITION_COLORS[p.position] ?? ""}`}
+      <div className="mx-auto max-w-[1440px] flex flex-col lg:flex-row gap-4 h-full px-4 py-4">
+        {/* ── Left: Player search (always) + sold log (desktop) ─────────────── */}
+        <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
+          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                Nominate Player
+              </h2>
+              {/* Mobile: bottom sheet toggle */}
+              <div className="flex items-center gap-2 lg:hidden">
+                <button
+                  onClick={() => {
+                    setSheetTab("sold");
+                    setSheetOpen(true);
+                  }}
+                  className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
                 >
-                  {p.position}
-                </Badge>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Sold log (desktop only) */}
-        <div className="hidden lg:flex rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex-col">
-          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
-            Sold ({soldIds.size})
-          </h2>
-          <div className="space-y-1 overflow-y-auto flex-1">
-            {(soldLog ?? []).map((s, i) => (
-              <div
-                key={`sold-${i}-${s.name}`}
-                className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
-              >
-                <div>
-                  <span className="text-[#d6e4f9] font-medium">{s.name}</span>
-                  <span className="text-[#849585] ml-1">→ {s.team}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[#00e478]">£{s.price}m</span>
-                  <button
-                    onClick={() => setConfirmRebid(s)}
-                    className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
-                    title="Rebid this player"
-                  >
-                    ↩
-                  </button>
-                </div>
+                  Sold ({soldIds.size})
+                </button>
+                <button
+                  onClick={() => {
+                    setSheetTab("budgets");
+                    setSheetOpen(true);
+                  }}
+                  className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+                >
+                  Budgets
+                </button>
               </div>
-            ))}
-            {(soldLog ?? []).length === 0 && (
-              <p className="text-xs text-[#849585] italic text-center py-2">
-                No sales yet
-              </p>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Centre: Live nomination ─────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col gap-4 overflow-hidden">
-        {/* Staged: player selected, not yet started */}
-        {!nomination && stagedPlayer && (
-          <div className="rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className={POSITION_COLORS[stagedPlayer.position] ?? ""}>{stagedPlayer.position}</Badge>
-                  <span className="text-xs text-[#849585]">{stagedPlayer.team_name}</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">{stagedPlayer.full_name}</h2>
-                <p className="text-sm text-[#849585] mt-1">Ready to nominate — set timer and start</p>
-              </div>
-              <button
-                onClick={() => setStagedPlayer(null)}
-                className="text-xs text-[#849585] hover:text-red-400 border border-[#3b4b3d] rounded px-2 py-1"
-              >
-                ✕ Cancel
-              </button>
             </div>
-            <PlayerStatsBar player={stagedPlayer} wide />
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#849585] whitespace-nowrap">Timer</span>
+            <div className="flex gap-1 flex-wrap">
+              {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => setPosFilter(pos)}
+                  className={`flex-1 text-[10px] font-bold rounded py-1 border ${
+                    posFilter === pos
+                      ? "bg-[#00e478] text-[#003919] border-[#00e478]"
+                      : "border-[#3b4b3d] text-[#849585] hover:text-[#d6e4f9]"
+                  }`}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+            <Input
+              placeholder="Search player or club…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] h-8 text-xs"
+            />
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {search.length > 0 && filteredPlayers.length === 0 && (
+                <p className="text-xs text-[#849585] italic text-center py-2">
+                  No players found
+                </p>
+              )}
+              {filteredPlayers.slice(0, 20).map((p) => (
+                <button
+                  key={p.id}
+                  disabled={!!nomination || !!stagedPlayer}
+                  onClick={() => stagePlayer(p)}
+                  className="w-full flex items-center justify-between rounded bg-[#132030] hover:bg-[#1e2b3b] disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-left"
+                >
+                  <div>
+                    <div className="text-xs font-medium text-[#d6e4f9]">
+                      {p.web_name}
+                    </div>
+                    <div className="text-[10px] text-[#849585]">
+                      {p.team_short}
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] ${POSITION_COLORS[p.position] ?? ""}`}
+                  >
+                    {p.position}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sold log (desktop only) */}
+          <div className="hidden lg:flex rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex-col">
+            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
+              Sold ({soldIds.size})
+            </h2>
+            <div className="space-y-1 overflow-y-auto flex-1">
+              {(soldLog ?? []).map((s, i) => (
+                <div
+                  key={`sold-${i}-${s.name}`}
+                  className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                >
+                  <div>
+                    <span className="text-[#d6e4f9] font-medium">{s.name}</span>
+                    <span className="text-[#849585] ml-1">→ {s.team}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-[#00e478]">
+                      £{s.price}m
+                    </span>
+                    <button
+                      onClick={() => setConfirmRebid(s)}
+                      className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
+                      title="Rebid this player"
+                    >
+                      ↩
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {(soldLog ?? []).length === 0 && (
+                <p className="text-xs text-[#849585] italic text-center py-2">
+                  No sales yet
+                </p>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* ── Centre: Live nomination ─────────────────────────────────────────── */}
+        <main className="flex-1 flex flex-col gap-4 overflow-hidden">
+          {/* Staged: player selected, not yet started */}
+          {!nomination && stagedPlayer && (
+            <div className="rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge
+                      variant="outline"
+                      className={POSITION_COLORS[stagedPlayer.position] ?? ""}
+                    >
+                      {stagedPlayer.position}
+                    </Badge>
+                    <span className="text-xs text-[#849585]">
+                      {stagedPlayer.team_name}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
+                    {stagedPlayer.full_name}
+                  </h2>
+                  <p className="text-sm text-[#849585] mt-1">
+                    Ready to nominate — set timer and start
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStagedPlayer(null)}
+                  className="text-xs text-[#849585] hover:text-red-400 border border-[#3b4b3d] rounded px-2 py-1"
+                >
+                  ✕ Cancel
+                </button>
+              </div>
+              <PlayerStatsBar player={stagedPlayer} wide />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#849585] whitespace-nowrap">
+                    Timer
+                  </span>
                   <select
                     aria-label="Timer in seconds"
                     value={startTimerInput}
                     onChange={(e) => setStartTimerInput(e.target.value)}
                     className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] rounded-md h-9 text-sm px-2 outline-none focus:border-[#00e478] cursor-pointer"
                   >
-                    {[10, 20, 30, 40, 50, 60].map((s) => (
-                      <option key={s} value={String(s)}>{s}s</option>
+                    {[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((s) => (
+                      <option key={s} value={String(s)}>
+                        {s}s
+                      </option>
                     ))}
                   </select>
                 </div>
-              <Button
-                onClick={() => startBidding().catch(() => {})}
-                className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-base py-5"
-              >
-                ▶ Start Bidding
-              </Button>
-            </div>
-          </div>
-        )}
-        {nomination ? (
-          <>
-            {/* Player card */}
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
-                <div>
-                  {(() => {
-                    const player = players.find((pl) => pl.id === nomination.fpl_player_id);
-                    const clubName = player?.team_name ?? nomination.player_team;
-                    const playerName = player?.full_name ?? nomination.player_name;
-                    return (
-                      <>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge
-                      variant="outline"
-                      className={`${POSITION_COLORS[nomination.position] ?? ""}`}
-                    >
-                      {nomination.position}
-                    </Badge>
-                    <span className="text-xs text-[#849585]">
-                      {clubName}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
-                    {playerName}
-                  </h2>
-                  <p className="text-sm text-[#849585] mt-1">
-                    Starting price: £{nomination.starting_price}m
-                  </p>
-                      </>
-                    );
-                  })()}
-                </div>
-                {/* Timer */}
-                <div className="text-right">
-                  <div className={`text-3xl sm:text-5xl font-mono font-bold ${timerColor}`}>
-                    {timerDisplayValue}
-                  </div>
-                  <div className="text-xs text-[#849585] mt-1">{timerDisplayUnit}</div>
-                </div>
-              </div>
-
-              {/* Stats for nominated player */}
-              {(() => {
-                const p = players.find((pl) => pl.id === nomination.fpl_player_id);
-                return p ? <PlayerStatsBar player={p} className="mb-4" wide /> : null;
-              })()}
-
-              {/* Current bid */}
-              <div className="bg-[#132030] rounded-lg p-4 mb-4">
-                <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
-                  {nomination.current_bidder_id === null ? "Starting Price" : "Current Bid"}
-                </div>
-                <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478]">
-                  £{nomination.current_bid}m
-                </div>
-                {nomination.current_bidder_name && (
-                  <div className="text-sm text-[#b9cbb9] mt-1">
-                    by{" "}
-                    <span className="font-semibold text-[#d6e4f9]">
-                      {nomination.current_bidder_name}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Controls */}
-              <div className="flex flex-wrap gap-2">
                 <Button
-                  onClick={gavel}
-                  disabled={!nomination.current_bidder_id}
-                  className="flex-1 min-w-[200px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
+                  onClick={() => startBidding().catch(() => {})}
+                  className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-base py-5"
                 >
-                  <span className="hidden sm:inline">🔨 SOLD — £{nomination.current_bid}m</span>
-                  <span className="sm:hidden">🔨 £{nomination.current_bid}m</span>
-                </Button>
-                {/* Unsold: only shown when timer expired and nobody bid */}
-                {secondsLeft === 0 && !nomination.current_bidder_id && (
-                  <Button
-                    onClick={markUnsold}
-                    variant="outline"
-                    className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30 py-6 px-4"
-                  >
-                    Unsold
-                  </Button>
-                )}
-                {/* Extend with seconds dropdown */}
-                <div className="flex items-stretch gap-1">
-                  <Button
-                    onClick={nomination.is_paused ? resumeTimer : pauseTimer}
-                    variant="outline"
-                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
-                  >
-                    {nomination.is_paused ? "Resume" : "Pause"}
-                  </Button>
-                  <select
-                    value={extendInput}
-                    onChange={(e) => setExtendInput(e.target.value)}
-                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] text-xs rounded-md px-2 outline-none focus:border-[#00e478] cursor-pointer"
-                  >
-                    {[10, 20, 30, 40, 50, 60].map((s) => (
-                      <option key={s} value={String(s)}>{s}s</option>
-                    ))}
-                  </select>
-                  <Button
-                    onClick={extendTimer}
-                    variant="outline"
-                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
-                  >
-                    +s
-                  </Button>
-                </div>
-                <Button
-                  onClick={cancelNomination}
-                  variant="outline"
-                  className="border-red-900 text-red-400 hover:bg-red-950/30 py-6 px-4"
-                >
-                  Cancel
+                  ▶ Start Bidding
                 </Button>
               </div>
             </div>
-
-            {/* Bid history */}
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex flex-col">
-              <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
-                Bid History
-              </h3>
-              <div className="space-y-1 overflow-y-auto flex-1">
-                {recentBids.map((b) => (
-                  <div
-                    key={b.id}
-                    className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
-                  >
-                    <span className="text-[#d6e4f9]">{b.participant_name}</span>
-                    <span className="font-mono text-[#00e478]">£{b.amount}m</span>
+          )}
+          {nomination ? (
+            <>
+              {/* Player card */}
+              <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+                  <div>
+                    {(() => {
+                      const player = players.find(
+                        (pl) => pl.id === nomination.fpl_player_id,
+                      );
+                      const clubName =
+                        player?.team_name ?? nomination.player_team;
+                      const playerName =
+                        player?.full_name ?? nomination.player_name;
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge
+                              variant="outline"
+                              className={`${POSITION_COLORS[nomination.position] ?? ""}`}
+                            >
+                              {nomination.position}
+                            </Badge>
+                            <span className="text-xs text-[#849585]">
+                              {clubName}
+                            </span>
+                          </div>
+                          <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
+                            {playerName}
+                          </h2>
+                          <p className="text-sm text-[#849585] mt-1">
+                            Starting price: £{nomination.starting_price}m
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
-                ))}
-                {recentBids.length === 0 && (
-                  <p className="text-xs text-[#849585] italic text-center py-4">
-                    No bids yet
-                  </p>
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          !stagedPlayer && (
-            <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
-              <div className="text-center">
-                <div className="text-4xl mb-3">🔨</div>
-                <p className="text-[#849585]">Search and nominate a player to start</p>
-              </div>
-            </div>
-          )
-        )}
-      </main>
-
-      {/* ── Right: Teams budgets (desktop only) ─────────────────────────────── */}
-      <aside className="hidden lg:block w-full lg:w-60 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 overflow-y-auto">
-        <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
-          Budgets
-        </h2>
-        <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
-      </aside>
-
-      {/* ── Rebid confirmation modal ────────────────────────────────────────── */}
-      {confirmRebid && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setConfirmRebid(null)} />
-          <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 className="text-sm font-semibold text-[#d6e4f9]">Rebid Player?</h3>
-            <p className="text-sm text-[#849585]">
-              Clear <span className="font-semibold text-[#d6e4f9]">{confirmRebid.name}</span>{" "}
-              (sold for <span className="font-mono text-[#00e478]">£{confirmRebid.price}m</span> to{" "}
-              {confirmRebid.team}) and stage them for nomination?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-              <Button
-                onClick={() => setConfirmRebid(null)}
-                variant="outline"
-                className="border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b]"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => { handleConfirmRebid(false).catch(() => {}); }}
-                variant="outline"
-                className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30"
-              >
-                Clear
-              </Button>
-              <Button
-                onClick={() => { handleConfirmRebid(true).catch(() => {}); }}
-                className="bg-yellow-500 text-black hover:bg-yellow-500/90 font-semibold"
-              >
-                Yes, Rebid
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Mobile bottom sheet: Sold + Budgets (tabs) ────────────────────── */}
-      {sheetOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setSheetOpen(false)} />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
-            {/* Tab bar */}
-            <div className="flex border-b border-[#3b4b3d] shrink-0">
-              <button
-                onClick={() => setSheetTab("sold")}
-                className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
-                  sheetTab === "sold"
-                    ? "text-[#00e478] border-b-2 border-[#00e478]"
-                    : "text-[#849585]"
-                }`}
-              >
-                Sold ({soldIds.size})
-              </button>
-              <button
-                onClick={() => setSheetTab("budgets")}
-                className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
-                  sheetTab === "budgets"
-                    ? "text-[#00e478] border-b-2 border-[#00e478]"
-                    : "text-[#849585]"
-                }`}
-              >
-                Budgets
-              </button>
-            </div>
-            {/* Tab content */}
-            <div className="overflow-y-auto overscroll-contain flex-1 p-4">
-              {sheetTab === "sold" ? (
-                <div className="space-y-1">
-                  {(soldLog ?? []).map((s, i) => (
+                  {/* Timer */}
+                  <div className="text-right">
                     <div
-                      key={`sold-mobile-${i}-${s.name}`}
-                      className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                      className={`text-3xl sm:text-5xl font-mono font-bold ${timerColor}`}
                     >
-                      <div>
-                        <span className="text-[#d6e4f9] font-medium">{s.name}</span>
-                        <span className="text-[#849585] ml-1">→ {s.team}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[#00e478]">£{s.price}m</span>
-                        <button
-                          onClick={() => { setSheetOpen(false); setConfirmRebid(s); }}
-                          className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
-                          title="Rebid this player"
-                        >
-                          ↩
-                        </button>
-                      </div>
+                      {timerDisplayValue}
+                    </div>
+                    <div className="text-xs text-[#849585] mt-1">
+                      {timerDisplayUnit}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats for nominated player */}
+                {(() => {
+                  const p = players.find(
+                    (pl) => pl.id === nomination.fpl_player_id,
+                  );
+                  return p ? (
+                    <PlayerStatsBar player={p} className="mb-4" wide />
+                  ) : null;
+                })()}
+
+                {/* Current bid */}
+                <div className="bg-[#132030] rounded-lg p-4 mb-4">
+                  <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
+                    {nomination.current_bidder_id === null
+                      ? "Starting Price"
+                      : "Current Bid"}
+                  </div>
+                  <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478]">
+                    £{nomination.current_bid}m
+                  </div>
+                  {nomination.current_bidder_name && (
+                    <div className="text-sm text-[#b9cbb9] mt-1">
+                      by{" "}
+                      <span className="font-semibold text-[#d6e4f9]">
+                        {nomination.current_bidder_name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={gavel}
+                    disabled={!nomination.current_bidder_id}
+                    className="flex-1 min-w-[200px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
+                  >
+                    <span className="hidden sm:inline">
+                      🔨 SOLD — £{nomination.current_bid}m
+                    </span>
+                    <span className="sm:hidden">
+                      🔨 £{nomination.current_bid}m
+                    </span>
+                  </Button>
+                  {/* Unsold: only shown when timer expired and nobody bid */}
+                  {secondsLeft === 0 && !nomination.current_bidder_id && (
+                    <Button
+                      onClick={markUnsold}
+                      variant="outline"
+                      className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30 py-6 px-4"
+                    >
+                      Unsold
+                    </Button>
+                  )}
+                  {/* Extend with seconds dropdown */}
+                  <div className="flex items-stretch gap-1">
+                    <Button
+                      onClick={nomination.is_paused ? resumeTimer : pauseTimer}
+                      variant="outline"
+                      className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                    >
+                      {nomination.is_paused ? "Resume" : "Pause"}
+                    </Button>
+                    <select
+                      value={extendInput}
+                      onChange={(e) => setExtendInput(e.target.value)}
+                      className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] text-xs rounded-md px-2 outline-none focus:border-[#00e478] cursor-pointer"
+                    >
+                      {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
+                        (s) => (
+                          <option key={s} value={String(s)}>
+                            {s}s
+                          </option>
+                        ),
+                      )}
+                    </select>
+                    <Button
+                      onClick={extendTimer}
+                      variant="outline"
+                      className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                    >
+                      +s
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={cancelNomination}
+                    variant="outline"
+                    className="border-red-900 text-red-400 hover:bg-red-950/30 py-6 px-4"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+
+              {/* Bid history */}
+              <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex flex-col">
+                <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
+                  Bid History
+                </h3>
+                <div className="space-y-1 overflow-y-auto flex-1">
+                  {recentBids.map((b) => (
+                    <div
+                      key={b.id}
+                      className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
+                    >
+                      <span className="text-[#d6e4f9]">
+                        {b.participant_name}
+                      </span>
+                      <span className="font-mono text-[#00e478]">
+                        £{b.amount}m
+                      </span>
                     </div>
                   ))}
-                  {(soldLog ?? []).length === 0 && (
-                    <p className="text-xs text-[#849585] italic text-center py-2">
-                      No sales yet
+                  {recentBids.length === 0 && (
+                    <p className="text-xs text-[#849585] italic text-center py-4">
+                      No bids yet
                     </p>
                   )}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
+              </div>
+            </>
+          ) : (
+            !stagedPlayer && (
+              <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
+                <div className="text-center">
+                  <div className="text-4xl mb-3">🔨</div>
+                  <p className="text-[#849585]">
+                    Search and nominate a player to start
+                  </p>
                 </div>
-              )}
+              </div>
+            )
+          )}
+        </main>
+
+        {/* ── Right: Teams budgets (desktop only) ─────────────────────────────── */}
+        <aside className="hidden lg:block w-full lg:w-60 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 overflow-y-auto">
+          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+            Budgets
+          </h2>
+          <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
+        </aside>
+
+        {/* ── Rebid confirmation modal ────────────────────────────────────────── */}
+        {confirmRebid && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setConfirmRebid(null)}
+            />
+            <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+              <h3 className="text-sm font-semibold text-[#d6e4f9]">
+                Rebid Player?
+              </h3>
+              <p className="text-sm text-[#849585]">
+                Clear{" "}
+                <span className="font-semibold text-[#d6e4f9]">
+                  {confirmRebid.name}
+                </span>{" "}
+                (sold for{" "}
+                <span className="font-mono text-[#00e478]">
+                  £{confirmRebid.price}m
+                </span>{" "}
+                to {confirmRebid.team}) and stage them for nomination?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <Button
+                  onClick={() => setConfirmRebid(null)}
+                  variant="outline"
+                  className="border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleConfirmRebid(false).catch(() => {});
+                  }}
+                  variant="outline"
+                  className="border-yellow-700 text-yellow-400 hover:bg-yellow-950/30"
+                >
+                  Clear
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleConfirmRebid(true).catch(() => {});
+                  }}
+                  className="bg-yellow-500 text-black hover:bg-yellow-500/90 font-semibold"
+                >
+                  Yes, Rebid
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* ── Mobile bottom sheet: Sold + Budgets (tabs) ────────────────────── */}
+        {sheetOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setSheetOpen(false)}
+            />
+            <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
+              {/* Tab bar */}
+              <div className="flex border-b border-[#3b4b3d] shrink-0">
+                <button
+                  onClick={() => setSheetTab("sold")}
+                  className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
+                    sheetTab === "sold"
+                      ? "text-[#00e478] border-b-2 border-[#00e478]"
+                      : "text-[#849585]"
+                  }`}
+                >
+                  Sold ({soldIds.size})
+                </button>
+                <button
+                  onClick={() => setSheetTab("budgets")}
+                  className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
+                    sheetTab === "budgets"
+                      ? "text-[#00e478] border-b-2 border-[#00e478]"
+                      : "text-[#849585]"
+                  }`}
+                >
+                  Budgets
+                </button>
+              </div>
+              {/* Tab content */}
+              <div className="overflow-y-auto overscroll-contain flex-1 p-4">
+                {sheetTab === "sold" ? (
+                  <div className="space-y-1">
+                    {(soldLog ?? []).map((s, i) => (
+                      <div
+                        key={`sold-mobile-${i}-${s.name}`}
+                        className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                      >
+                        <div>
+                          <span className="text-[#d6e4f9] font-medium">
+                            {s.name}
+                          </span>
+                          <span className="text-[#849585] ml-1">
+                            → {s.team}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[#00e478]">
+                            £{s.price}m
+                          </span>
+                          <button
+                            onClick={() => {
+                              setSheetOpen(false);
+                              setConfirmRebid(s);
+                            }}
+                            className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
+                            title="Rebid this player"
+                          >
+                            ↩
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(soldLog ?? []).length === 0 && (
+                      <p className="text-xs text-[#849585] italic text-center py-2">
+                        No sales yet
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <BudgetList
+                      teams={teams}
+                      budget={league?.budget_per_team ?? 200}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
