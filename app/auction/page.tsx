@@ -117,7 +117,23 @@ export default function AuctionBrowsePage() {
       </div>
 
       {loading && (
-        <p className="text-[#849585] text-sm">Loading auctions…</p>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] px-5 py-4 animate-pulse"
+            >
+              <div className="space-y-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-48 rounded bg-[#1e2b3b]" />
+                  <div className="h-5 w-14 rounded-full bg-[#1e2b3b]" />
+                </div>
+                <div className="h-3 w-24 rounded bg-[#1e2b3b]" />
+              </div>
+              <div className="h-8 w-16 rounded bg-[#1e2b3b] shrink-0 ml-4" />
+            </div>
+          ))}
+        </div>
       )}
 
       {!loading && leagues.length === 0 && (
