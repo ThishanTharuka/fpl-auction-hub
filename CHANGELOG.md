@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.4.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.2...v1.4.0) (2026-06-03)
+
+
+### Bug Fixes
+
+* adjust timer input range and improve player nomination UI ([aef5eb8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/aef5eb8d963ddc7a570acf3724b07ba06a0bb704))
+
+
+### Features
+
+* update login page background and navigation logo ([f4e9d56](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f4e9d56d810819abf3c2aae5b100dca0f7bf3032))
+
 ## [1.3.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.1...v1.3.2) (2026-06-03)
 
 
