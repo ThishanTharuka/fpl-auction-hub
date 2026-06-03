@@ -521,7 +521,8 @@ export default function AuctioneerPage() {
   const timerDisplayUnit = nomination?.is_paused ? "paused" : "seconds";
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden px-4 py-4">
+    <div className="min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden">
+    <div className="mx-auto max-w-[1440px] flex flex-col lg:flex-row gap-4 h-full px-4 py-4">
       {/* ── Left: Player search (always) + sold log (desktop) ─────────────── */}
       <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
         <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
@@ -947,6 +948,7 @@ export default function AuctioneerPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
