@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -8,12 +8,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 
 interface League {
   id: string;
   name: string;
   budget_per_team: number;
+  max_gkp: number | null;
+  max_def: number | null;
+  max_mid: number | null;
+  max_fwd: number | null;
+  squad_size: number | null;
 }
 
 interface ParticipantRow {
@@ -21,48 +35,87 @@ interface ParticipantRow {
   name: string;
   color: string | null;
   league_id: string | null;
-  user_id: string | null;
 }
 
-interface AuctionResult {
+interface TeamFormation {
+  id: string;
+  participant_id: string;
+  formation: string;
+}
+
+interface AuctionResultRow {
   id: string;
   participant_id: string | null;
   fpl_player_id: number;
   price_paid: number;
   position_slot: string | null;
   league_id: string | null;
-  created_at: string | null;
 }
 
 interface SquadPlayer extends EnrichedPlayer {
   price_paid: number;
   position_slot: string;
+  auction_result_id: string;
 }
 
-const FORMATION_ROWS: Record<string, number[]> = {
-  "4-4-2": [4, 4, 2],
-  "4-3-3": [4, 3, 3],
-  "3-5-2": [3, 5, 2],
-  "5-3-2": [5, 3, 2],
-  "5-4-1": [5, 4, 1],
-  "4-5-1": [4, 5, 1],
-  "3-4-3": [3, 4, 3],
+const POSITION_COLORS: Record<string, string> = {
+  GKP: "bg-[#c05a00]",
+  DEF: "bg-[#0058c0]",
+  MID: "bg-[#6a00c0]",
+  FWD: "bg-[#c00028]",
+  BENCH: "bg-[#444]",
 };
+
+const POSITION_DOT: Record<string, string> = {
+  GKP: "bg-[#c05a00]",
+  DEF: "bg-[#0058c0]",
+  MID: "bg-[#6a00c0]",
+  FWD: "bg-[#c00028]",
+  BENCH: "bg-[#444]",
+};
+
+const POSITION_LABELS: Record<string, string> = {
+  GKP: "Goalkeeper",
+  DEF: "Defender",
+  MID: "Midfielder",
+  FWD: "Forward",
+};
+
+const FORMATIONS = ["4-3-3", "4-4-2", "3-5-2", "5-3-2", "5-4-1"];
+
+function getFormationSlots(formation: string) {
+  const map: Record<string, { def: number; mid: number; fwd: number }> = {
+    "4-3-3": { def: 4, mid: 3, fwd: 3 },
+    "4-4-2": { def: 4, mid: 4, fwd: 2 },
+    "3-5-2": { def: 3, mid: 5, fwd: 2 },
+    "5-3-2": { def: 5, mid: 3, fwd: 2 },
+    "5-4-1": { def: 5, mid: 4, fwd: 1 },
+  };
+  return { gkp: 1, ...(map[formation] ?? map["4-3-3"]!) };
+}
 
 export default function TeamsPage() {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
-  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(
-    null,
-  );
-  const [results, setResults] = useState<AuctionResult[]>([]);
+  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
+  const [results, setResults] = useState<AuctionResultRow[]>([]);
   const [players, setPlayers] = useState<EnrichedPlayer[]>([]);
-  const [formation, setFormation] = useState("4-3-3");
-  const [selectedPlayer, setSelectedPlayer] = useState<SquadPlayer | null>(
-    null,
-  );
+  const [formationsMap, setFormationsMap] = useState<Record<string, string>>({});
+  const [selectedPlayer, setSelectedPlayer] = useState<SquadPlayer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
+  const [dialogImgError, setDialogImgError] = useState(false);
+  const [dialogCrestLoaded, setDialogCrestLoaded] = useState(false);
+  const [dialogCrestError, setDialogCrestError] = useState(false);
+
+  useEffect(() => {
+    setDialogImgLoaded(false);
+    setDialogImgError(false);
+    setDialogCrestLoaded(false);
+    setDialogCrestError(false);
+  }, [selectedPlayer]);
 
   useEffect(() => {
     Promise.all([
@@ -82,57 +135,185 @@ export default function TeamsPage() {
       .from("participants")
       .select("*")
       .eq("league_id", selectedLeague)
-      .then(({ data }) => {
-        setParticipants(data ?? []);
-        if (data && data.length > 0)
-          setSelectedParticipant(data[0]?.id ?? null);
+      .then(async ({ data: ps }) => {
+        const ids = (ps ?? []).map((p: ParticipantRow) => p.id);
+        const [fs, rs] = await Promise.all([
+          ids.length > 0
+            ? supabase.from("team_formations").select("*").in("participant_id", ids)
+            : { data: [] as TeamFormation[] },
+          supabase.from("auction_results").select("*").eq("league_id", selectedLeague),
+        ]);
+        setParticipants(ps ?? []);
+        setResults(rs.data ?? []);
+        const fm: Record<string, string> = {};
+        for (const f of (fs.data ?? [])) {
+          if (f.participant_id) { fm[f.participant_id] = f.formation ?? "4-3-3"; }
+        }
+        setFormationsMap(fm);
+        if ((ps ?? []).length > 0) {
+          const firstPid = ps![0]!.id;
+          if (!ps!.find((p: ParticipantRow) => p.id === selectedParticipant)) {
+            setSelectedParticipant(firstPid);
+          }
+        }
       });
   }, [selectedLeague]);
 
-  useEffect(() => {
-    if (!selectedLeague) return;
-    supabase
-      .from("auction_results")
-      .select("*")
-      .eq("league_id", selectedLeague)
-      .then(({ data }) => setResults(data ?? []));
-  }, [selectedLeague]);
+  const currentLeague = leagues.find((l) => l.id === selectedLeague);
+  const currentFormation = selectedParticipant
+    ? (formationsMap[selectedParticipant] ?? "4-3-3")
+    : "4-3-3";
 
   const squad = useMemo<SquadPlayer[]>(() => {
     if (!selectedParticipant) return [];
-    const myResults = results.filter(
-      (r) => r.participant_id === selectedParticipant,
-    );
-    return myResults.flatMap((r) => {
-      const p = players.find((pl) => pl.id === r.fpl_player_id);
-      if (!p) return [];
-      return [
-        {
+    return results
+      .filter((r) => r.participant_id === selectedParticipant)
+      .flatMap((r) => {
+        const p = players.find((pl) => pl.id === r.fpl_player_id);
+        if (!p) return [];
+        return [{
           ...p,
           price_paid: r.price_paid,
-          position_slot: r.position_slot ?? "",
-        },
-      ];
-    });
+          position_slot: r.position_slot ?? "BENCH",
+          auction_result_id: r.id,
+        }];
+      });
   }, [results, selectedParticipant, players]);
 
+  const sortedSquad = useMemo(() => {
+    const order = ["GKP", "DEF", "MID", "FWD", "BENCH"];
+    return [...squad].sort(
+      (a, b) => order.indexOf(a.position_slot) - order.indexOf(b.position_slot),
+    );
+  }, [squad]);
+
   const { starters, bench } = useMemo(() => {
+    const slots = getFormationSlots(currentFormation);
     const gkp = squad.filter((p) => p.position_slot === "GKP");
     const def = squad.filter((p) => p.position_slot === "DEF");
     const mid = squad.filter((p) => p.position_slot === "MID");
     const fwd = squad.filter((p) => p.position_slot === "FWD");
-    const bench = squad.filter((p) => p.position_slot === "BENCH");
-    return { starters: { gkp, def, mid, fwd }, bench };
-  }, [squad]);
+    const explicitBench = squad.filter((p) => p.position_slot === "BENCH");
+    return {
+      starters: {
+        gkp: { players: gkp.slice(0, 1), max: 1 },
+        def: { players: def.slice(0, slots.def), max: slots.def },
+        mid: { players: mid.slice(0, slots.mid), max: slots.mid },
+        fwd: { players: fwd.slice(0, slots.fwd), max: slots.fwd },
+      },
+      bench: [
+        ...gkp.slice(1),
+        ...def.slice(slots.def),
+        ...mid.slice(slots.mid),
+        ...fwd.slice(slots.fwd),
+        ...explicitBench,
+      ],
+    };
+  }, [squad, currentFormation]);
 
   const totalSpent = useMemo(
     () => squad.reduce((s, p) => s + p.price_paid, 0),
     [squad],
   );
 
-  const currentLeague = leagues.find((l) => l.id === selectedLeague);
-  const currentParticipant = participants.find(
-    (p) => p.id === selectedParticipant,
+  const budget = currentLeague?.budget_per_team ?? 200;
+  const remaining = budget - totalSpent;
+  const budgetPct = (totalSpent / budget) * 100;
+  const budgetBarColor =
+    remaining > budget * 0.5
+      ? "bg-[#00d166]"
+      : remaining > budget * 0.25
+        ? "bg-amber-500"
+        : "bg-red-500";
+
+  const maxPositions = {
+    GKP: currentLeague?.max_gkp ?? 2,
+    DEF: currentLeague?.max_def ?? 5,
+    MID: currentLeague?.max_mid ?? 5,
+    FWD: currentLeague?.max_fwd ?? 3,
+  };
+
+  const posCounts = {
+    GKP: squad.filter((p) => p.position_slot === "GKP").length,
+    DEF: squad.filter((p) => p.position_slot === "DEF").length,
+    MID: squad.filter((p) => p.position_slot === "MID").length,
+    FWD: squad.filter((p) => p.position_slot === "FWD").length,
+  };
+
+  const handleFormationChange = useCallback(async (newFormation: string) => {
+    if (!selectedParticipant) return;
+    setFormationsMap((prev) => ({ ...prev, [selectedParticipant]: newFormation }));
+    await supabase.from("team_formations").upsert(
+      { participant_id: selectedParticipant, formation: newFormation },
+      { onConflict: "participant_id" },
+    );
+  }, [selectedParticipant]);
+
+  const handleMoveToBench = useCallback(async (player: SquadPlayer) => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("auction_results")
+      .update({ position_slot: "BENCH" })
+      .eq("id", player.auction_result_id);
+    if (!error) {
+      setResults((prev) =>
+        prev.map((r) =>
+          r.id === player.auction_result_id ? { ...r, position_slot: "BENCH" } : r,
+        ),
+      );
+      setSelectedPlayer(null);
+    }
+    setSaving(false);
+  }, []);
+
+  const handlePromoteToXI = useCallback(async (player: SquadPlayer) => {
+    if (!selectedParticipant) return;
+    setSaving(true);
+    const position = player.position;
+    if (!["GKP", "DEF", "MID", "FWD"].includes(position)) return;
+    const slots = getFormationSlots(currentFormation);
+    const maxSlots = position === "GKP" ? 1 : slots[position.toLowerCase() as keyof typeof slots] ?? 0;
+    const positionStarters = squad.filter(
+      (p) => p.position_slot === position && p.auction_result_id !== player.auction_result_id,
+    );
+    if (positionStarters.length < maxSlots) {
+      const { error } = await supabase
+        .from("auction_results")
+        .update({ position_slot: position })
+        .eq("id", player.auction_result_id);
+      if (!error) {
+        setResults((prev) =>
+          prev.map((r) =>
+            r.id === player.auction_result_id ? { ...r, position_slot: position } : r,
+          ),
+        );
+        setSelectedPlayer(null);
+      }
+    } else {
+      const sorted = [...positionStarters].sort((a, b) => a.total_points - b.total_points);
+      const toBench = sorted[0];
+      if (!toBench) return;
+      const [r1, r2] = await Promise.all([
+        supabase.from("auction_results").update({ position_slot: "BENCH" }).eq("id", toBench.auction_result_id),
+        supabase.from("auction_results").update({ position_slot: position }).eq("id", player.auction_result_id),
+      ]);
+      if (!r1.error && !r2.error) {
+        setResults((prev) =>
+          prev.map((r) => {
+            if (r.id === toBench.auction_result_id) return { ...r, position_slot: "BENCH" };
+            if (r.id === player.auction_result_id) return { ...r, position_slot: position };
+            return r;
+          }),
+        );
+        setSelectedPlayer(null);
+      }
+    }
+    setSaving(false);
+  }, [selectedParticipant, squad, currentFormation]);
+
+  const selectedLeagueName = useMemo(
+    () => leagues.find((l) => l.id === selectedLeague)?.name ?? "Select League",
+    [leagues, selectedLeague],
   );
 
   if (loading) {
@@ -151,160 +332,420 @@ export default function TeamsPage() {
     );
   }
 
+  const isStarting = selectedPlayer
+    ? selectedPlayer.position_slot !== "BENCH"
+    : false;
+
   return (
-    <div className="mx-auto max-w-[1200px] px-6 py-6">
-      {/* Header controls */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        {/* League selector */}
-        <select
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
+      {/* ─── Toolbar ─────────────────────────────── */}
+      <div className="mb-4 sm:mb-5 flex flex-wrap items-center gap-3">
+        <Select
           value={selectedLeague ?? ""}
-          onChange={(e) => setSelectedLeague(e.target.value)}
-          className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] rounded px-3 py-1.5 text-sm"
+          onValueChange={(v) => v && setSelectedLeague(v)}
         >
-          {leagues.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[160px]">
+            <span className="text-xs text-[#d6e4f9]">{selectedLeagueName}</span>
+          </SelectTrigger>
+          <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+            <SelectGroup>
+              {leagues.map((l) => (
+                <SelectItem key={l.id} value={l.id} className="text-xs">
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-        {/* Formation selector */}
-        <select
-          value={formation}
-          onChange={(e) => setFormation(e.target.value)}
-          className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] rounded px-3 py-1.5 text-sm"
+        <Select
+          value={currentFormation}
+          onValueChange={(v) => v && handleFormationChange(v)}
         >
-          {Object.keys(FORMATION_ROWS).map((f) => (
-            <option key={f}>{f}</option>
-          ))}
-        </select>
+          <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+            <SelectGroup>
+              {FORMATIONS.map((f) => (
+                <SelectItem key={f} value={f} className="text-xs">
+                  {f}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-        {/* Team budget indicator */}
         {currentLeague && (
-          <div className="ml-auto text-sm text-[#849585]">
-            <span className="font-mono text-[#00e478]">
-              £{(currentLeague.budget_per_team - totalSpent).toFixed(1)}m
+          <div className="text-xs text-[#849585] ml-auto">
+            Spent{" "}
+            <span className="font-mono text-[#00d166]">
+              £{totalSpent.toFixed(1)}m
             </span>
-            <span className="mx-1">remaining</span>
-            <span className="text-[#3b4b3d]">
-              / £{currentLeague.budget_per_team}m
-            </span>
+            {" / "}
+            <span className="text-[#d6e4f9]">£{budget}m</span>
+            {" · "}
+            <span className="font-mono text-[#00d166]">
+              £{remaining.toFixed(1)}m
+            </span>{" "}
+            left
           </div>
         )}
       </div>
 
-      {/* Participant tabs */}
+      {/* ─── Team Tabs ───────────────────────────── */}
       {participants.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {participants.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedParticipant(p.id)}
-              className="rounded-full px-4 py-1.5 text-sm font-medium transition-all"
-              style={
-                selectedParticipant === p.id
-                  ? {
-                      backgroundColor: `${p.color ?? "#888"}33`,
-                      color: p.color ?? undefined,
-                      border: `1px solid ${p.color ?? "#888"}88`,
-                    }
-                  : {
-                      backgroundColor: "#132030",
-                      color: "#b9cbb9",
-                      border: "1px solid #3b4b3d",
-                    }
-              }
-            >
-              {p.name}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {participants.map((p) => {
+            const isActive = selectedParticipant === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setSelectedParticipant(p.id);
+                  setSelectedPlayer(null);
+                }}
+                className={`rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
+                  isActive
+                    ? "bg-[#1a4731] text-[#00ff87]"
+                    : "bg-[#132030] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+                }`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Pitch */}
-      <div
-        className="relative rounded-xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(180deg, #0a3d1c 0%, #0d4d22 40%, #0a3d1c 100%)",
-          border: "1px solid #1a6b30",
-          minHeight: 520,
-        }}
-      >
-        {/* Pitch markings */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Centre line */}
-          <div className="absolute left-0 right-0 top-1/2 h-px bg-white/15" />
-          {/* Centre circle */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-white/15" />
-          {/* Goal areas */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-10 border border-white/15 border-b-0" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-10 border border-white/15 border-t-0" />
+      {/* ─── Main content: 2-column grid ─────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] border border-border rounded-xl overflow-hidden">
+        {/* ─── Left: Pitch + Bench ──────────────────── */}
+        <div>
+          <div className="bg-[#1a5c35] bg-[repeating-linear-gradient(0deg,transparent,transparent_50px,rgba(255,255,255,0.02)_50px,rgba(255,255,255,0.02)_100px)]">
+            <div className="p-6 pb-4 min-h-[520px]">
+              <div className="flex flex-col items-center gap-1">
+                {(["gkp", "def", "mid", "fwd"] as const).map((pos) => {
+                  const slotInfo = starters[pos];
+                  const posKey = pos.toUpperCase();
+                  const slots = slotInfo.max;
+                  return (
+                    <div
+                      key={pos}
+                      className="w-full flex flex-col items-center"
+                    >
+                      <div className="text-[10px] text-white/20 tracking-widest text-center mb-1 uppercase">
+                        {posKey}
+                      </div>
+                      <div className="flex justify-center gap-3">
+                        {Array.from({ length: slots }).map((_, i) => {
+                          const player = slotInfo.players[i] ?? null;
+                          return player ? (
+                            <PitchPlayerCard
+                              key={player.auction_result_id}
+                              player={player}
+                              position={posKey}
+                              onSelect={setSelectedPlayer}
+                            />
+                          ) : (
+                            <EmptySlot key={`empty-${pos}-${i}`} />
+                          );
+                        })}
+                      </div>
+                      {pos !== "fwd" && (
+                        <div className="w-full my-2 border-t border-white/5" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Bench strip */}
+          <div className="bg-[#163d24] border-t border-white/10 py-3 min-h-[100px]">
+            <div className="text-[10px] text-white/35 tracking-widest text-center mb-2 uppercase">
+              Bench
+            </div>
+            <div className="flex justify-center gap-4">
+              {bench.length > 0
+                ? bench.map((p) => (
+                    <PitchPlayerCard
+                      key={p.auction_result_id}
+                      player={p}
+                      position="BENCH"
+                      onSelect={setSelectedPlayer}
+                    />
+                  ))
+                : Array.from({ length: 4 }).map((_, i) => (
+                    <EmptySlot key={`empty-bench-${i}`} small />
+                  ))}
+            </div>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-6 py-6 px-4">
-          <PitchRow players={starters.gkp} onSelect={setSelectedPlayer} />
-          <PitchRow players={starters.def} onSelect={setSelectedPlayer} />
-          <PitchRow players={starters.mid} onSelect={setSelectedPlayer} />
-          <PitchRow players={starters.fwd} onSelect={setSelectedPlayer} />
+        {/* ─── Right: Squad Sidebar ────────────────── */}
+        <div className="border-l border-border flex flex-col bg-[#0f1c2c]">
+          <div className="px-4 py-3 border-b border-border/50">
+            <div className="text-sm font-semibold text-[#d6e4f9]">
+              {participants.find((p) => p.id === selectedParticipant)?.name ??
+                "Squad"}
+            </div>
+            <div className="text-[11px] text-[#849585]">
+              {squad.length} players ·{" "}
+              {currentLeague
+                ? Math.max(0, (currentLeague.squad_size ?? 15) - squad.length)
+                : 0}{" "}
+              empty slots
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {(["GKP", "DEF", "MID", "FWD", "BENCH"] as const).map((pos) => {
+              const posPlayers = sortedSquad.filter(
+                (p) => p.position_slot === pos,
+              );
+              if (posPlayers.length === 0) return null;
+              return (
+                <div key={pos}>
+                  <div className="text-[10px] font-medium text-[#849585] tracking-[0.8px] uppercase px-4 pt-3 pb-1">
+                    {pos} ({posPlayers.length})
+                  </div>
+                  {posPlayers.map((p) => (
+                    <div
+                      key={p.auction_result_id}
+                      className="flex items-center gap-2 px-4 py-1.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-[#132030] transition-colors"
+                      onClick={() => setSelectedPlayer(p)}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${POSITION_DOT[p.position_slot] ?? POSITION_DOT.BENCH}`}
+                      />
+                      <span className="text-[12px] text-[#d6e4f9] flex-1 truncate">
+                        {p.web_name}
+                      </span>
+                      <span className="text-[11px] text-[#849585]">
+                        {p.total_points}
+                      </span>
+                      <span className="text-[11px] text-[#00d166] min-w-[36px] text-right font-mono">
+                        £{p.price_paid.toFixed(1)}m
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+            {squad.length === 0 && (
+              <div className="p-4 text-xs text-[#849585] text-center">
+                No players yet
+              </div>
+            )}
+          </div>
+
+          {/* Budget bar */}
+          <div className="px-4 py-3 border-t border-border/50 mt-auto space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#849585]">Budget spent</span>
+              <span className="font-mono text-[#d6e4f9]">
+                £{totalSpent.toFixed(1)}m / £{budget}m
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${budgetBarColor}`}
+                style={{ width: `${Math.min(budgetPct, 100)}%` }}
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {(["GKP", "DEF", "MID", "FWD"] as const).map((pos) => {
+                const count = posCounts[pos];
+                const max = maxPositions[pos];
+                const remainingSlots = max - count;
+                return (
+                  <span
+                    key={pos}
+                    className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                      remainingSlots > 0
+                        ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
+                        : "border-[#3b4b3d] text-[#849585]"
+                    }`}
+                  >
+                    {pos} {count}/{max}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bench */}
-      {bench.length > 0 && (
-        <div className="mt-4 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
-          <div className="text-xs text-[#849585] uppercase tracking-wider mb-3">
-            Substitutes
-          </div>
-          <div className="flex flex-wrap gap-4">
-            {bench.map((p) => (
-              <PlayerToken key={p.id} player={p} onSelect={setSelectedPlayer} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {squad.length === 0 && (
-        <p className="mt-6 text-center text-sm text-[#849585]">
-          {currentParticipant
-            ? `${currentParticipant.name} has no players yet.`
-            : "Select a participant."}
-        </p>
-      )}
-
-      {/* Player detail modal */}
+      {/* ─── Player detail modal ──────────────────── */}
       <Dialog
         open={!!selectedPlayer}
         onOpenChange={(o) => !o && setSelectedPlayer(null)}
       >
-        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] max-w-sm">
+        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
           {selectedPlayer && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold">
-                  {selectedPlayer.web_name}
-                </DialogTitle>
-                <p className="text-sm text-[#b9cbb9]">
-                  {selectedPlayer.position} · {selectedPlayer.team_name}
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-10 sm:h-14 sm:w-12 shrink-0">
+                    {!dialogImgLoaded && !dialogImgError && (
+                      <div className="absolute inset-0 rounded bg-[#0a1724] animate-pulse" />
+                    )}
+                    {dialogImgError ? (
+                      <img
+                        src="/player-fallback.png"
+                        alt={selectedPlayer.web_name}
+                        className="h-full w-full rounded object-cover bg-[#132030]"
+                      />
+                    ) : (
+                      <img
+                        src={selectedPlayer.image_url}
+                        alt={selectedPlayer.web_name}
+                        className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
+                        loading="lazy"
+                        onLoad={() => {
+                          setDialogImgLoaded(true);
+                          setDialogImgError(false);
+                        }}
+                        onError={() => {
+                          setDialogImgLoaded(false);
+                          setDialogImgError(true);
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-lg sm:text-xl font-bold truncate">
+                      {selectedPlayer.web_name}
+                    </DialogTitle>
+                    <p className="text-xs sm:text-sm text-[#b9cbb9]">
+                      {POSITION_LABELS[selectedPlayer.position] ??
+                        selectedPlayer.position}
+                      {" · "}
+                      {selectedPlayer.team_name}
+                      {" · "}
+                      <span className="text-[#00d166]">
+                        £{selectedPlayer.price_paid.toFixed(1)}m
+                      </span>
+                    </p>
+                  </div>
+                  {selectedPlayer.team_crest_url &&
+                    (dialogCrestError ? (
+                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">
+                          {selectedPlayer.team_short?.charAt(0) ?? "?"}
+                        </span>
+                      </div>
+                    ) : (
+                      <img
+                        src={selectedPlayer.team_crest_url}
+                        alt={selectedPlayer.team_name}
+                        className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 shrink-0 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
+                        loading="lazy"
+                        onLoad={() => {
+                          setDialogCrestLoaded(true);
+                          setDialogCrestError(false);
+                        }}
+                        onError={() => {
+                          setDialogCrestLoaded(true);
+                          setDialogCrestError(true);
+                        }}
+                      />
+                    ))}
+                  {!dialogCrestLoaded &&
+                    !dialogCrestError &&
+                    selectedPlayer.team_crest_url && (
+                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
+                    )}
+                </div>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-3 py-4">
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-4">
                 <Stat
-                  label="Auction Price"
+                  label="Price"
                   value={`£${selectedPlayer.price_paid.toFixed(1)}m`}
-                  highlight
-                />
-                <Stat
-                  label="FPL Price"
-                  value={`£${selectedPlayer.price.toFixed(1)}m`}
                 />
                 <Stat
                   label="Total Points"
                   value={selectedPlayer.total_points}
                 />
-                <Stat label="Form" value={selectedPlayer.form} />
+                <Stat label="PPG" value={selectedPlayer.points_per_game} />
+                <Stat label="Form" value={selectedPlayer.form} highlight />
+                <Stat label="ICT Index" value={selectedPlayer.ict_index} />
+                <Stat
+                  label="xGI"
+                  value={parseFloat(
+                    selectedPlayer.expected_goal_involvements,
+                  ).toFixed(2)}
+                />
                 <Stat label="Goals" value={selectedPlayer.goals_scored} />
                 <Stat label="Assists" value={selectedPlayer.assists} />
+                <Stat
+                  label="Clean Sheets"
+                  value={selectedPlayer.clean_sheets}
+                />
+                <Stat label="Minutes" value={selectedPlayer.minutes} />
+                <Stat label="Bonus" value={selectedPlayer.bonus} />
+                <Stat label="Starts" value={selectedPlayer.starts} />
+                <Stat
+                  label="Influence"
+                  value={parseFloat(selectedPlayer.influence).toFixed(1)}
+                />
+                <Stat
+                  label="Creativity"
+                  value={parseFloat(selectedPlayer.creativity).toFixed(1)}
+                />
+                <Stat
+                  label="Threat"
+                  value={parseFloat(selectedPlayer.threat).toFixed(1)}
+                />
+                <Stat
+                  label="xG"
+                  value={parseFloat(selectedPlayer.expected_goals).toFixed(2)}
+                />
+                <Stat
+                  label="xA"
+                  value={parseFloat(selectedPlayer.expected_assists).toFixed(2)}
+                />
+                <Stat
+                  label="xGC"
+                  value={parseFloat(
+                    selectedPlayer.expected_goals_conceded,
+                  ).toFixed(2)}
+                />
+                <Stat label="BPS" value={selectedPlayer.bps} />
+                <Stat label="Avg FDR ×5" value={selectedPlayer.avg_fdr_next5} />
+              </div>
+
+              {selectedPlayer.news && (
+                <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2 mb-2">
+                  {selectedPlayer.news}
+                </p>
+              )}
+
+              {/* Swap actions */}
+              <div className="border-t border-[#3b4b3d] pt-3">
+                {isStarting ? (
+                  <Button
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => handleMoveToBench(selectedPlayer)}
+                    className="h-8 text-xs bg-[#444] text-white hover:bg-[#555]"
+                  >
+                    Send to Bench
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => handlePromoteToXI(selectedPlayer)}
+                    className="h-8 text-xs bg-[#1a4731] text-[#00ff87] hover:bg-[#1e5c3a]"
+                  >
+                    Promote to Starting XI
+                  </Button>
+                )}
               </div>
             </>
           )}
@@ -314,41 +755,72 @@ export default function TeamsPage() {
   );
 }
 
-function PitchRow({
-  players,
-  onSelect,
-}: Readonly<{ players: SquadPlayer[]; onSelect: (p: SquadPlayer) => void }>) {
-  if (players.length === 0) return null;
-  return (
-    <div className="flex justify-center gap-6 w-full">
-      {players.map((p) => (
-        <PlayerToken key={p.id} player={p} onSelect={onSelect} />
-      ))}
-    </div>
-  );
-}
+// ─── Helpers ───────────────────────────────────────────────────────────────
 
-function PlayerToken({
+function PitchPlayerCard({
   player,
+  position,
   onSelect,
-}: Readonly<{ player: SquadPlayer; onSelect: (p: SquadPlayer) => void }>) {
+}: Readonly<{
+  player: SquadPlayer;
+  position: string;
+  onSelect: (p: SquadPlayer) => void;
+}>) {
+  const name = player.web_name;
+  const initial = name.charAt(0).toUpperCase();
+  const colorClass = POSITION_COLORS[position] ?? POSITION_COLORS.BENCH;
+  const isGkp = player.position === "GKP";
+  const shirtUrl = isGkp
+    ? `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_code}_1-66.webp`
+    : `https://fantasy.premierleague.com/dist/img/shirts/standard/shirt_${player.team_code}-110.webp`;
+  const [imgError, setImgError] = useState(false);
+
   return (
     <button
-      className="flex flex-col items-center gap-1 group"
+      className="flex flex-col items-center gap-0.5 group"
       onClick={() => onSelect(player)}
     >
-      <div className="w-12 h-12 rounded-full bg-[#061423]/80 border-2 border-[#00e478]/60 flex items-center justify-center text-lg font-bold text-white group-hover:border-[#00e478] transition-colors">
-        {player.web_name.charAt(0)}
-      </div>
-      <div className="bg-[#061423]/90 rounded px-1.5 py-0.5 text-center max-w-[80px]">
-        <div className="text-[11px] text-white font-medium truncate leading-tight">
-          {player.web_name}
+      {imgError ? (
+        <div
+          className={`w-12 h-14 rounded-md flex items-center justify-center text-lg font-medium text-white shadow-md transition-transform group-hover:scale-105 ${colorClass}`}
+        >
+          {initial}
         </div>
-        <div className="text-[10px] text-[#00e478] font-mono">
+      ) : (
+        <div className="w-12 h-14 rounded-md flex items-center justify-center bg-black/30 shadow-md transition-transform group-hover:scale-105">
+          <img
+            src={shirtUrl}
+            alt={name}
+            className="w-10 h-12 object-contain"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        </div>
+      )}
+      <div className="bg-black/55 rounded px-1.5 py-0.5 text-center max-w-[80px]">
+        <div className="text-[11px] text-white font-medium truncate leading-tight">
+          {name}
+        </div>
+        <div className="text-[10px] text-[#00d166] font-mono">
           £{player.price_paid.toFixed(1)}m
         </div>
       </div>
     </button>
+  );
+}
+
+function EmptySlot({ small }: { small?: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className={`rounded-md border-2 border-dashed border-white/15 opacity-40 ${
+          small ? "w-10 h-10" : "w-12 h-14"
+        }`}
+      />
+      <div className="bg-black/30 rounded px-1.5 py-0.5 text-center">
+        <div className="text-[10px] text-white/30">Empty</div>
+      </div>
+    </div>
   );
 }
 
@@ -358,12 +830,12 @@ function Stat({
   highlight,
 }: Readonly<{ label: string; value: string | number; highlight?: boolean }>) {
   return (
-    <div className="bg-[#132030] rounded p-2.5">
-      <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1">
+    <div className="bg-[#132030] rounded p-2 sm:p-3">
+      <div className="text-[9px] sm:text-[10px] text-[#849585] uppercase tracking-wider mb-0.5 sm:mb-1">
         {label}
       </div>
       <div
-        className={`font-mono font-bold ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
+        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
       >
         {value}
       </div>
