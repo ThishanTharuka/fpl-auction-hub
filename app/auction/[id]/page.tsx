@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { LeagueSettingsPanel } from "./league-settings-panel";
 
 const supabase = createSupabaseBrowserClient();
 
@@ -14,10 +15,21 @@ interface League {
   id: string;
   name: string;
   budget_per_team: number;
-  timer_seconds: number | null;
-  bid_increment: number | null;
+  timer_seconds: number;
+  bid_increment: number;
   status: string | null;
   created_by: string | null;
+  room_password: string | null;
+  base_price_gkp: number;
+  base_price_def: number;
+  base_price_mid: number;
+  base_price_fwd: number;
+  max_per_club: number;
+  squad_size: number;
+  max_gkp: number;
+  max_def: number;
+  max_mid: number;
+  max_fwd: number;
 }
 
 interface Participant {
@@ -70,7 +82,7 @@ export default function AuctionLobbyPage() {
 
   async function load() {
     const [{ data: lg }, { data: ps }, { data: ms }] = await Promise.all([
-      supabase.from("leagues").select("id,name,budget_per_team,timer_seconds,bid_increment,status,created_by").eq("id", id).single(),
+      supabase.from("leagues").select("*").eq("id", id).single(),
       supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
       supabase.from("team_members").select("id,participant_id,user_id,user_email,user_name,status").eq("league_id", id),
     ]);
@@ -111,6 +123,10 @@ export default function AuctionLobbyPage() {
     setStartingAuction(false);
   }
 
+  function onSettingsSaved(updated: Partial<League>) {
+    setLeague((l) => (l ? { ...l, ...updated } : l));
+  }
+
   if (loading || authLoading) {
     return <div className="flex items-center justify-center h-64 text-[#849585]">Loading…</div>;
   }
@@ -124,170 +140,186 @@ export default function AuctionLobbyPage() {
   const canStart = teams.length > 0 && teams.every((t) => teamsWithApproved.has(t.id));
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
-          <p className="text-sm text-[#849585] mt-1">
-            {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
-          </p>
-        </div>
-        <StatusBadge status={league.status ?? "setup"} />
-      </div>
-
-      {/* Auctioneer: start + manage */}
-      {isAuctioneer && (
-        <div className="rounded-lg border border-purple-500/30 bg-purple-900/10 p-5 space-y-4">
-          <h2 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Auctioneer Controls</h2>
-          <div className="flex gap-3 flex-wrap">
-            {league.status === "setup" && (
-              <Button
-                onClick={startAuction}
-                disabled={startingAuction || !canStart}
-                className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-              >
-                {startingAuction ? "Starting…" : "Start Auction"}
-              </Button>
-            )}
-            {league.status === "active" && (
-              <Link href={`/auction/${id}/auctioneer`}>
-                <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
-                  Open Auctioneer Panel
-                </Button>
-              </Link>
-            )}
-            <Link href={`/auction/${id}/teams`}>
-              <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
-                View Teams
-              </Button>
-            </Link>
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 lg:py-10">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left column - main content */}
+        <div className="flex-1 space-y-6 min-w-0">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
+              <p className="text-sm text-[#849585] mt-1">
+                {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
+              </p>
+            </div>
+            <StatusBadge status={league.status ?? "setup"} />
           </div>
-          {league.status === "setup" && !canStart && (
-            <p className="text-xs text-[#849585]">
-              All teams need at least one approved manager before you can start.
-            </p>
-          )}
-        </div>
-      )}
 
-      {/* Manager: my status */}
-      {!isAuctioneer && user && myMembership && (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
-          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">Your Status</h2>
-          <div className="flex items-center gap-3">
-            <TeamDot color={teams.find((t) => t.id === myMembership.participant_id)?.color ?? "#888"} />
-            <span className="text-[#d6e4f9]">
-              {teams.find((t) => t.id === myMembership.participant_id)?.name ?? "Unknown team"}
-            </span>
-            <StatusPill status={myMembership.status} />
-          </div>
-          {myMembership.status === "approved" && league.status === "active" && (
-            <Link href={`/auction/${id}/bid`}>
-              <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold mt-2">
-                Go to Live Auction →
-              </Button>
-            </Link>
-          )}
-          {myMembership.status === "pending" && (
-            <p className="text-xs text-[#849585]">Waiting for the auctioneer to approve your claim.</p>
-          )}
-          {myMembership.status === "rejected" && (
-            <p className="text-xs text-red-400">Your claim was rejected. You can claim a different team.</p>
-          )}
-        </div>
-      )}
-
-      {/* Manager: not logged in */}
-      {!isAuctioneer && !user && (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
-          <p className="text-sm text-[#849585]">
-            <Link href="/login" className="text-[#00e478] hover:underline">Sign in</Link>{" "}
-            to claim a team and join this auction.
-          </p>
-        </div>
-      )}
-
-      {/* Teams list */}
-      <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
-        <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-4">
-          Teams ({teams.length})
-        </h2>
-        <div className="space-y-3">
-          {teams.map((team) => {
-            const teamMembers = members.filter((m) => m.participant_id === team.id);
-            const approvedManagers = teamMembers.filter((m) => m.status === "approved");
-            const pendingManagers = teamMembers.filter((m) => m.status === "pending");
-            const myClaimHere = user ? teamMembers.find((m) => m.user_id === user.id) : null;
-            const canClaim =
-              user &&
-              !isAuctioneer &&
-              !myMembership &&
-              approvedManagers.length < 2;
-
-            return (
-              <div
-                key={team.id}
-                className="flex items-center justify-between gap-3 rounded-md bg-[#132030] border border-[#3b4b3d] px-3 py-3"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <TeamDot color={team.color ?? "#888"} />
-                  <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {approvedManagers.map((m) => (
-                      <span key={m.id} className="text-xs bg-green-500/15 text-green-400 rounded px-1.5 py-0.5">
-                        {m.user_name ?? m.user_email}
-                      </span>
-                    ))}
-                    {pendingManagers.map((m) => (
-                      <span key={m.id} className="text-xs bg-yellow-500/15 text-yellow-500 rounded px-1.5 py-0.5">
-                        {m.user_name ?? m.user_email} (pending)
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* Auctioneer: approve/reject pending claims */}
-                  {isAuctioneer && pendingManagers.map((m) => (
-                    <ApproveRejectButtons
-                      key={m.id}
-                      memberId={m.id}
-                      onApprove={updateMemberStatus}
-                      onReject={updateMemberStatus}
-                    />
-                  ))}
-
-                  {/* Manager: claim button */}
-                  {canClaim && !myClaimHere && (
-                    <Button
-                      size="sm"
-                      onClick={() => claimTeam(team.id).catch(() => {})}
-                      disabled={claiming === team.id}
-                      className="h-7 px-3 text-xs bg-[#1e2b3b] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#28394a]"
-                    >
-                      {claiming === team.id ? "Claiming…" : "Claim"}
+          {/* Auctioneer: start + manage */}
+          {isAuctioneer && (
+            <div className="rounded-lg border border-purple-500/30 bg-purple-900/10 p-5 space-y-4">
+              <h2 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Auctioneer Controls</h2>
+              <div className="flex gap-3 flex-wrap">
+                {league.status === "setup" && (
+                  <Button
+                    onClick={startAuction}
+                    disabled={startingAuction || !canStart}
+                    className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
+                  >
+                    {startingAuction ? "Starting…" : "Start Auction"}
+                  </Button>
+                )}
+                {league.status === "active" && (
+                  <Link href={`/auction/${id}/auctioneer`}>
+                    <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
+                      Open Auctioneer Panel
                     </Button>
-                  )}
-
-                  {myClaimHere && (
-                    <StatusPill status={myClaimHere.status} />
-                  )}
-                </div>
+                  </Link>
+                )}
+                <Link href={`/auction/${id}/teams`}>
+                  <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
+                    View Teams
+                  </Button>
+                </Link>
               </div>
-            );
-          })}
-        </div>
-      </div>
+              {league.status === "setup" && !canStart && (
+                <p className="text-xs text-[#849585]">
+                  All teams need at least one approved manager before you can start.
+                </p>
+              )}
+            </div>
+          )}
 
-      {/* Quick links (auctioneer view) */}
-      {isAuctioneer && (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-2">
-          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">Quick Links</h2>
-          <CopyRow label="Lobby URL" url={`/auction/${id}`} />
-          <CopyRow label="Teams View" url={`/auction/${id}/teams`} />
+          {/* Manager: my status */}
+          {!isAuctioneer && user && myMembership && (
+            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">Your Status</h2>
+              <div className="flex items-center gap-3">
+                <TeamDot color={teams.find((t) => t.id === myMembership.participant_id)?.color ?? "#888"} />
+                <span className="text-[#d6e4f9]">
+                  {teams.find((t) => t.id === myMembership.participant_id)?.name ?? "Unknown team"}
+                </span>
+                <StatusPill status={myMembership.status} />
+              </div>
+              {myMembership.status === "approved" && league.status === "active" && (
+                <Link href={`/auction/${id}/bid`}>
+                  <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold mt-2">
+                    Go to Live Auction →
+                  </Button>
+                </Link>
+              )}
+              {myMembership.status === "pending" && (
+                <p className="text-xs text-[#849585]">Waiting for the auctioneer to approve your claim.</p>
+              )}
+              {myMembership.status === "rejected" && (
+                <p className="text-xs text-red-400">Your claim was rejected. You can claim a different team.</p>
+              )}
+            </div>
+          )}
+
+          {/* Manager: not logged in */}
+          {!isAuctioneer && !user && (
+            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+              <p className="text-sm text-[#849585]">
+                <Link href="/login" className="text-[#00e478] hover:underline">Sign in</Link>{" "}
+                to claim a team and join this auction.
+              </p>
+            </div>
+          )}
+
+          {/* Teams list */}
+          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-4">
+              Teams ({teams.length})
+            </h2>
+            <div className="space-y-3">
+              {teams.map((team) => {
+                const teamMembers = members.filter((m) => m.participant_id === team.id);
+                const approvedManagers = teamMembers.filter((m) => m.status === "approved");
+                const pendingManagers = teamMembers.filter((m) => m.status === "pending");
+                const myClaimHere = user ? teamMembers.find((m) => m.user_id === user.id) : null;
+                const canClaim =
+                  user &&
+                  !isAuctioneer &&
+                  !myMembership &&
+                  approvedManagers.length < 2;
+
+                return (
+                  <div
+                    key={team.id}
+                    className="flex items-center justify-between gap-3 rounded-md bg-[#132030] border border-[#3b4b3d] px-3 py-3"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <TeamDot color={team.color ?? "#888"} />
+                      <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {approvedManagers.map((m) => (
+                          <span key={m.id} className="text-xs bg-green-500/15 text-green-400 rounded px-1.5 py-0.5">
+                            {m.user_name ?? m.user_email}
+                          </span>
+                        ))}
+                        {pendingManagers.map((m) => (
+                          <span key={m.id} className="text-xs bg-yellow-500/15 text-yellow-500 rounded px-1.5 py-0.5">
+                            {m.user_name ?? m.user_email} (pending)
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Auctioneer: approve/reject pending claims */}
+                      {isAuctioneer && pendingManagers.map((m) => (
+                        <ApproveRejectButtons
+                          key={m.id}
+                          memberId={m.id}
+                          onApprove={updateMemberStatus}
+                          onReject={updateMemberStatus}
+                        />
+                      ))}
+
+                      {/* Manager: claim button */}
+                      {canClaim && !myClaimHere && (
+                        <Button
+                          size="sm"
+                          onClick={() => claimTeam(team.id).catch(() => {})}
+                          disabled={claiming === team.id}
+                          className="h-7 px-3 text-xs bg-[#1e2b3b] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#28394a]"
+                        >
+                          {claiming === team.id ? "Claiming…" : "Claim"}
+                        </Button>
+                      )}
+
+                      {myClaimHere && (
+                        <StatusPill status={myClaimHere.status} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Quick links (auctioneer view) */}
+          {isAuctioneer && (
+            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-2">
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">Quick Links</h2>
+              <CopyRow label="Lobby URL" url={`/auction/${id}`} />
+              <CopyRow label="Teams View" url={`/auction/${id}/teams`} />
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right column - settings sidebar (auctioneer only) */}
+        {isAuctioneer && league && (
+          <aside className="w-full lg:w-[460px] shrink-0">
+            <LeagueSettingsPanel
+              leagueId={id}
+              settings={league}
+              onSaved={onSettingsSaved}
+            />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
