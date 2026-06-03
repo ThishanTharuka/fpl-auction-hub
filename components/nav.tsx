@@ -28,7 +28,11 @@ export function Nav() {
           href="/"
           className="flex items-center gap-2 font-bold text-[#00e478] shrink-0"
         >
-          <img src="/fpl.png" alt="FPL Auction Hub" className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
+          <img
+            src="/fplah.png"
+            alt="FPL Auction Hub"
+            className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
+          />
           <span className="hidden sm:inline">FPL Auction Hub</span>
         </Link>
 
@@ -88,7 +92,11 @@ export function Nav() {
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="Toggle navigation menu"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {menuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           )}
         </div>

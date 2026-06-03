@@ -113,9 +113,13 @@ function LoginForm() {
   const showLinkExpiredError = urlError === "link_expired";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       <div
-        className="w-full max-w-sm rounded-xl border p-8 space-y-6"
+        className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
+        style={{ backgroundImage: "url(/fplbg.jpg)" }}
+      />
+      <div
+        className="relative z-10 w-full max-w-sm rounded-xl border p-8 space-y-6"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
         {/* Logo / title */}
