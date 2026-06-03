@@ -449,10 +449,21 @@ export default function PlayersPage() {
     { id: "total_points", desc: true },
   ]);
   const [selected, setSelected] = useState<EnrichedPlayer | null>(null);
+  const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
+  const [dialogImgError, setDialogImgError] = useState(false);
+  const [dialogCrestLoaded, setDialogCrestLoaded] = useState(false);
+  const [dialogCrestError, setDialogCrestError] = useState(false);
   const [colVisibility, setColVisibility] =
     useState<VisibilityState>(DEFAULT_VISIBLE);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setDialogImgLoaded(false);
+    setDialogImgError(false);
+    setDialogCrestLoaded(false);
+    setDialogCrestError(false);
+  }, [selected]);
 
   useEffect(() => {
     fetch("/api/fpl/bootstrap")
@@ -1023,11 +1034,27 @@ export default function PlayersPage() {
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
-                  <img
-                    src={selected.image_url}
-                    alt={selected.web_name}
-                    className="h-12 w-10 sm:h-14 sm:w-12 rounded object-cover bg-[#132030]"
-                  />
+                  <div className="relative h-12 w-10 sm:h-14 sm:w-12 shrink-0">
+                    {!dialogImgLoaded && !dialogImgError && (
+                      <div className="absolute inset-0 rounded bg-[#0a1724] animate-pulse" />
+                    )}
+                    {dialogImgError ? (
+                      <img
+                        src="/player-fallback.png"
+                        alt={selected.web_name}
+                        className="h-full w-full rounded object-cover bg-[#132030]"
+                      />
+                    ) : (
+                      <img
+                        src={selected.image_url}
+                        alt={selected.web_name}
+                        className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
+                        loading="lazy"
+                        onLoad={() => { setDialogImgLoaded(true); setDialogImgError(false); }}
+                        onError={() => { setDialogImgLoaded(false); setDialogImgError(true); }}
+                      />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <DialogTitle className="text-lg sm:text-xl font-bold truncate">
                       {selected.web_name}
@@ -1037,11 +1064,23 @@ export default function PlayersPage() {
                     </p>
                   </div>
                   {selected.team_crest_url && (
-                    <img
-                      src={selected.team_crest_url}
-                      alt={selected.team_name}
-                      className="h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8"
-                    />
+                    dialogCrestError ? (
+                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8">
+                        <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">{selected.team_short?.charAt(0) ?? "?"}</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={selected.team_crest_url}
+                        alt={selected.team_name}
+                        className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
+                        loading="lazy"
+                        onLoad={() => { setDialogCrestLoaded(true); setDialogCrestError(false); }}
+                        onError={() => { setDialogCrestLoaded(true); setDialogCrestError(true); }}
+                      />
+                    )
+                  )}
+                  {!dialogCrestLoaded && !dialogCrestError && selected.team_crest_url && (
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
                   )}
                 </div>
               </DialogHeader>

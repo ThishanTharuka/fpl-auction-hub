@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 
 type Props = Readonly<{
@@ -180,8 +181,12 @@ export function PlayerStatsBar({
 }: Props) {
   const stats = buildStats(player);
   const positionLabel = POSITION_FULL_LABEL[player.position] ?? player.position;
-  // wide (auctioneer): ALL 8 stats in 2-col grid on the right, nothing below
-  // narrow (bidder):   Pts+PPG pinned right, 6 position stats in bottom row
+
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [crestLoaded, setCrestLoaded] = useState(false);
+  const [crestError, setCrestError] = useState(false);
+
   const heroStats = wide ? stats : stats.slice(0, 2);
   const detailStats = wide ? [] : stats.slice(2);
 
@@ -197,12 +202,26 @@ export function PlayerStatsBar({
         <div
           className={`relative shrink-0 ${wide ? "w-full sm:w-[210px] sm:min-w-[190px] h-48 sm:h-full sm:self-stretch" : "w-[120px] h-[148px]"}`}
         >
+          {!imgLoaded && !imgError && (
+            <div className={`absolute inset-0 rounded-xl bg-[#0a1724] animate-pulse ${wide ? "" : ""}`} />
+          )}
+          {imgError ? (
+            <img
+              src="/player-fallback.png"
+              alt={player.full_name}
+              className={`relative w-full drop-shadow-[0_12px_32px_rgba(0,0,0,0.55)] ${wide ? "h-full object-contain object-bottom" : "h-full object-cover object-top"}`}
+            />
+          ) : (
+            <img
+              src={player.image_url}
+              alt={player.full_name}
+              loading="lazy"
+              onLoad={() => { setImgLoaded(true); setImgError(false); }}
+              onError={() => { setImgLoaded(false); setImgError(true); }}
+              className={`relative w-full drop-shadow-[0_12px_32px_rgba(0,0,0,0.55)] ${wide ? "h-full object-contain object-bottom" : "h-full object-cover object-top"} ${imgLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+            />
+          )}
           <div className="absolute inset-x-0 bottom-0 h-10 rounded-full bg-[#00e478]/10 blur-2xl pointer-events-none" />
-          <img
-            src={player.image_url}
-            alt={player.full_name}
-            className={`relative w-full drop-shadow-[0_12px_32px_rgba(0,0,0,0.55)] ${wide ? "h-full object-contain object-bottom" : "h-full object-cover object-top"}`}
-          />
         </div>
 
         {/* Name + club + metadata — flex-1 so it fills space between photo and hero stats */}
@@ -212,12 +231,24 @@ export function PlayerStatsBar({
           </div>
           <div className="mt-2 flex items-center gap-2 text-sm text-[#7a9dba] font-medium">
             {player.team_crest_url ? (
-              <img
-                src={player.team_crest_url}
-                alt={`${player.team_name} crest`}
-                className="h-5 w-5 rounded-sm object-contain"
-              />
+              crestError ? (
+                <div className="h-5 w-5 rounded-sm bg-[#1e3248] flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-[#5e7d99]">{player.team_short?.charAt(0) ?? "?"}</span>
+                </div>
+              ) : (
+                <img
+                  src={player.team_crest_url}
+                  alt={`${player.team_name} crest`}
+                  className={`h-5 w-5 rounded-sm object-contain ${crestLoaded ? "" : "opacity-0 absolute"}`}
+                  loading="lazy"
+                  onLoad={() => { setCrestLoaded(true); setCrestError(false); }}
+                  onError={() => { setCrestLoaded(true); setCrestError(true); }}
+                />
+              )
             ) : null}
+            {!crestLoaded && !crestError && player.team_crest_url && (
+              <div className="h-5 w-5 rounded-sm bg-[#0a1724] animate-pulse shrink-0" />
+            )}
             <span>{player.team_name}</span>
           </div>
           <div className="mt-2 text-[11px] tracking-[0.05em] space-y-1">
