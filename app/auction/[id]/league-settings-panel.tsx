@@ -141,7 +141,6 @@ export function LeagueSettingsPanel({
     <div className="space-y-5">
       {/* League */}
       <div>
-        {/* <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">League</h3> */}
         <div className="space-y-3">
           <Field label="League Name">
             <Input
