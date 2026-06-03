@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -36,14 +36,19 @@ export function LeagueSettingsPanel({
   leagueId,
   settings,
   onSaved,
+  mobileOpen,
+  onMobileOpenChange,
 }: {
   leagueId: string;
   settings: LeagueSettings;
   onSaved: (updated: LeagueSettings) => void;
+  mobileOpen: boolean;
+  onMobileOpenChange: (open: boolean) => void;
 }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const prevOpen = useRef(mobileOpen);
+  const prevSettings = useRef(settings);
 
   const [name, setName] = useState(settings.name);
   const [roomPassword, setRoomPassword] = useState(settings.room_password ?? "");
@@ -82,6 +87,19 @@ export function LeagueSettingsPanel({
     setMaxFwd(settings.max_fwd);
     setError(null);
   }
+
+  useEffect(() => {
+    if (mobileOpen && !prevOpen.current) resetForm();
+    prevOpen.current = mobileOpen;
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (settings !== prevSettings.current) {
+      const wasOpen = prevOpen.current;
+      if (!wasOpen) resetForm();
+      prevSettings.current = settings;
+    }
+  }, [settings]);
 
   async function save() {
     if (!name.trim()) return;
@@ -134,7 +152,7 @@ export function LeagueSettingsPanel({
     });
 
     setSaving(false);
-    setDrawerOpen(false);
+    onMobileOpenChange(false);
   }
 
   const formContent = (
@@ -315,25 +333,12 @@ export function LeagueSettingsPanel({
         {formContent}
       </div>
 
-      {/* Mobile: trigger button + bottom drawer */}
-      <div className="lg:hidden">
-        <Button
-          onClick={() => {
-            resetForm();
-            setDrawerOpen(true);
-          }}
-          variant="outline"
-          className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
-        >
-          Edit Settings
-        </Button>
-      </div>
-
-      {drawerOpen && (
+      {/* Mobile: bottom drawer */}
+      {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="absolute inset-0 bg-black/60"
-            onClick={() => setDrawerOpen(false)}
+            onClick={() => onMobileOpenChange(false)}
           />
           <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#3b4b3d] shrink-0">
@@ -341,7 +346,7 @@ export function LeagueSettingsPanel({
                 League Settings
               </h2>
               <button
-                onClick={() => setDrawerOpen(false)}
+                onClick={() => onMobileOpenChange(false)}
                 className="text-[#849585] hover:text-[#d6e4f9]"
                 aria-label="Close"
               >

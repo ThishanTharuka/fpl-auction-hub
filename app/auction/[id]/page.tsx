@@ -61,6 +61,7 @@ export default function AuctionLobbyPage() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [startingAuction, setStartingAuction] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -145,15 +146,26 @@ export default function AuctionLobbyPage() {
         {/* Left column - main content */}
         <div className="flex-1 space-y-6 min-w-0">
           {/* Header */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
-              <p className="text-sm text-[#849585] mt-1">
-                {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
-              </p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
+                <p className="text-sm text-[#849585] mt-1">
+                  {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {isAuctioneer && (
+                  <Button
+                    onClick={() => setMobileSettingsOpen(true)}
+                    variant="outline"
+                    className="lg:hidden border-[#3b4b3d] text-[#849585] hover:bg-[#132030] h-7 text-xs"
+                  >
+                    Settings
+                  </Button>
+                )}
+                <StatusBadge status={league.status ?? "setup"} />
+              </div>
             </div>
-            <StatusBadge status={league.status ?? "setup"} />
-          </div>
 
           {/* Auctioneer: start + manage */}
           {isAuctioneer && (
@@ -316,6 +328,8 @@ export default function AuctionLobbyPage() {
               leagueId={id}
               settings={league}
               onSaved={onSettingsSaved}
+              mobileOpen={mobileSettingsOpen}
+              onMobileOpenChange={setMobileSettingsOpen}
             />
           </aside>
         )}
