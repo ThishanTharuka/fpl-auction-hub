@@ -1,5 +1,6 @@
-# [1.3.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.2.2...v1.3.0) (2026-06-03)
+# Changelog
 
+## [1.3.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.2.2...v1.3.0) (2026-06-03)
 
 ### Features
 
@@ -9,8 +10,6 @@
 * enhance loading state with skeleton screens in AuctionLobbyPage and AuctionBrowsePage ([c6ce5ec](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c6ce5ec1049a7601e107b2f89c1aebecf08ac735))
 * enhance TeamsPage with formation management and player position updates ([f709061](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f709061b8dc8b83c644634e30b114e1fab606b6b))
 * implement league settings panel and integrate with auction lobby ([eac9568](https://github.com/ThishanTharuka/fpl-auction-hub/commit/eac956880e62a70564d8da115c7f79923cb153d2))
-
-# Changelog
 
 ## [1.2.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.2.1...v1.2.2) (2026-06-03)
 
