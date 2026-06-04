@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.7.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.1...v1.7.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* correctly manage loading state in AuthProvider ([840ba33](https://github.com/ThishanTharuka/fpl-auction-hub/commit/840ba33f4773106b692dcfa7ba5ca19c3c24d509))
+
+
+### Features
+
+* implement server clock for accurate time synchronization in auction and bid pages ([07b6b8f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/07b6b8fbbb6993d9344767a576a6cb2be2323a15))
+
 ## [1.6.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.0...v1.6.1) (2026-06-04)
 
 
