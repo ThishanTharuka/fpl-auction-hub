@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { useServerClock } from "@/lib/use-server-clock";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -133,6 +134,7 @@ export default function AuctioneerPage() {
     return () => { document.body.style.overflow = ""; };
   }, [sheetOpen]);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const serverClock = useServerClock();
 
   // ── Load initial data ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -280,9 +282,10 @@ export default function AuctioneerPage() {
     }
     const remaining = Math.max(
       0,
-      Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000),
+      Math.round((new Date(nomination.bid_end_time).getTime() - serverClock.getServerNow()) / 1000),
     );
     setSecondsLeft(remaining);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nomination]);
 
   useEffect(() => {
@@ -313,7 +316,7 @@ export default function AuctioneerPage() {
     };
     const startingPrice = basePriceMap[posKey] ?? 4;
     const timerSecs = Math.max(5, Number(startTimerInput) || (league?.timer_seconds ?? 45));
-    const endTime = new Date(Date.now() + timerSecs * 1000).toISOString();
+    const endTime = serverClock.toISO(serverClock.getServerNow() + timerSecs * 1000);
 
     const { data } = await supabase
       .from("auction_nominations")
@@ -437,7 +440,7 @@ export default function AuctioneerPage() {
       setNomination((prev) => (prev ? { ...prev, paused_seconds: pausedSeconds } : prev));
       return;
     }
-    const newEnd = new Date(Date.now() + secs * 1000).toISOString();
+    const newEnd = serverClock.toISO(serverClock.getServerNow() + secs * 1000);
     await supabase
       .from("auction_nominations")
       .update({ bid_end_time: newEnd })
@@ -448,7 +451,7 @@ export default function AuctioneerPage() {
   async function pauseTimer() {
     if (!nomination || nomination.is_paused) return;
     const remaining = nomination.bid_end_time
-      ? Math.max(0, Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000))
+      ? Math.max(0, Math.round((new Date(nomination.bid_end_time).getTime() - serverClock.getServerNow()) / 1000))
       : 0;
     await supabase
       .from("auction_nominations")
@@ -460,7 +463,7 @@ export default function AuctioneerPage() {
   async function resumeTimer() {
     if (!nomination || nomination.is_paused === false) return;
     const secs = Math.max(1, nomination.paused_seconds ?? (league?.timer_seconds ?? 45));
-    const newEnd = new Date(Date.now() + secs * 1000).toISOString();
+    const newEnd = serverClock.toISO(serverClock.getServerNow() + secs * 1000);
     await supabase
       .from("auction_nominations")
       .update({ is_paused: false, paused_seconds: null, bid_end_time: newEnd })

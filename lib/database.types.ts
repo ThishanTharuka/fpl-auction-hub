@@ -388,7 +388,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_server_time: {
+        Args: Record<string, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
