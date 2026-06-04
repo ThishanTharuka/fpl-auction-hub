@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -189,6 +187,27 @@ export type Database = {
           },
         ]
       }
+      fpl_cache: {
+        Row: {
+          key: string
+          ttl_ms: number
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          ttl_ms?: number
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          ttl_ms?: number
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       leagues: {
         Row: {
           base_price_def: number | null
@@ -310,7 +329,7 @@ export type Database = {
           {
             foreignKeyName: "team_formations_participant_id_fkey"
             columns: ["participant_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "participants"
             referencedColumns: ["id"]
           },

@@ -4,6 +4,13 @@ import type {
   EnrichedPlayer,
   FPLFixture,
 } from "./fpl-types";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
+
+const supabase = createClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 const FPL_BOOTSTRAP_URL =
   "https://fantasy.premierleague.com/api/bootstrap-static/";
@@ -12,6 +19,14 @@ const FPL_PHOTO_BASE_URL =
   "https://resources.premierleague.com/premierleague/photos/players/110x140/p";
 const FPL_CREST_BASE_URL =
   "https://resources.premierleague.com/premierleague/badges/70/t";
+
+const CACHE_KEY = "fpl_data";
+
+const TTL = {
+  MATCHDAY: 5 * 60 * 1000,
+  MATCHDAY_EVE: 30 * 60 * 1000,
+  DEFAULT: 2 * 60 * 60 * 1000,
+};
 
 const POSITION_MAP: Record<number, "GKP" | "DEF" | "MID" | "FWD"> = {
   1: "GKP",
@@ -55,14 +70,39 @@ function computeAvgFdr(
   return Math.round((total / upcoming.length) * 10) / 10;
 }
 
-export async function getFplData(): Promise<{
+function getCurrentTtl(fixtures: FPLFixture[]): number {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const hasMatchToday = fixtures.some(
+    (f) => f.kickoff_time && f.kickoff_time.startsWith(todayStr),
+  );
+
+  const hasMatchTomorrow = fixtures.some(
+    (f) => f.kickoff_time && f.kickoff_time.startsWith(tomorrowStr),
+  );
+
+  if (hasMatchToday) return TTL.MATCHDAY;
+  if (hasMatchTomorrow) return TTL.MATCHDAY_EVE;
+  return TTL.DEFAULT;
+}
+
+type FplDataResult = {
   players: EnrichedPlayer[];
   teams: FPLTeam[];
   currentGameweek: number;
+};
+
+async function fetchFromUpstream(): Promise<{
+  data: FplDataResult;
+  ttl: number;
 }> {
   const [bootstrapRes, fixturesRes] = await Promise.all([
-    fetch(FPL_BOOTSTRAP_URL, { next: { revalidate: 3600 }, headers: HEADERS }),
-    fetch(FPL_FIXTURES_URL, { next: { revalidate: 3600 }, headers: HEADERS }),
+    fetch(FPL_BOOTSTRAP_URL, { headers: HEADERS }),
+    fetch(FPL_FIXTURES_URL, { headers: HEADERS }),
   ]);
 
   if (!bootstrapRes.ok) {
@@ -73,6 +113,8 @@ export async function getFplData(): Promise<{
   const fixtures: FPLFixture[] = fixturesRes.ok
     ? await fixturesRes.json()
     : [];
+
+  const ttl = getCurrentTtl(fixtures);
 
   const currentEvent = bootstrap.events.find((e) => e.is_current);
   const nextEvent = bootstrap.events.find((e) => e.is_next);
@@ -103,8 +145,39 @@ export async function getFplData(): Promise<{
   });
 
   return {
-    players,
-    teams: bootstrap.teams,
-    currentGameweek: currentGw,
+    data: { players, teams: bootstrap.teams, currentGameweek: currentGw },
+    ttl,
   };
+}
+
+export async function getFplData(): Promise<FplDataResult> {
+  const { data } = await supabase
+    .from("fpl_cache")
+    .select("value, updated_at, ttl_ms")
+    .eq("key", CACHE_KEY)
+    .single();
+
+  if (data) {
+    const age = Date.now() - new Date(data.updated_at).getTime();
+    const ttl = data.ttl_ms ?? TTL.DEFAULT;
+    if (age < ttl) {
+      return data.value as unknown as FplDataResult;
+    }
+  }
+
+  const { data: fresh, ttl } = await fetchFromUpstream();
+
+  await supabase
+    .from("fpl_cache")
+    .upsert(
+      {
+        key: CACHE_KEY,
+        value: JSON.parse(JSON.stringify(fresh)),
+        updated_at: new Date().toISOString(),
+        ttl_ms: ttl,
+      },
+      { onConflict: "key" },
+    );
+
+  return fresh;
 }
