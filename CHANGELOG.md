@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.0...v1.6.1) (2026-06-04)
+
+
+### Bug Fixes
+
+* add skeleton loading states and suspense for players, teams, and index builder pages ([765daa6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/765daa6949b43fc23a18b46a3c05c684fbd7755c))
+
 # [1.6.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.5.0...v1.6.0) (2026-06-04)
 
 
