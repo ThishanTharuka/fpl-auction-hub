@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-
-const supabase = createSupabaseBrowserClient();
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400",
@@ -45,6 +43,8 @@ export function LeagueSettingsPanel({
   mobileOpen: boolean;
   onMobileOpenChange: (open: boolean) => void;
 }) {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const prevOpen = useRef(mobileOpen);
@@ -69,7 +69,7 @@ export function LeagueSettingsPanel({
   const [maxMid, setMaxMid] = useState(settings.max_mid);
   const [maxFwd, setMaxFwd] = useState(settings.max_fwd);
 
-  function resetForm() {
+  const resetForm = useCallback(function resetForm() {
     setName(settings.name);
     setRoomPassword(settings.room_password ?? "");
     setBudget(settings.budget_per_team);
@@ -86,12 +86,12 @@ export function LeagueSettingsPanel({
     setMaxMid(settings.max_mid);
     setMaxFwd(settings.max_fwd);
     setError(null);
-  }
+  }, [settings]);
 
   useEffect(() => {
     if (mobileOpen && !prevOpen.current) resetForm();
     prevOpen.current = mobileOpen;
-  }, [mobileOpen]);
+  }, [mobileOpen, resetForm]);
 
   useEffect(() => {
     if (settings !== prevSettings.current) {
@@ -99,7 +99,7 @@ export function LeagueSettingsPanel({
       if (!wasOpen) resetForm();
       prevSettings.current = settings;
     }
-  }, [settings]);
+  }, [settings, resetForm]);
 
   async function save() {
     if (!name.trim()) return;

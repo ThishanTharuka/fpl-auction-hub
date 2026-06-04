@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -49,7 +49,7 @@ export default function TeamsHubPage() {
   const [teams, setTeams] = useState<TeamView[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadData() {
+  const loadData = useCallback(async function loadData() {
     const [{ data: lg }, { data: ps }, { data: results }] = await Promise.all([
       supabase.from("leagues").select("budget_per_team, squad_size").eq("id", id).single(),
       supabase.from("participants").select("*").eq("league_id", id).order("name"),
@@ -93,8 +93,9 @@ export default function TeamsHubPage() {
     );
 
     setLoading(false);
-  }
+  }, [id]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: initial data fetch + realtime subscription */
   useEffect(() => {
     void loadData();
 
@@ -108,7 +109,8 @@ export default function TeamsHubPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel).catch(() => {}); };
-  }, [id]);
+  }, [id, loadData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (loading) {
     return (

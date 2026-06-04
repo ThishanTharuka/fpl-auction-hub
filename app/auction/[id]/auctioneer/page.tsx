@@ -393,23 +393,6 @@ export default function AuctioneerPage() {
     setSecondsLeft(0);
   }
 
-  async function rebid(entry: { name: string; team: string; price: number; pos: string; playerId: number; participantId: string }) {
-    await supabase
-      .from("auction_results")
-      .delete()
-      .eq("league_id", id)
-      .eq("fpl_player_id", entry.playerId);
-    setSoldIds((prev) => { const next = new Set(prev); next.delete(entry.playerId); return next; });
-    setSoldLog((prev) => (prev ?? []).filter((s) => s.playerId !== entry.playerId));
-    setTeams((prev) =>
-      prev.map((t) =>
-        t.id === entry.participantId
-          ? { ...t, spent: t.spent - entry.price, squad: t.squad - 1 }
-          : t,
-      ),
-    );
-  }
-
   async function handleConfirmRebid(stage: boolean) {
     if (!confirmRebid) return;
     const player = players.find((p) => p.id === confirmRebid.playerId);

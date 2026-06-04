@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- dynamic crests with onError fallback, next/image incompatible */
 
 import { useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -234,62 +235,6 @@ function getStatusInfo(status: string, chance: number | null) {
   }
 }
 
-function StatusDot({
-  status,
-  chance,
-}: {
-  status: string;
-  chance: number | null;
-}) {
-  const info = getStatusInfo(status, chance);
-  const [showTip, setShowTip] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
-
-  return (
-    <>
-      <span
-        ref={ref}
-        className="inline-flex items-center cursor-help"
-        onMouseEnter={() => {
-          const r = ref.current?.getBoundingClientRect();
-          if (r) setCoords({ x: r.left + r.width / 2, y: r.top });
-          setShowTip(true);
-        }}
-        onMouseLeave={() => { setShowTip(false); setCoords(null); }}
-        onClick={(e) => {
-          e.stopPropagation();
-          const r = ref.current?.getBoundingClientRect();
-          if (r) {
-            if (showTip) { setShowTip(false); setCoords(null); }
-            else { setCoords({ x: r.left + r.width / 2, y: r.top }); setShowTip(true); }
-          }
-        }}
-      >
-        <span
-          className={`inline-block w-2.5 h-2.5 rounded-full ring-2 ${info.dot} ${info.ring}`}
-        />
-      </span>
-      {showTip && coords &&
-        createPortal(
-          <div
-            style={{
-              position: "fixed",
-              left: coords.x,
-              top: coords.y - 6,
-              transform: "translate(-50%, -100%)",
-              zIndex: 9999,
-            }}
-            className="rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1 text-[11px] text-[#d6e4f9] whitespace-nowrap text-center shadow-lg pointer-events-none"
-          >
-            {info.label}
-          </div>,
-          document.body,
-        )}
-    </>
-  );
-}
-
 function StatusChip({
   status,
   chance,
@@ -297,7 +242,6 @@ function StatusChip({
   status: string;
   chance: number | null;
 }) {
-  const info = getStatusInfo(status, chance);
   const chip = (label: string, color: string) => (
     <span
       className={`inline-flex items-center justify-center rounded-full border w-20 sm:w-24 py-0.5 text-[10px] sm:text-[11px] font-medium ${color}`}
@@ -329,13 +273,11 @@ function StatusChip({
 function ColumnPickerContent({
   colVisibility,
   setColVisibility,
-  setPickerOpen,
 }: {
   colVisibility: VisibilityState;
   setColVisibility: (
     v: VisibilityState | ((prev: VisibilityState) => VisibilityState),
   ) => void;
-  setPickerOpen: (o: boolean) => void;
 }) {
   return (
     <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-lg shadow-xl p-4 overflow-y-auto w-72 max-h-[min(90vh,680px)]">
@@ -874,7 +816,6 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                 <ColumnPickerContent
                   colVisibility={colVisibility}
                   setColVisibility={setColVisibility}
-                  setPickerOpen={setPickerOpen}
                 />
               </div>
             )}

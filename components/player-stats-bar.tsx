@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element -- dynamic crests with onError fallback, next/image incompatible */
 import { useState } from "react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 

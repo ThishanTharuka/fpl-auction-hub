@@ -1,7 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- dynamic crests with onError fallback, next/image incompatible */
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useAuth } from "@/components/auth-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   Dialog,
@@ -99,7 +99,7 @@ function getFormationSlots(formation: string) {
 export function TeamsClient({
   players,
 }: Readonly<{ players: EnrichedPlayer[] }>) {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
@@ -108,7 +108,9 @@ export function TeamsClient({
   const [formationsMap, setFormationsMap] = useState<Record<string, string>>({});
   const [selectedPlayer, setSelectedPlayer] = useState<SquadPlayer | null>(null);
   const lastSelectedPlayer = useRef(selectedPlayer);
+  // eslint-disable-next-line react-hooks/refs -- intentional: keep previous player visible during dialog close animation
   if (selectedPlayer) lastSelectedPlayer.current = selectedPlayer;
+  // eslint-disable-next-line react-hooks/refs -- intentional: keep previous player visible during dialog close animation
   const displayPlayer = selectedPlayer ?? lastSelectedPlayer.current;
   const [saving, setSaving] = useState(false);
   const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
@@ -118,12 +120,14 @@ export function TeamsClient({
   const [leaguesResolved, setLeaguesResolved] = useState(false);
   const [userParticipantIds, setUserParticipantIds] = useState<string[]>([]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset derived image state when switching players */
   useEffect(() => {
     setDialogImgLoaded(false);
     setDialogImgError(false);
     setDialogCrestLoaded(false);
     setDialogCrestError(false);
   }, [selectedPlayer]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     supabase.from("leagues").select("*").then(({ data: lgs }) => {
@@ -131,7 +135,7 @@ export function TeamsClient({
       if (lgs && lgs.length > 0) setSelectedLeague(lgs[0]?.id ?? null);
       setLeaguesResolved(true);
     });
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!selectedLeague) return;
@@ -163,7 +167,7 @@ export function TeamsClient({
           }
         }
       });
-  }, [selectedLeague]);
+  }, [selectedLeague, supabase, selectedParticipant]);
 
   const currentLeague = leagues.find((l) => l.id === selectedLeague);
   const currentFormation = selectedParticipant
@@ -222,7 +226,6 @@ export function TeamsClient({
     [squad],
   );
 
-  const { user } = useAuth();
   const canEditFormation = selectedParticipant ? userParticipantIds.includes(selectedParticipant) : false;
 
   const budget = currentLeague?.budget_per_team ?? 200;
@@ -259,7 +262,7 @@ export function TeamsClient({
     if (error) {
       setFormationsMap((prev) => ({ ...prev, [selectedParticipant]: currentFormation }));
     }
-  }, [selectedParticipant, currentFormation]);
+  }, [selectedParticipant, currentFormation, supabase]);
 
   const handleMoveToBench = useCallback(async (player: SquadPlayer) => {
     setSaving(true);
@@ -276,7 +279,7 @@ export function TeamsClient({
       setSelectedPlayer(null);
     }
     setSaving(false);
-  }, []);
+  }, [supabase]);
 
   const handlePromoteToXI = useCallback(async (player: SquadPlayer) => {
     if (!selectedParticipant) return;
@@ -321,7 +324,7 @@ export function TeamsClient({
       }
     }
     setSaving(false);
-  }, [selectedParticipant, squad, currentFormation]);
+  }, [selectedParticipant, squad, currentFormation, supabase]);
 
   const selectedLeagueName = useMemo(
     () => leagues.find((l) => l.id === selectedLeague)?.name ?? "Select League",

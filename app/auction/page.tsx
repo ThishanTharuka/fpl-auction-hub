@@ -38,18 +38,6 @@ export default function AuctionBrowsePage() {
   const [passwordError, setPasswordError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    loadLeagues().catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (pendingLeague) {
-      setPasswordInput("");
-      setPasswordError("");
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [pendingLeague]);
-
   async function loadLeagues() {
     setLoading(true);
     const { data, error } = await supabase
@@ -79,6 +67,22 @@ export default function AuctionBrowsePage() {
     );
     setLoading(false);
   }
+
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: loadLeagues calls setState; this is a standard mount-and-fetch pattern */
+  useEffect(() => {
+    loadLeagues().catch(() => {});
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset password form when different league selected */
+  useEffect(() => {
+    if (pendingLeague) {
+      setPasswordInput("");
+      setPasswordError("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [pendingLeague]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleEnter(league: LeagueRow) {
     if (league.created_by === user?.id) {

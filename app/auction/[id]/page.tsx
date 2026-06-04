@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { LeagueSettingsPanel } from "./league-settings-panel";
-
-const supabase = createSupabaseBrowserClient();
 
 interface League {
   id: string;
@@ -62,26 +60,9 @@ export default function AuctionLobbyPage() {
   const [claiming, setClaiming] = useState<string | null>(null);
   const [startingAuction, setStartingAuction] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
-  useEffect(() => {
-    if (authLoading) return;
-    load().catch(() => {});
-  }, [id, authLoading]);
-
-  useEffect(() => {
-    // Realtime: watch team_members for this league
-    const channel = supabase
-      .channel(`lobby-${id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "team_members", filter: `league_id=eq.${id}` },
-        () => { load().catch(() => {}); },
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel).catch(() => {}); };
-  }, [id]);
-
-  async function load() {
+  const load = useCallback(async function load() {
     const [{ data: lg }, { data: ps }, { data: ms }] = await Promise.all([
       supabase.from("leagues").select("*").eq("id", id).single(),
       supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
@@ -95,7 +76,27 @@ export default function AuctionLobbyPage() {
       setMyMembership(msList.find((m) => m.user_id === user.id) ?? null);
     }
     setLoading(false);
-  }
+  }, [id, supabase, user]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: load calls setState; mount-and-fetch pattern */
+  useEffect(() => {
+    if (authLoading) return;
+    load().catch(() => {});
+  }, [id, authLoading, load]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    // Realtime: watch team_members for this league
+    const channel = supabase
+      .channel(`lobby-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "team_members", filter: `league_id=eq.${id}` },
+        () => { load().catch(() => {}); },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel).catch(() => {}); };
+  }, [id, load, supabase]);
 
   async function claimTeam(participantId: string) {
     if (!user) { router.push("/login"); return; }
@@ -458,7 +459,9 @@ function TeamDot({ color }: Readonly<{ color: string }>) {
 function CopyRow({ label, url }: Readonly<{ label: string; url: string }>) {
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
+  /* eslint-disable react-hooks/set-state-in-effect -- intentional: derive window origin once on mount */
   useEffect(() => { setOrigin(globalThis.window?.location.origin ?? ""); }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
   const fullUrl = `${origin}${url}`;
   function copy() {
     navigator.clipboard.writeText(fullUrl).catch(() => {});
