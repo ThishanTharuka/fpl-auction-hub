@@ -1,5 +1,26 @@
 # Changelog
 
+# [1.5.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.4.0...v1.5.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* optimize image loading and adjust dimensions across components ([c19ac3d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c19ac3d68b36e9af7cbe105b8a0a64b612dffacb))
+* regenerate lockfile with optional deps ([18c425c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/18c425c25ab85aad5b37f2d59a61c3c8888e5508))
+* sync package-lock.json ([0d1b9f2](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0d1b9f28b464f943af47be4edd9fe83a392a1125))
+* update image formats to WebP and adjust API fetch caching ([43d14c8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/43d14c886b6d98f470dafdbea8db408d636d5c69))
+* update main element styling for login form layout ([0ec0be3](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0ec0be3d150c7de9c9d1575c7c3d8c63cb79e147))
+
+
+### Features
+
+* add FPL data fetching and processing logic ([f262a52](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f262a520791226572928df06121b785756733fa9))
+* add loading state and skeleton UI for TeamsClient component ([338957c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/338957c4745ef813696f8f1e8268acace57dc5c0))
+* add TeamsClient component for managing fantasy league teams and player auctions ([8438ebd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8438ebde1f145cbb06b8a2f2cba14224caedd6e3))
+* implement NProgress for loading indicators and update dependencies ([3618cc0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/3618cc07e6e45f7cc4da77406bfe9e3428c672c2))
+* integrate Supabase client and enhance team member management in TeamsClient component ([de459f2](https://github.com/ThishanTharuka/fpl-auction-hub/commit/de459f2c1621bf577ea683224c6ef49cc76f1277))
+* refactor player selection logic in PlayersTable and TeamsClient components ([447c22b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/447c22b01e4bdd98d52d82ddc2bdc6925a2ea08d))
+
 # [1.4.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.2...v1.4.0) (2026-06-03)
 
 
