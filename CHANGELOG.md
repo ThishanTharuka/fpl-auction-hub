@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.6.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.5.0...v1.6.0) (2026-06-04)
+
+
+### Features
+
+* implement caching mechanism for FPL data using Supabase ([33d3f2b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/33d3f2bdf66edf33ef11d3cba7a56d48e59fe4ac))
+
 # [1.5.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.4.0...v1.5.0) (2026-06-04)
 
 
