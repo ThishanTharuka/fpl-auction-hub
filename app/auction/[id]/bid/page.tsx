@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { useServerClock } from "@/lib/use-server-clock";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
@@ -128,6 +129,7 @@ export default function BidPage() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const serverClock = useServerClock();
   const fplPlayersMapRef = useRef<Map<number, EnrichedPlayer>>(new Map());
 
   const loadMySquad = useCallback(async (participantId: string, lg: League | null, playerMap?: Map<number, EnrichedPlayer>) => {
@@ -266,9 +268,10 @@ export default function BidPage() {
     if (!nomination.bid_end_time) { setSecondsLeft(0); return; }
     const remaining = Math.max(
       0,
-      Math.round((new Date(nomination.bid_end_time).getTime() - Date.now()) / 1000),
+      Math.round((new Date(nomination.bid_end_time).getTime() - serverClock.getServerNow()) / 1000),
     );
     setSecondsLeft(remaining);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nomination]);
 
   useEffect(() => {
@@ -286,9 +289,9 @@ export default function BidPage() {
     setBidding(true);
     const inc = league.bid_increment ?? 0.5;
     const bidAmount = resolveBidAmount(nomination, inc);
-    const endTime = new Date(Date.now() + (league.timer_seconds ?? 45) * 1000).toISOString();
+    const endTime = serverClock.toISO(serverClock.getServerNow() + (league.timer_seconds ?? 45) * 1000);
 
-    const nowIso = new Date().toISOString();
+    const nowIso = serverClock.toISO(serverClock.getServerNow());
     const { data: updatedRow } = await supabase
       .from("auction_nominations")
       .update({
