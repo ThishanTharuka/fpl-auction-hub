@@ -116,7 +116,7 @@ function LoginForm() {
     <main className="fixed inset-0 flex items-center justify-center px-4 overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
-        style={{ backgroundImage: "url(/fplbg.jpg)" }}
+        style={{ backgroundImage: "url(/fplbg.webp)" }}
       />
       <div
         className="relative z-10 w-full max-w-sm rounded-xl border p-8 space-y-6"

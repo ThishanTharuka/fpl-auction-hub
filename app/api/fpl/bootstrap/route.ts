@@ -63,8 +63,8 @@ const HEADERS = {
 export async function GET() {
   try {
     const [bootstrapRes, fixturesRes] = await Promise.all([
-      fetch(FPL_BOOTSTRAP_URL, { cache: "no-store", headers: HEADERS }),
-      fetch(FPL_FIXTURES_URL, { cache: "no-store", headers: HEADERS }),
+      fetch(FPL_BOOTSTRAP_URL, { next: { revalidate: 3600 }, headers: HEADERS }),
+      fetch(FPL_FIXTURES_URL, { next: { revalidate: 3600 }, headers: HEADERS }),
     ]);
 
     if (!bootstrapRes.ok) {

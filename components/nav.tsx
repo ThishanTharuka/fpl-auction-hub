@@ -29,7 +29,7 @@ export function Nav() {
           className="flex items-center gap-2 font-bold text-[#00e478] shrink-0"
         >
           <img
-            src="/fplah.png"
+            src="/fplah.webp"
             alt="FPL Auction Hub"
             className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
           />
