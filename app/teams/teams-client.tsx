@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface League {
   id: string;
   name: string;
   budget_per_team: number;
+  created_by: string | null;
   max_gkp: number | null;
   max_def: number | null;
   max_mid: number | null;
@@ -97,6 +99,7 @@ function getFormationSlots(formation: string) {
 export function TeamsClient({
   players,
 }: Readonly<{ players: EnrichedPlayer[] }>) {
+  const supabase = createSupabaseBrowserClient();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [participants, setParticipants] = useState<ParticipantRow[]>([]);
@@ -113,6 +116,7 @@ export function TeamsClient({
   const [dialogCrestLoaded, setDialogCrestLoaded] = useState(false);
   const [dialogCrestError, setDialogCrestError] = useState(false);
   const [leaguesResolved, setLeaguesResolved] = useState(false);
+  const [userParticipantIds, setUserParticipantIds] = useState<string[]>([]);
 
   useEffect(() => {
     setDialogImgLoaded(false);
@@ -137,12 +141,14 @@ export function TeamsClient({
       .eq("league_id", selectedLeague)
       .then(async ({ data: ps }) => {
         const ids = (ps ?? []).map((p: ParticipantRow) => p.id);
-        const [fs, rs] = await Promise.all([
+        const [fs, rs, tm] = await Promise.all([
           ids.length > 0
             ? supabase.from("team_formations").select("*").in("participant_id", ids)
             : { data: [] as TeamFormation[] },
           supabase.from("auction_results").select("*").eq("league_id", selectedLeague),
+          supabase.from("team_members").select("participant_id").eq("league_id", selectedLeague).eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? ""),
         ]);
+        setUserParticipantIds((tm.data ?? []).map((r: { participant_id: string }) => r.participant_id));
         setParticipants(ps ?? []);
         setResults(rs.data ?? []);
         const fm: Record<string, string> = {};
@@ -216,6 +222,9 @@ export function TeamsClient({
     [squad],
   );
 
+  const { user } = useAuth();
+  const canEditFormation = selectedParticipant ? userParticipantIds.includes(selectedParticipant) : false;
+
   const budget = currentLeague?.budget_per_team ?? 200;
   const remaining = budget - totalSpent;
   const budgetPct = (totalSpent / budget) * 100;
@@ -243,11 +252,14 @@ export function TeamsClient({
   const handleFormationChange = useCallback(async (newFormation: string) => {
     if (!selectedParticipant) return;
     setFormationsMap((prev) => ({ ...prev, [selectedParticipant]: newFormation }));
-    await supabase.from("team_formations").upsert(
+    const { error } = await supabase.from("team_formations").upsert(
       { participant_id: selectedParticipant, formation: newFormation },
       { onConflict: "participant_id" },
     );
-  }, [selectedParticipant]);
+    if (error) {
+      setFormationsMap((prev) => ({ ...prev, [selectedParticipant]: currentFormation }));
+    }
+  }, [selectedParticipant, currentFormation]);
 
   const handleMoveToBench = useCallback(async (player: SquadPlayer) => {
     setSaving(true);
@@ -433,23 +445,29 @@ export function TeamsClient({
           </SelectContent>
         </Select>
 
-        <Select
-          value={currentFormation}
-          onValueChange={(v) => v && handleFormationChange(v)}
-        >
-          <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[100px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
-            <SelectGroup>
-              {FORMATIONS.map((f) => (
-                <SelectItem key={f} value={f} className="text-xs">
-                  {f}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        {canEditFormation ? (
+          <Select
+            value={currentFormation}
+            onValueChange={(v) => v && handleFormationChange(v)}
+          >
+            <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+              <SelectGroup>
+                {FORMATIONS.map((f) => (
+                  <SelectItem key={f} value={f} className="text-xs">
+                    {f}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="bg-[#132030] border border-[#3b4b3d] text-[#6b7b6b] h-8 text-xs w-auto min-w-[100px] rounded px-3 py-1.5 flex items-center select-none cursor-not-allowed">
+            {currentFormation}
+          </div>
+        )}
 
         {currentLeague && (
           <div className="text-xs text-[#849585] ml-auto">
