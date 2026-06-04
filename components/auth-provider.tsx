@@ -24,12 +24,14 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     // Read session from cookies (instant, no network request)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) setUser(session.user);
+      setLoading(false);
     });
 
     // Listen for auth state changes
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading: false, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
