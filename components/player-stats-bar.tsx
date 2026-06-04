@@ -209,12 +209,16 @@ export function PlayerStatsBar({
             <img
               src="/player-fallback.png"
               alt={player.full_name}
+              width={1024}
+              height={1024}
               className={`relative w-full drop-shadow-[0_12px_32px_rgba(0,0,0,0.55)] ${wide ? "h-full object-contain object-bottom" : "h-full object-cover object-top"}`}
             />
           ) : (
             <img
               src={player.image_url}
               alt={player.full_name}
+              width={110}
+              height={140}
               loading="lazy"
               onLoad={() => { setImgLoaded(true); setImgError(false); }}
               onError={() => { setImgLoaded(false); setImgError(true); }}
@@ -239,6 +243,8 @@ export function PlayerStatsBar({
                 <img
                   src={player.team_crest_url}
                   alt={`${player.team_name} crest`}
+                  width={70}
+                  height={70}
                   className={`h-5 w-5 rounded-sm object-contain ${crestLoaded ? "" : "opacity-0 absolute"}`}
                   loading="lazy"
                   onLoad={() => { setCrestLoaded(true); setCrestError(false); }}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -28,10 +29,13 @@ export function Nav() {
           href="/"
           className="flex items-center gap-2 font-bold text-[#00e478] shrink-0"
         >
-          <img
+          <Image
             src="/fplah.webp"
             alt="FPL Auction Hub"
+            width={32}
+            height={32}
             className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
+            priority
           />
           <span className="hidden sm:inline">FPL Auction Hub</span>
         </Link>

@@ -1005,12 +1005,16 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                       <img
                         src="/player-fallback.png"
                         alt={selected.web_name}
+                        width={1024}
+                        height={1024}
                         className="h-full w-full rounded object-cover bg-[#132030]"
                       />
                     ) : (
                       <img
                         src={selected.image_url}
                         alt={selected.web_name}
+                        width={110}
+                        height={140}
                         className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
                         loading="lazy"
                         onLoad={() => { setDialogImgLoaded(true); setDialogImgError(false); }}
@@ -1035,6 +1039,8 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                       <img
                         src={selected.team_crest_url}
                         alt={selected.team_name}
+                        width={70}
+                        height={70}
                         className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
                         loading="lazy"
                         onLoad={() => { setDialogCrestLoaded(true); setDialogCrestError(false); }}

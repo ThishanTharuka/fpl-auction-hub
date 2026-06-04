@@ -1,8 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // No custom output mode — Vercel auto-detects Next.js and deploys optimally
-  // without `output: "standalone"`. Keep this default for Vercel hosting.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "resources.premierleague.com",
+        pathname: "/premierleague/**",
+      },
+    ],
+  },
 
   // Security headers
   async headers() {
