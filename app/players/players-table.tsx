@@ -466,6 +466,9 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
     { id: "total_points", desc: true },
   ]);
   const [selected, setSelected] = useState<EnrichedPlayer | null>(null);
+  const lastSelected = useRef(selected);
+  if (selected) lastSelected.current = selected;
+  const displayPlayer = selected ?? lastSelected.current;
   const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
   const [dialogImgError, setDialogImgError] = useState(false);
   const [dialogCrestLoaded, setDialogCrestLoaded] = useState(false);
@@ -993,7 +996,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
       {/* Player detail modal */}
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
-          {selected && (
+          {displayPlayer && (
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
@@ -1004,15 +1007,15 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                     {dialogImgError ? (
                       <img
                         src="/player-fallback.png"
-                        alt={selected.web_name}
+                        alt={displayPlayer.web_name}
                         width={1024}
                         height={1024}
                         className="h-full w-full rounded object-cover bg-[#132030]"
                       />
                     ) : (
                       <img
-                        src={selected.image_url}
-                        alt={selected.web_name}
+                        src={displayPlayer.image_url}
+                        alt={displayPlayer.web_name}
                         width={110}
                         height={140}
                         className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
@@ -1024,88 +1027,100 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                   </div>
                   <div className="flex-1 min-w-0">
                     <DialogTitle className="text-lg sm:text-xl font-bold truncate">
-                      {selected.web_name}
+                      {displayPlayer.web_name}
                     </DialogTitle>
-                    <p className="text-xs sm:text-sm text-[#b9cbb9] truncate">
-                      {selected.team_name} · {selected.position}
+                    <p className="text-xs sm:text-sm text-[#b9cbb9]">
+                      {POSITION_LABELS[displayPlayer.position] ??
+                        displayPlayer.position}
+                      {" · "}
+                      {displayPlayer.team_name}
+                      {" · "}
+                      <span className="text-[#00d166]">
+                        £{displayPlayer.price.toFixed(1)}m
+                      </span>
                     </p>
                   </div>
-                  {selected.team_crest_url && (
-                    dialogCrestError ? (
-                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8">
-                        <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">{selected.team_short?.charAt(0) ?? "?"}</span>
+                  {displayPlayer.team_crest_url &&
+                    (dialogCrestError ? (
+                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">
+                          {displayPlayer.team_short?.charAt(0) ?? "?"}
+                        </span>
                       </div>
                     ) : (
                       <img
-                        src={selected.team_crest_url}
-                        alt={selected.team_name}
-                        width={70}
-                        height={70}
-                        className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
+                        src={displayPlayer.team_crest_url}
+                        alt={displayPlayer.team_name}
+                        className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 shrink-0 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
                         loading="lazy"
                         onLoad={() => { setDialogCrestLoaded(true); setDialogCrestError(false); }}
                         onError={() => { setDialogCrestLoaded(true); setDialogCrestError(true); }}
                       />
-                    )
-                  )}
-                  {!dialogCrestLoaded && !dialogCrestError && selected.team_crest_url && (
-                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
-                  )}
+                    ))}
+                  {!dialogCrestLoaded &&
+                    !dialogCrestError &&
+                    displayPlayer.team_crest_url && (
+                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
+                    )}
                 </div>
               </DialogHeader>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-4">
-                <Stat label="Price" value={`£${selected.price.toFixed(1)}m`} />
-                <Stat label="Total Points" value={selected.total_points} />
-                <Stat label="PPG" value={selected.points_per_game} />
                 <Stat
-                  label="Own %"
-                  value={`${selected.selected_by_percent}%`}
+                  label="Price"
+                  value={`£${displayPlayer.price.toFixed(1)}m`}
                 />
-                <Stat label="Form" value={selected.form} highlight />
-                <Stat label="ICT Index" value={selected.ict_index} />
+                <Stat
+                  label="Total Points"
+                  value={displayPlayer.total_points}
+                />
+                <Stat label="PPG" value={displayPlayer.points_per_game} />
+                <Stat label="Form" value={displayPlayer.form} highlight />
+                <Stat label="ICT Index" value={displayPlayer.ict_index} />
+                <Stat
+                  label="xGI"
+                  value={parseFloat(displayPlayer.expected_goal_involvements).toFixed(2)}
+                />
+                <Stat label="Goals" value={displayPlayer.goals_scored} />
+                <Stat label="Assists" value={displayPlayer.assists} />
+                <Stat
+                  label="Clean Sheets"
+                  value={displayPlayer.clean_sheets}
+                />
+                <Stat label="Minutes" value={displayPlayer.minutes} />
+                <Stat label="Bonus" value={displayPlayer.bonus} />
+                <Stat label="Starts" value={displayPlayer.starts} />
                 <Stat
                   label="Influence"
-                  value={parseFloat(selected.influence).toFixed(1)}
+                  value={parseFloat(displayPlayer.influence).toFixed(1)}
                 />
                 <Stat
                   label="Creativity"
-                  value={parseFloat(selected.creativity).toFixed(1)}
+                  value={parseFloat(displayPlayer.creativity).toFixed(1)}
                 />
                 <Stat
                   label="Threat"
-                  value={parseFloat(selected.threat).toFixed(1)}
+                  value={parseFloat(displayPlayer.threat).toFixed(1)}
                 />
                 <Stat
                   label="xG"
-                  value={parseFloat(selected.expected_goals).toFixed(2)}
+                  value={parseFloat(displayPlayer.expected_goals).toFixed(2)}
                 />
                 <Stat
                   label="xA"
-                  value={parseFloat(selected.expected_assists).toFixed(2)}
-                />
-                <Stat
-                  label="xGI"
-                  value={parseFloat(
-                    selected.expected_goal_involvements,
-                  ).toFixed(2)}
+                  value={parseFloat(displayPlayer.expected_assists).toFixed(2)}
                 />
                 <Stat
                   label="xGC"
-                  value={parseFloat(selected.expected_goals_conceded).toFixed(
-                    2,
-                  )}
+                  value={parseFloat(displayPlayer.expected_goals_conceded).toFixed(2)}
                 />
-                <Stat label="Goals" value={selected.goals_scored} />
-                <Stat label="Assists" value={selected.assists} />
-                <Stat label="Clean Sheets" value={selected.clean_sheets} />
-                <Stat label="Minutes" value={selected.minutes} />
-                <Stat label="Bonus" value={selected.bonus} />
-                <Stat label="BPS" value={selected.bps} />
-                <Stat label="Avg FDR ×5" value={selected.avg_fdr_next5} />
+                <Stat label="BPS" value={displayPlayer.bps} />
+                <Stat label="Avg FDR ×5" value={displayPlayer.avg_fdr_next5} />
               </div>
-              {selected.news && (
-                <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2">
-                  {selected.news}
+
+              {displayPlayer.news && (
+                <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2 mb-2">
+                  {displayPlayer.news}
                 </p>
               )}
             </>

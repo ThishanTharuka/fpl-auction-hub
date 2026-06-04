@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Dialog,
@@ -104,6 +104,9 @@ export function TeamsClient({
   const [results, setResults] = useState<AuctionResultRow[]>([]);
   const [formationsMap, setFormationsMap] = useState<Record<string, string>>({});
   const [selectedPlayer, setSelectedPlayer] = useState<SquadPlayer | null>(null);
+  const lastSelectedPlayer = useRef(selectedPlayer);
+  if (selectedPlayer) lastSelectedPlayer.current = selectedPlayer;
+  const displayPlayer = selectedPlayer ?? lastSelectedPlayer.current;
   const [saving, setSaving] = useState(false);
   const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
   const [dialogImgError, setDialogImgError] = useState(false);
@@ -657,7 +660,7 @@ export function TeamsClient({
         onOpenChange={(o) => !o && setSelectedPlayer(null)}
       >
         <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
-          {selectedPlayer && (
+          {displayPlayer && (
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
@@ -668,13 +671,13 @@ export function TeamsClient({
                     {dialogImgError ? (
                       <img
                         src="/player-fallback.png"
-                        alt={selectedPlayer.web_name}
+                        alt={displayPlayer.web_name}
                         className="h-full w-full rounded object-cover bg-[#132030]"
                       />
                     ) : (
                       <img
-                        src={selectedPlayer.image_url}
-                        alt={selectedPlayer.web_name}
+                        src={displayPlayer.image_url}
+                        alt={displayPlayer.web_name}
                         className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
                         loading="lazy"
                         onLoad={() => {
@@ -690,30 +693,30 @@ export function TeamsClient({
                   </div>
                   <div className="flex-1 min-w-0">
                     <DialogTitle className="text-lg sm:text-xl font-bold truncate">
-                      {selectedPlayer.web_name}
+                      {displayPlayer.web_name}
                     </DialogTitle>
                     <p className="text-xs sm:text-sm text-[#b9cbb9]">
-                      {POSITION_LABELS[selectedPlayer.position] ??
-                        selectedPlayer.position}
+                      {POSITION_LABELS[displayPlayer.position] ??
+                        displayPlayer.position}
                       {" · "}
-                      {selectedPlayer.team_name}
+                      {displayPlayer.team_name}
                       {" · "}
                       <span className="text-[#00d166]">
-                        £{selectedPlayer.price_paid.toFixed(1)}m
+                        £{displayPlayer.price_paid.toFixed(1)}m
                       </span>
                     </p>
                   </div>
-                  {selectedPlayer.team_crest_url &&
+                  {displayPlayer.team_crest_url &&
                     (dialogCrestError ? (
                       <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8 shrink-0">
                         <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">
-                          {selectedPlayer.team_short?.charAt(0) ?? "?"}
+                          {displayPlayer.team_short?.charAt(0) ?? "?"}
                         </span>
                       </div>
                     ) : (
                       <img
-                        src={selectedPlayer.team_crest_url}
-                        alt={selectedPlayer.team_name}
+                        src={displayPlayer.team_crest_url}
+                        alt={displayPlayer.team_name}
                         className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 shrink-0 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
                         loading="lazy"
                         onLoad={() => {
@@ -728,7 +731,7 @@ export function TeamsClient({
                     ))}
                   {!dialogCrestLoaded &&
                     !dialogCrestError &&
-                    selectedPlayer.team_crest_url && (
+                    displayPlayer.team_crest_url && (
                       <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
                     )}
                 </div>
@@ -737,63 +740,63 @@ export function TeamsClient({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-4">
                 <Stat
                   label="Price"
-                  value={`£${selectedPlayer.price_paid.toFixed(1)}m`}
+                  value={`£${displayPlayer.price_paid.toFixed(1)}m`}
                 />
                 <Stat
                   label="Total Points"
-                  value={selectedPlayer.total_points}
+                  value={displayPlayer.total_points}
                 />
-                <Stat label="PPG" value={selectedPlayer.points_per_game} />
-                <Stat label="Form" value={selectedPlayer.form} highlight />
-                <Stat label="ICT Index" value={selectedPlayer.ict_index} />
+                <Stat label="PPG" value={displayPlayer.points_per_game} />
+                <Stat label="Form" value={displayPlayer.form} highlight />
+                <Stat label="ICT Index" value={displayPlayer.ict_index} />
                 <Stat
                   label="xGI"
                   value={parseFloat(
-                    selectedPlayer.expected_goal_involvements,
+                    displayPlayer.expected_goal_involvements,
                   ).toFixed(2)}
                 />
-                <Stat label="Goals" value={selectedPlayer.goals_scored} />
-                <Stat label="Assists" value={selectedPlayer.assists} />
+                <Stat label="Goals" value={displayPlayer.goals_scored} />
+                <Stat label="Assists" value={displayPlayer.assists} />
                 <Stat
                   label="Clean Sheets"
-                  value={selectedPlayer.clean_sheets}
+                  value={displayPlayer.clean_sheets}
                 />
-                <Stat label="Minutes" value={selectedPlayer.minutes} />
-                <Stat label="Bonus" value={selectedPlayer.bonus} />
-                <Stat label="Starts" value={selectedPlayer.starts} />
+                <Stat label="Minutes" value={displayPlayer.minutes} />
+                <Stat label="Bonus" value={displayPlayer.bonus} />
+                <Stat label="Starts" value={displayPlayer.starts} />
                 <Stat
                   label="Influence"
-                  value={parseFloat(selectedPlayer.influence).toFixed(1)}
+                  value={parseFloat(displayPlayer.influence).toFixed(1)}
                 />
                 <Stat
                   label="Creativity"
-                  value={parseFloat(selectedPlayer.creativity).toFixed(1)}
+                  value={parseFloat(displayPlayer.creativity).toFixed(1)}
                 />
                 <Stat
                   label="Threat"
-                  value={parseFloat(selectedPlayer.threat).toFixed(1)}
+                  value={parseFloat(displayPlayer.threat).toFixed(1)}
                 />
                 <Stat
                   label="xG"
-                  value={parseFloat(selectedPlayer.expected_goals).toFixed(2)}
+                  value={parseFloat(displayPlayer.expected_goals).toFixed(2)}
                 />
                 <Stat
                   label="xA"
-                  value={parseFloat(selectedPlayer.expected_assists).toFixed(2)}
+                  value={parseFloat(displayPlayer.expected_assists).toFixed(2)}
                 />
                 <Stat
                   label="xGC"
                   value={parseFloat(
-                    selectedPlayer.expected_goals_conceded,
+                    displayPlayer.expected_goals_conceded,
                   ).toFixed(2)}
                 />
-                <Stat label="BPS" value={selectedPlayer.bps} />
-                <Stat label="Avg FDR ×5" value={selectedPlayer.avg_fdr_next5} />
+                <Stat label="BPS" value={displayPlayer.bps} />
+                <Stat label="Avg FDR ×5" value={displayPlayer.avg_fdr_next5} />
               </div>
 
-              {selectedPlayer.news && (
+              {displayPlayer.news && (
                 <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2 mb-2">
-                  {selectedPlayer.news}
+                  {displayPlayer.news}
                 </p>
               )}
 
@@ -803,7 +806,7 @@ export function TeamsClient({
                   <Button
                     size="sm"
                     disabled={saving}
-                    onClick={() => handleMoveToBench(selectedPlayer)}
+                    onClick={() => handleMoveToBench(displayPlayer)}
                     className="h-8 text-xs bg-[#444] text-white hover:bg-[#555]"
                   >
                     Send to Bench
@@ -812,7 +815,7 @@ export function TeamsClient({
                   <Button
                     size="sm"
                     disabled={saving}
-                    onClick={() => handlePromoteToXI(selectedPlayer)}
+                    onClick={() => handlePromoteToXI(displayPlayer)}
                     className="h-8 text-xs bg-[#1a4731] text-[#00ff87] hover:bg-[#1e5c3a]"
                   >
                     Promote to Starting XI
