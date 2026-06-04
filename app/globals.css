@@ -90,6 +90,15 @@
   --sidebar-ring: #00e478;
 }
 
+/* NProgress — match app green accent */
+#nprogress .bar {
+  background: #00e478 !important;
+  height: 3px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #00e478, 0 0 5px #00e478 !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

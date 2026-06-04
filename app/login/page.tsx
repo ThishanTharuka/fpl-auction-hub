@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import NProgress from "nprogress";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ function LoginForm() {
         setLoading(false);
       } else {
         // Redirect — middleware will pick up the new session
+        NProgress.start();
         window.location.href = "/players";
       }
     } else {
