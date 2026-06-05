@@ -93,6 +93,118 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm test` | Run Vitest tests |
 | `npm run type-check && npm run lint` | Verify before committing |
 
+## User Guide
+
+### For the Auctioneer (League Owner)
+
+The auctioneer creates the league, configures rules, manages teams, and runs the live auction.
+
+#### 1. Create a League
+
+Go to `/auction` and click **+ New Auction**. Configure:
+
+| Setting | Description |
+|---|---|
+| League Name | Name visible to all managers |
+| Room Password | Optional — managers must enter this to join |
+| Budget per Team | Total £m each manager can spend |
+| Timer | Countdown seconds per nomination (15–120) |
+| Bid Increment | Minimum £m increase per bid |
+| Starting Prices | Base bid price per position (GKP, DEF, MID, FWD) |
+| Max Per Club | Limit players from the same FPL club |
+| Teams | Add participating team/manager names (at least 2) |
+
+Click **Create Auction** to save.
+
+#### 2. Lobby — Manage Teams
+
+After creation you land on the lobby (`/auction/[id]`). Here you can:
+
+- **Share the lobby URL** — copy the URL from the Quick Links section and send it to managers
+- **Approve or reject** team claims — managers who claim a team appear with a yellow "pending" badge; click ✓ to approve or ✗ to reject
+- **Edit settings** — the right sidebar (or "Settings" button on mobile) lets you change league rules before the auction starts
+- **Start Auction** — once every team has at least one approved manager, click the green button to set the league to "Live"
+
+#### 3. Auctioneer Panel
+
+Once live, click **Open Auctioneer Panel** (`/auction/[id]/auctioneer`).
+
+##### Nominating a Player
+
+1. Use the **search bar** in the left panel to find a player by name or club
+2. Filter by position using the GKP / DEF / MID / FWD buttons
+3. Click a player to **stage** them — the centre panel shows their stats and a timer dropdown
+4. Select the timer duration (10–60 seconds) and click **Start Bidding**
+
+##### During a Bid
+
+While bidding is open you can:
+
+- **Monitor the timer** — green (>15s), yellow (5–15s), or red (<5s)
+- **See the current bid** and who placed it
+- **View bid history** in the panel below the player card
+- **Sell** — click the green **SOLD** button to finalise the sale to the current highest bidder
+- **Unsold** — if the timer hits 0 with no bids, click **Unsold** to remove the player
+- **Extend** — add extra seconds to the timer (or to the paused counter)
+- **Pause / Resume** — pause the countdown mid-bid
+- **Cancel** — cancel the current nomination entirely
+
+The sold log on the left shows all sales so far. Click ↩ next to any sold player to **rebid** them (clears the previous sale and stages the player again).
+
+##### Budgets Panel
+
+The right sidebar shows every team's remaining budget and squad count. Sold players automatically deduct from the buying team's budget.
+
+### For the Bidder (Manager)
+
+#### 1. Find and Join an Auction
+
+Go to `/auction` to browse all available leagues. Look for:
+
+- **Live** (green) and **Setup** (yellow) leagues
+- Leagues marked **Your auction** are ones you created
+- 🔒 **Password** badges mean you'll need the room password to enter
+
+Click **Enter** to go to the lobby.
+
+#### 2. Claim a Team
+
+In the lobby, find a team you want to manage and click **Claim**. The auctioneer must approve you before you can bid. While waiting, your status shows as "pending".
+
+Once approved, a **Go to Live Auction** button appears.
+
+#### 3. Live Bidding
+
+Click the bid link to open `/auction/[id]/bid`. The page shows:
+
+- **Player card** with position, club, and stats (xG, goals, assists, etc.)
+- **Timer** counting down — same time visible to the auctioneer
+- **Current bid** and who placed it
+- **Your squad** list below
+
+To bid, click **Bid £Xm**. Rules that block a bid:
+
+- You cannot outbid yourself
+- You must have enough budget remaining
+- You cannot exceed the position limit (e.g. max 2 GKP)
+- Bidding is disabled while the timer is paused or expired
+
+If you are outbid, the timer resets and you can bid again.
+
+#### 4. After the Auction
+
+Use the **Teams** view (`/auction/[id]/teams`) to see every participant's squad sorted by formation (4-3-3 / 3-4-3 / 4-4-2 / 3-5-2 / 5-3-2 / 4-5-1).
+
+---
+
+### For Everyone: Other Pages
+
+| Page | Description |
+|---|---|
+| `/players` | Browse all FPL players with sorting, filtering, and detailed stats — **Streaming SSR** |
+| `/index-builder` | Build a custom weighted scoring index to value players for your auction |
+| `/teams` | Global view of all squads across all leagues |
+
 ## Architecture
 
 ### Streaming SSR
