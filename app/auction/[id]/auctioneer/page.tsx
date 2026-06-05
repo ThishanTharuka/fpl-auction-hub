@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { useServerClock } from "@/lib/use-server-clock";
+import { toast } from "sonner";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -391,6 +392,9 @@ export default function AuctioneerPage() {
       },
       ...(prev ?? []),
     ]);
+    toast.success(
+      `${nomination.player_name} SOLD to ${winnerTeam?.name ?? nomination.current_bidder_name} for \u00a3${nomination.current_bid}m`,
+    );
     setNomination(null);
     setRecentBids([]);
     setSecondsLeft(0);
@@ -419,10 +423,14 @@ export default function AuctioneerPage() {
 
   async function cancelNomination() {
     if (!nomination) return;
+    const name = nomination.player_name;
     await supabase
       .from("auction_nominations")
       .update({ status: "cancelled" })
       .eq("id", nomination.id);
+    toast(`${name} - CANCELLED`, {
+      style: { background: "#9a3412", color: "#ffedd5", border: "1px solid #ea580c" },
+    });
     setNomination(null);
     setRecentBids([]);
     setSecondsLeft(0);
@@ -473,10 +481,14 @@ export default function AuctioneerPage() {
 
   async function markUnsold() {
     if (!nomination) return;
+    const name = nomination.player_name;
     await supabase
       .from("auction_nominations")
       .update({ status: "unsold" })
       .eq("id", nomination.id);
+    toast(`${name} - UNSOLD`, {
+      style: { background: "#991b1b", color: "#fecaca", border: "1px solid #dc2626" },
+    });
     setNomination(null);
     setRecentBids([]);
     setSecondsLeft(0);

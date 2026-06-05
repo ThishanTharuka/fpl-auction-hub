@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { AuthProvider } from "@/components/auth-provider";
 import { NProgressProvider } from "@/components/nprogress-provider";
+import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "nprogress/nprogress.css";
@@ -29,6 +30,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
           </NProgressProvider>
         </AuthProvider>
+        <Toaster position="top-right" />
         <Analytics />
         <SpeedInsights />
       </body>

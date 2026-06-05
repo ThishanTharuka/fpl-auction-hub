@@ -116,6 +116,18 @@ function checkCanBid(a: CanBidArgs): boolean {
   return true;
 }
 
+interface AuctionEvent {
+  type: "sold" | "unsold" | "cancelled";
+  playerName: string;
+  playerTeam: string | null;
+  position: string;
+  winnerName: string | null;
+  winnerId: string | null;
+  price: number;
+  fplPlayerId: number;
+  fullName: string;
+}
+
 export default function BidPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -128,6 +140,7 @@ export default function BidPage() {
   const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [bidding, setBidding] = useState(false);
+  const [auctionEvent, setAuctionEvent] = useState<AuctionEvent | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -259,8 +272,29 @@ export default function BidPage() {
       if (row.status === "open") {
         setNomination(row);
         setFplPlayer(fplPlayersMapRef.current.get(row.fpl_player_id) ?? null);
+        setAuctionEvent(null);
         return;
       }
+
+      if (
+        row.status === "sold" ||
+        row.status === "unsold" ||
+        row.status === "cancelled"
+      ) {
+        const player = fplPlayersMapRef.current.get(row.fpl_player_id);
+        setAuctionEvent({
+          type: row.status,
+          playerName: row.player_name,
+          playerTeam: row.player_team,
+          position: row.position,
+          winnerName: row.current_bidder_name,
+          winnerId: row.current_bidder_id,
+          price: row.current_bid,
+          fplPlayerId: row.fpl_player_id,
+          fullName: player?.full_name ?? row.player_name,
+        });
+      }
+
       setNomination(null);
       setFplPlayer(null);
       setSecondsLeft(0);
@@ -336,6 +370,13 @@ export default function BidPage() {
     nomination?.paused_seconds,
     tickTimer,
   ]);
+
+  // ── Auto-dismiss auction event ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!auctionEvent) return;
+    const id = setTimeout(() => setAuctionEvent(null), 10000);
+    return () => clearTimeout(id);
+  }, [auctionEvent]);
 
   // ── Bid ───────────────────────────────────────────────────────────────────
   async function placeBid() {
@@ -521,6 +562,8 @@ export default function BidPage() {
       totalRemainingSlots={totalRemainingSlots}
       totalMinAllocationAfterBid={totalMinAllocationAfterBid}
       totalRemainingSlotsAfterBid={totalRemainingSlotsAfterBid}
+      auctionEvent={auctionEvent}
+      myTeamId={myTeam.id}
       onBid={() => placeBid().catch(() => {})}
     />
   );
@@ -562,6 +605,8 @@ type BidUIProps = Readonly<{
   totalRemainingSlots: number;
   totalMinAllocationAfterBid: number;
   totalRemainingSlotsAfterBid: number;
+  auctionEvent: AuctionEvent | null;
+  myTeamId: string;
   onBid: () => void;
 }>;
 
@@ -588,6 +633,8 @@ function BidUI({
   totalRemainingSlots,
   totalMinAllocationAfterBid,
   totalRemainingSlotsAfterBid,
+  auctionEvent,
+  myTeamId,
   onBid,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
@@ -733,6 +780,8 @@ function BidUI({
                 </p>
               )}
             </div>
+          ) : auctionEvent ? (
+            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeamId} />
           ) : (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
               <div className="text-center">
@@ -890,6 +939,75 @@ function BidUI({
           )}
         </aside>
       </div>
+    </div>
+  );
+}
+
+function AuctionEventDisplay({
+  event,
+  myTeamId,
+}: {
+  event: AuctionEvent;
+  myTeamId: string;
+}) {
+  const isWinner = event.type === "sold" && event.winnerId === myTeamId;
+
+  const borderColor =
+    event.type === "sold"
+      ? "border-[#00e478]"
+      : event.type === "unsold"
+        ? "border-yellow-500/50"
+        : "border-red-500/50";
+
+  const badgeLabel =
+    event.type === "sold"
+      ? "SOLD"
+      : event.type === "unsold"
+        ? "UNSOLD"
+        : "CANCELLED";
+
+  const badgeColor =
+    event.type === "sold"
+      ? "text-[#00e478]"
+      : event.type === "unsold"
+        ? "text-yellow-400"
+        : "text-red-400";
+
+  return (
+    <div
+      className={`rounded-lg border-2 ${borderColor} bg-[#0f1c2c] p-6 min-h-[300px] flex flex-col items-center justify-center text-center space-y-3`}
+    >
+      <div className={`text-4xl font-bold leading-none ${badgeColor}`}>
+        {badgeLabel}
+      </div>
+      <h2 className="text-2xl font-bold text-[#d6e4f9]">
+        {event.fullName}
+      </h2>
+      <p className="text-sm">
+        {event.type === "sold" && isWinner ? (
+          <span className="text-[#00e478] font-semibold">
+            Won by your team for &pound;{event.price}m
+          </span>
+        ) : event.type === "sold" ? (
+          <span className="text-[#b9cbb9]">
+            Sold to{" "}
+            <span className="font-semibold text-[#d6e4f9]">
+              {event.winnerName}
+            </span>{" "}
+            for{" "}
+            <span className="font-mono text-[#00e478] font-bold">
+              &pound;{event.price}m
+            </span>
+          </span>
+        ) : event.type === "unsold" ? (
+          <span className="text-yellow-400">Player went unsold</span>
+        ) : (
+          <span className="text-red-400">Nomination was cancelled</span>
+        )}
+      </p>
+      <p className="text-xs text-[#849585] pt-2">
+        Waiting for next nomination...
+      </p>
     </div>
   );
 }
