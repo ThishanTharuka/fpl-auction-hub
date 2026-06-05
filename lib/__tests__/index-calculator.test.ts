@@ -103,8 +103,8 @@ describe("normalize", () => {
       makePlayer({ total_points: 50 }),
     ];
     const indexed = applyIndexToPlayers(players, { ...DEFAULT_WEIGHTS, total_points: 1 });
-    expect(indexed[0].index_score).toBe(0);
-    expect(indexed[1].index_score).toBe(0);
+    expect(indexed[0]!.index_score).toBe(0);
+    expect(indexed[1]!.index_score).toBe(0);
   });
 
   it("normalizes to 0-1 range across the player pool", () => {
@@ -127,8 +127,8 @@ describe("inverted stats", () => {
       makePlayer({ expected_goals_conceded: "25" }),
     ];
     const indexed = applyIndexToPlayers(players, { ...DEFAULT_WEIGHTS, xgc: 1 });
-    expect(indexed[0].id).toBe(1);
-    expect(indexed[0].index_score).toBeGreaterThan(indexed[1].index_score);
+    expect(indexed[0]!.id).toBe(1);
+    expect(indexed[0]!.index_score).toBeGreaterThan(indexed[1]!.index_score);
   });
 
   it("inverts goals_conceded so lower raw value scores higher", () => {
@@ -137,8 +137,8 @@ describe("inverted stats", () => {
       makePlayer({ goals_conceded: 40 }),
     ];
     const indexed = applyIndexToPlayers(players, { ...DEFAULT_WEIGHTS, goals_conceded: 1 });
-    expect(indexed[0].id).toBe(1);
-    expect(indexed[0].index_score).toBeGreaterThan(indexed[1].index_score);
+    expect(indexed[0]!.id).toBe(1);
+    expect(indexed[0]!.index_score).toBeGreaterThan(indexed[1]!.index_score);
   });
 
   it("inverts avg_fdr_next5 so lower raw value scores higher", () => {
@@ -147,8 +147,8 @@ describe("inverted stats", () => {
       makePlayer({ avg_fdr_next5: 5 }),
     ];
     const indexed = applyIndexToPlayers(players, { ...DEFAULT_WEIGHTS, avg_fdr_next5: 1 });
-    expect(indexed[0].id).toBe(1);
-    expect(indexed[0].index_score).toBeGreaterThan(indexed[1].index_score);
+    expect(indexed[0]!.id).toBe(1);
+    expect(indexed[0]!.index_score).toBeGreaterThan(indexed[1]!.index_score);
   });
 });
 
@@ -198,7 +198,7 @@ describe("buildNormalizationBounds", () => {
     const player = makePlayer({ total_points: 99 });
     const result = applyIndexToPlayers([player]);
     expect(result).toHaveLength(1);
-    expect(result[0].index_score).toBe(0);
+    expect(result[0]!.index_score).toBe(0);
   });
 });
 
@@ -211,16 +211,16 @@ describe("applyIndexToPlayers", () => {
     ];
     const weights = { ...DEFAULT_WEIGHTS, goals_scored: 0.5, assists: 0.5 };
     const result = applyIndexToPlayers(players, weights);
-    expect(result[0].id).toBe(2);
-    expect(result[1].id).toBe(3);
-    expect(result[2].id).toBe(1);
+    expect(result[0]!.id).toBe(2);
+    expect(result[1]!.id).toBe(3);
+    expect(result[2]!.id).toBe(1);
   });
 
   it("uses DEFAULT_WEIGHTS when no weights provided", () => {
     const players = [makePlayer({})];
     const result = applyIndexToPlayers(players);
     expect(result).toHaveLength(1);
-    expect(result[0].index_score).toBe(0);
+    expect(result[0]!.index_score).toBe(0);
   });
 
   it("adds index_score and normalized to each player", () => {
@@ -229,9 +229,9 @@ describe("applyIndexToPlayers", () => {
       makePlayer({ goals_scored: 20 }),
     ];
     const result = applyIndexToPlayers(players, { ...DEFAULT_WEIGHTS, goals_scored: 1 });
-    expect(result[0]).toHaveProperty("index_score");
-    expect(result[0]).toHaveProperty("normalized");
-    expect(result[0].normalized.goals_scored).toBeDefined();
+    expect(result[0]!).toHaveProperty("index_score");
+    expect(result[0]!).toHaveProperty("normalized");
+    expect(result[0]!.normalized.goals_scored).toBeDefined();
   });
 
   it("handles string stat values (points_per_game, form, etc.)", () => {
@@ -241,7 +241,7 @@ describe("applyIndexToPlayers", () => {
     ];
     const weights = { ...DEFAULT_WEIGHTS, points_per_game: 0.5, form: 0.5 };
     const result = applyIndexToPlayers(players, weights);
-    expect(result[0].id).toBe(2);
-    expect(result[1].id).toBe(1);
+    expect(result[0]!.id).toBe(2);
+    expect(result[1]!.id).toBe(1);
   });
 });
