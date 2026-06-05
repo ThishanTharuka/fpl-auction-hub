@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.4...v1.7.5) (2026-06-05)
+
+
+### Bug Fixes
+
+* remove Vercel notifications from verification steps in release workflow ([327a600](https://github.com/ThishanTharuka/fpl-auction-hub/commit/327a6006ec134ac7d32f71d13c7cbc39772e134a))
+
 ## [1.7.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.3...v1.7.4) (2026-06-05)
 
 
