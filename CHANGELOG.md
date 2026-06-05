@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.1...v1.7.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* add non-null assertions for index_score and id in player tests ([1c1adbd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/1c1adbd26f9f75232e103cb12107c56dcda96ce8))
+* specify schema for get_server_time function and add search_path setting ([e3231ec](https://github.com/ThishanTharuka/fpl-auction-hub/commit/e3231ec065c31ca71d3d69aa57f495ebd065100c))
+* update package-lock.json with new [@emnapi](https://github.com/emnapi) dependencies and electron-to-chromium version ([fedcfa5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/fedcfa5ccd37d315bce06fe7bd9456a10299726f))
+
 ## [1.7.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.0...v1.7.1) (2026-06-05)
 
 
