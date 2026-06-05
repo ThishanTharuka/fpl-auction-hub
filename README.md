@@ -61,6 +61,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run lint` | Run ESLint |
 | `npm run lint:fix` | Run ESLint with auto-fix |
 | `npm run type-check` | Run TypeScript compiler check |
+| `npm test` | Run Vitest tests |
 | `npm run type-check && npm run lint` | Verify before committing |
 
 ## Architecture
@@ -98,6 +99,25 @@ The FPL bootstrap payload (~2.6MB) exceeds Vercel's free-tier fetch cache limit 
 2. Import the project in [Vercel](https://vercel.com).
 3. Add environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in Vercel project settings.
 4. Deploy — Vercel auto-detects Next.js.
+
+### CI/CD pipeline
+
+On push to `master`, GitHub Actions runs:
+
+- **verify** — `type-check` → `lint` → `test`. Must all pass before the release job runs.
+- **release** — `npx semantic-release` publishes a new version (auto-bumped via conventional commits).
+
+### Vercel deployment checks
+
+To require the `verify` check before promoting to production:
+
+1. In Vercel project settings → **Deployment Checks** → **Add Checks** → **GitHub**.
+2. Search for the job name `Release / verify` and add it.
+3. Set **Ignore Build Step** to skip `[skip ci]` commits (preventing semantic-release's version bumps from triggering redundant deploys):
+
+   ```
+   git log -1 --pretty=format:"%s" | grep -q "\[skip ci\]" && exit 0 || exit 1
+   ```
 
 **Vercel free tier limits**: 10s function timeout, 100k invocations/month.
 
