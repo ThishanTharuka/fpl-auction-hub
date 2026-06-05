@@ -38,7 +38,7 @@ const POSITION_FULL_LABEL: Record<EnrichedPlayer["position"], string> = {
   FWD: "Forward",
 };
 
-function buildStats(p: EnrichedPlayer): Stat[] {
+export function buildStats(p: EnrichedPlayer): Stat[] {
   const tip = (label: string) => STAT_TOOLTIPS[label] ?? label;
 
   if (p.position === "GKP") {
@@ -116,7 +116,7 @@ function buildStats(p: EnrichedPlayer): Stat[] {
   ];
 }
 
-function metricTone(label: string) {
+export function metricTone(label: string) {
   if (["Pts", "PPG", "Goals", "Saves"].includes(label)) {
     return {
       chip: "border-[#00e478]/25 bg-[#00e478]/8 text-[#00e478]",

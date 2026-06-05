@@ -43,7 +43,7 @@ const HEADERS = {
   Origin: "https://fantasy.premierleague.com",
 };
 
-function computeAvgFdr(
+export function computeAvgFdr(
   teamId: number,
   fixtures: FPLFixture[],
   currentGw: number,
@@ -70,7 +70,7 @@ function computeAvgFdr(
   return Math.round((total / upcoming.length) * 10) / 10;
 }
 
-function getCurrentTtl(fixtures: FPLFixture[]): number {
+export function getCurrentTtl(fixtures: FPLFixture[]): number {
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
   const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000)
