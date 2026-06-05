@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.2...v1.7.3) (2026-06-05)
+
+
+### Bug Fixes
+
+* reorder jobs in release workflow to ensure verification steps run before release ([b83ae5c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b83ae5ce2e7fde9668ead17c9d18999682a2cf93))
+
 ## [1.7.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.1...v1.7.2) (2026-06-05)
 
 
