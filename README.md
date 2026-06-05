@@ -7,23 +7,23 @@ A Fantasy Premier League auction tool with live bidding, squad management, and a
 <div align="center">
   <table>
     <tr>
-      <td><img src="/screenshots/players.png" alt="Players" width="400"/></td>
-      <td><img src="/screenshots/index-builder.png" alt="Index Builder" width="400"/></td>
+      <td><img width="1896" height="911" alt="players" src="https://github.com/user-attachments/assets/72cd69f3-3e4e-453f-a67c-0492c1bc6efb" /></td>
+      <td><img width="1894" height="913" alt="index_builder" src="https://github.com/user-attachments/assets/2bb2ec3e-32b5-4a16-8ad3-eafe306a8d67" /></td>
     </tr>
     <tr>
       <td align="center"><em>Players — sortable data table</em></td>
       <td align="center"><em>Index Builder — custom scoring weights</em></td>
     </tr>
     <tr>
-      <td><img src="/screenshots/auctioneer.png" alt="Auctioneer" width="400"/></td>
-      <td><img src="/screenshots/bidder.png" alt="Bidder" width="400"/></td>
+      <td><img width="1894" height="912" alt="auctioneer_panel" src="https://github.com/user-attachments/assets/f1b3c331-ffe7-428c-8e32-e853186b6fee" /></td>
+      <td><img width="1892" height="914" alt="bidder" src="https://github.com/user-attachments/assets/fc3483cd-d21c-4f33-96db-c2ffdcb8af2b" /></td>
     </tr>
     <tr>
       <td align="center"><em>Auctioneer — nominate &amp; manage bids</em></td>
       <td align="center"><em>Bidder — live player stats &amp; bidding</em></td>
     </tr>
     <tr>
-      <td colspan="2" align="center"><img src="/screenshots/teams.png" alt="Teams" width="400"/></td>
+      <td colspan="2" align="center"><img width="1909" height="910" alt="teams" src="https://github.com/user-attachments/assets/e28da8c2-c9a8-42d4-ad96-d7d3990228f6" /></td>
     </tr>
     <tr>
       <td colspan="2" align="center"><em>Teams — pitch view of all squads</em></td>
