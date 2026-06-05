@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.3...v1.7.4) (2026-06-05)
+
+
+### Bug Fixes
+
+* add statuses permission in release workflow ([a7cb34e](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a7cb34ee3d056682d251dca1984c68f3b2d486aa))
+* add Vercel notifications for type-check, lint, and test steps in release workflow ([0682fe7](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0682fe7f42aa258715297d2186ce48a72a7a520d))
+
 ## [1.7.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.2...v1.7.3) (2026-06-05)
 
 
