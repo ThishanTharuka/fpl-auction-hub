@@ -626,7 +626,7 @@ function BidUI({
 
           {/* Live nomination */}
           {nomination ? (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 min-h-[300px]">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -681,7 +681,9 @@ function BidUI({
               </div>
 
               <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
-                <span>Max affordable bid: &pound;{maxBid.toFixed(1)}m</span>
+                <span>
+                  Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
+                </span>
                 {myBid > maxBid && nomination && (
                   <span className="text-yellow-400">
                     Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
@@ -732,11 +734,11 @@ function BidUI({
               )}
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
+            <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
               <div className="text-center">
                 <div className="text-4xl mb-3">⏳</div>
                 <p className="text-[#849585]">
-                  Waiting for next nomination\u2026
+                  Waiting for next nomination…
                 </p>
               </div>
             </div>

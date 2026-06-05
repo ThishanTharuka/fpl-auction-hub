@@ -197,7 +197,7 @@ export function PlayerStatsBar({
     >
       {/* ── Top row ─────────────────────────────────────────────────── */}
       <div
-        className={`flex flex-col sm:flex-row gap-4 ${wide ? "sm:items-stretch sm:min-h-[220px]" : "items-start"}`}
+        className={`flex gap-4 ${wide ? "flex-col sm:flex-row sm:items-stretch sm:min-h-[220px]" : "flex-wrap items-start"}`}
       >
         {/* Player portrait — full body when wide, cropped portrait when narrow */}
         <div
