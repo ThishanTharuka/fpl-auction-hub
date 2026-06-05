@@ -17,9 +17,30 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+
       - run: npm run type-check
+      - name: Notify Vercel — type-check
+        if: always()
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          name: "Vercel - fpl-auction-hub: type-check"
+          github_token: ${{ github.token }}
+
       - run: npm run lint
+      - name: Notify Vercel — lint
+        if: always()
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          name: "Vercel - fpl-auction-hub: lint"
+          github_token: ${{ github.token }}
+
       - run: npm test
+      - name: Notify Vercel — test
+        if: always()
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          name: "Vercel - fpl-auction-hub: test"
+          github_token: ${{ github.token }}
 
   release:
     needs: verify
