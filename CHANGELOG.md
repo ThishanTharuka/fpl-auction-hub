@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.0...v1.7.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* add database migrations for auction system including leagues, participants, auction results, and team formations ([203f371](https://github.com/ThishanTharuka/fpl-auction-hub/commit/203f371d369a7dbda8bc71da4c45bcfeaf906d97))
+
 # [1.7.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.1...v1.7.0) (2026-06-04)
 
 
