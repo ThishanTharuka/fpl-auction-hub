@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.6](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.5...v1.7.6) (2026-06-05)
+
+
+### Bug Fixes
+
+* add CI/CD pipeline and Vercel deployment checks to README ([e16dd98](https://github.com/ThishanTharuka/fpl-auction-hub/commit/e16dd9881a23e50055064308e397d3d3390a85a9))
+
 ## [1.7.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.4...v1.7.5) (2026-06-05)
 
 
