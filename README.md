@@ -2,6 +2,35 @@
 
 A Fantasy Premier League auction tool with live bidding, squad management, and a weighted player index builder.
 
+## Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="/screenshots/players.png" alt="Players" width="400"/></td>
+      <td><img src="/screenshots/index-builder.png" alt="Index Builder" width="400"/></td>
+    </tr>
+    <tr>
+      <td align="center"><em>Players — sortable data table</em></td>
+      <td align="center"><em>Index Builder — custom scoring weights</em></td>
+    </tr>
+    <tr>
+      <td><img src="/screenshots/auctioneer.png" alt="Auctioneer" width="400"/></td>
+      <td><img src="/screenshots/bidder.png" alt="Bidder" width="400"/></td>
+    </tr>
+    <tr>
+      <td align="center"><em>Auctioneer — nominate &amp; manage bids</em></td>
+      <td align="center"><em>Bidder — live player stats &amp; bidding</em></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><img src="/screenshots/teams.png" alt="Teams" width="400"/></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><em>Teams — pitch view of all squads</em></td>
+    </tr>
+  </table>
+</div>
+
 ## Stack
 
 - **Next.js 16.2** (App Router, React 19, Streaming SSR)
