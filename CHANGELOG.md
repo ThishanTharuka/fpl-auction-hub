@@ -1,5 +1,20 @@
 # Changelog
 
+# [1.8.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.6...v1.8.0) (2026-06-06)
+
+
+### Bug Fixes
+
+* add buffer_per_player column to leagues and create revert migration ([c6082fb](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c6082fbbfaac9354417acfb16b7052088e235952))
+* enhance toast notifications for auction status updates and improve code formatting ([4503dae](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4503dae2be9617bc6f524b92595570056174bebb))
+* improve layout and accessibility of bid UI and player stats bar ([030c48f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/030c48fc1750078b2c0f194be165e6f3eca57938))
+
+
+### Features
+
+* enhance bidding logic with position requirements and base prices ([99f5eea](https://github.com/ThishanTharuka/fpl-auction-hub/commit/99f5eea1c784298727f23de5d78f335fc5efed38))
+* integrate toast notifications for auction events and add Toaster component ([ae94560](https://github.com/ThishanTharuka/fpl-auction-hub/commit/ae94560893b0bccaef4568c7f1dccc9530f95aca))
+
 ## [1.7.6](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.5...v1.7.6) (2026-06-05)
 
 
