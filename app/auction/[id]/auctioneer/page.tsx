@@ -428,8 +428,12 @@ export default function AuctioneerPage() {
       .from("auction_nominations")
       .update({ status: "cancelled" })
       .eq("id", nomination.id);
-    toast(`${name} - CANCELLED`, {
-      style: { background: "#9a3412", color: "#ffedd5", border: "1px solid #ea580c" },
+    toast.info(`${name} - CANCELLED`, {
+      style: {
+        background: "#9a3412",
+        color: "#ffedd5",
+        border: "1px solid #ea580c",
+      },
     });
     setNomination(null);
     setRecentBids([]);
@@ -438,14 +442,19 @@ export default function AuctioneerPage() {
 
   async function extendTimer() {
     if (!nomination) return;
-    const secs = Math.max(5, Number(extendInput) || (league?.timer_seconds ?? 45));
+    const secs = Math.max(
+      5,
+      Number(extendInput) || (league?.timer_seconds ?? 45),
+    );
     if (nomination.is_paused) {
       const pausedSeconds = (nomination.paused_seconds ?? 0) + secs;
       await supabase
         .from("auction_nominations")
         .update({ paused_seconds: pausedSeconds })
         .eq("id", nomination.id);
-      setNomination((prev) => (prev ? { ...prev, paused_seconds: pausedSeconds } : prev));
+      setNomination((prev) =>
+        prev ? { ...prev, paused_seconds: pausedSeconds } : prev,
+      );
       return;
     }
     const newEnd = serverClock.toISO(serverClock.getServerNow() + secs * 1000);
@@ -459,24 +468,56 @@ export default function AuctioneerPage() {
   async function pauseTimer() {
     if (!nomination || nomination.is_paused) return;
     const remaining = nomination.bid_end_time
-      ? Math.max(0, Math.round((new Date(nomination.bid_end_time).getTime() - serverClock.getServerNow()) / 1000))
+      ? Math.max(
+          0,
+          Math.round(
+            (new Date(nomination.bid_end_time).getTime() -
+              serverClock.getServerNow()) /
+              1000,
+          ),
+        )
       : 0;
     await supabase
       .from("auction_nominations")
-      .update({ is_paused: true, paused_seconds: remaining, bid_end_time: null })
+      .update({
+        is_paused: true,
+        paused_seconds: remaining,
+        bid_end_time: null,
+      })
       .eq("id", nomination.id);
-    setNomination((prev) => (prev ? { ...prev, is_paused: true, paused_seconds: remaining, bid_end_time: null } : prev));
+    setNomination((prev) =>
+      prev
+        ? {
+            ...prev,
+            is_paused: true,
+            paused_seconds: remaining,
+            bid_end_time: null,
+          }
+        : prev,
+    );
   }
 
   async function resumeTimer() {
     if (!nomination || nomination.is_paused === false) return;
-    const secs = Math.max(1, nomination.paused_seconds ?? (league?.timer_seconds ?? 45));
+    const secs = Math.max(
+      1,
+      nomination.paused_seconds ?? league?.timer_seconds ?? 45,
+    );
     const newEnd = serverClock.toISO(serverClock.getServerNow() + secs * 1000);
     await supabase
       .from("auction_nominations")
       .update({ is_paused: false, paused_seconds: null, bid_end_time: newEnd })
       .eq("id", nomination.id);
-    setNomination((prev) => (prev ? { ...prev, is_paused: false, paused_seconds: null, bid_end_time: newEnd } : prev));
+    setNomination((prev) =>
+      prev
+        ? {
+            ...prev,
+            is_paused: false,
+            paused_seconds: null,
+            bid_end_time: newEnd,
+          }
+        : prev,
+    );
   }
 
   async function markUnsold() {
@@ -486,8 +527,12 @@ export default function AuctioneerPage() {
       .from("auction_nominations")
       .update({ status: "unsold" })
       .eq("id", nomination.id);
-    toast(`${name} - UNSOLD`, {
-      style: { background: "#991b1b", color: "#fecaca", border: "1px solid #dc2626" },
+    toast.info(`${name} - UNSOLD`, {
+      style: {
+        background: "#991b1b",
+        color: "#fecaca",
+        border: "1px solid #dc2626",
+      },
     });
     setNomination(null);
     setRecentBids([]);
