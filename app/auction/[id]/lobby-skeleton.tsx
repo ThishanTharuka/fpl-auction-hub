@@ -32,29 +32,6 @@ export function LobbySkeleton() {
             ))}
           </div>
         </div>
-
-        <aside className="hidden lg:block w-full lg:w-[460px] shrink-0">
-          <div className="rounded-2xl border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-4 animate-pulse">
-            <div className="h-3 w-28 rounded bg-[#1e2b3b]" />
-            <div className="space-y-3">
-              <div className="h-4 w-full rounded bg-[#1e2b3b]" />
-              <div className="h-4 w-full rounded bg-[#1e2b3b]" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-              <div className="h-8 rounded bg-[#1e2b3b]" />
-            </div>
-            <div className="h-9 w-full rounded bg-[#1e2b3b]" />
-          </div>
-        </aside>
       </div>
     </div>
   );

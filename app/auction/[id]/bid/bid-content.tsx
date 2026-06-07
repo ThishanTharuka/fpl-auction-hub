@@ -361,14 +361,7 @@ export function BidContent({
     setBidding(false);
   }
 
-  // ── Render guards ─────────────────────────────────────────────────────────
-  if (authLoading || (!myTeam && !loadError)) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[#849585]">
-        Loading...
-      </div>
-    );
-  }
+  // ── Error state ─────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-64 text-red-400">
@@ -376,14 +369,9 @@ export function BidContent({
       </div>
     );
   }
-  if (!myTeam || !league) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[#849585]">
-        Redirecting...
-      </div>
-    );
-  }
 
+  // ── Derived values (use fallbacks for pending team) ──────────────────────
+  const pendingTeam = !myTeam;
   const remaining = teamMeta
     ? teamMeta.budget_per_team - teamMeta.spent
     : league.budget_per_team;
@@ -461,18 +449,20 @@ export function BidContent({
     : totalRemainingSlots;
   const maxBid = Math.max(0, surplus + nomStartPrice);
 
-  const canBid = checkCanBid({
-    nomination,
-    myTeamId: myTeam.id,
-    myBid,
-    maxBid,
-    secondsLeft,
-    remaining,
-    myPosCount,
-    posLimit,
-    squadSize,
-    maxSquad,
-  });
+  const canBid = myTeam
+    ? checkCanBid({
+        nomination,
+        myTeamId: myTeam.id,
+        myBid,
+        maxBid,
+        secondsLeft,
+        remaining,
+        myPosCount,
+        posLimit,
+        squadSize,
+        maxSquad,
+      })
+    : false;
 
   let timerColor = "text-red-400";
   if (secondsLeft > 15) timerColor = "text-[#00e478]";
@@ -503,7 +493,7 @@ export function BidContent({
       totalMinAllocationAfterBid={totalMinAllocationAfterBid}
       totalRemainingSlotsAfterBid={totalRemainingSlotsAfterBid}
       auctionEvent={auctionEvent}
-      myTeamId={myTeam.id}
+      pendingTeam={pendingTeam}
       onBid={() => placeBid().catch(() => {})}
     />
   );
@@ -524,7 +514,7 @@ interface PositionRequirement {
 
 type BidUIProps = Readonly<{
   league: BidLeague;
-  myTeam: Participant;
+  myTeam: Participant | null;
   teamMeta: TeamMeta | null;
   nomination: BidNomination | null;
   fplPlayer: EnrichedPlayer | null;
@@ -546,7 +536,7 @@ type BidUIProps = Readonly<{
   totalMinAllocationAfterBid: number;
   totalRemainingSlotsAfterBid: number;
   auctionEvent: AuctionEvent | null;
-  myTeamId: string;
+  pendingTeam: boolean;
   onBid: () => void;
 }>;
 
@@ -574,7 +564,7 @@ function BidUI({
   totalMinAllocationAfterBid,
   totalRemainingSlotsAfterBid,
   auctionEvent,
-  myTeamId,
+  pendingTeam,
   onBid,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
@@ -596,16 +586,22 @@ function BidUI({
             <div>
               <p className="text-xs text-[#849585]">{league.name}</p>
               <h1 className="text-lg font-bold text-[#d6e4f9] flex items-center gap-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: myTeam.color ?? "#888" }}
-                />
-                {myTeam.name}
+                {pendingTeam ? (
+                  <span className="text-[#849585] text-base font-normal">Loading team info...</span>
+                ) : (
+                  <>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: myTeam!.color ?? "#888" }}
+                    />
+                    {myTeam!.name}
+                  </>
+                )}
               </h1>
             </div>
             <div className="text-right">
               <div className="text-2xl font-mono font-bold text-[#00e478]">
-                &pound;{remaining.toFixed(1)}m
+                {pendingTeam ? "\u2014" : `\u00a3${remaining.toFixed(1)}m`}
               </div>
               <div className="text-xs text-[#849585]">remaining</div>
             </div>
@@ -656,7 +652,7 @@ function BidUI({
                 </div>
                 {nomination.current_bidder_name && (
                   <div className="text-xs text-[#849585] mt-1">
-                    {nomination.current_bidder_id === myTeam.id ? (
+                    {nomination.current_bidder_id === myTeam?.id ? (
                       <span className="text-[#00e478] font-semibold">
                         You are the highest bidder
                       </span>
@@ -687,7 +683,7 @@ function BidUI({
                 {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
               </Button>
 
-              {nomination.current_bidder_id === myTeam.id && (
+              {nomination.current_bidder_id === myTeam?.id && (
                 <p className="text-xs text-[#849585] text-center mt-2">
                   You are already the highest bidder
                 </p>
@@ -721,7 +717,7 @@ function BidUI({
               )}
             </div>
           ) : auctionEvent ? (
-            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeamId} />
+            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeam?.id ?? ""} />
           ) : (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
               <div className="text-center">
