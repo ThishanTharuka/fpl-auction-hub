@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.9.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.8.0...v1.9.0) (2026-06-07)
+
+
+### Features
+
+* implement auction lobby with real-time updates and loading states ([b3b735c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b3b735c63d52e9b49a689855954e465ee81a4f60))
+
 # [1.8.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.6...v1.8.0) (2026-06-06)
 
 
