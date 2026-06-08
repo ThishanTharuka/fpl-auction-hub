@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.1...v1.10.2) (2026-06-08)
+
+
+### Bug Fixes
+
+* enhance bid functionality with initial team data and improved loading states ([f5a73f8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f5a73f8cf3f0883de4ae7d2b5f4d8310d982bb8d))
+
 ## [1.10.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.0...v1.10.1) (2026-06-08)
 
 
