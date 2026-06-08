@@ -45,3 +45,7 @@ next-env.d.ts
 # editor — do not commit local MCP configs or editor-specific settings
 .vscode/
 .idea/
+
+# opencode — contains API keys for MCP servers
+opencode.json
+opencode.jsonc
