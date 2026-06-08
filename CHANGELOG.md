@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.3...v1.10.4) (2026-06-08)
+
+
+### Bug Fixes
+
+* add Vercel deployment trigger to release workflow ([9a7cb57](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9a7cb57169773112f6903eac9d2f595899791218))
+
 ## [1.10.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.2...v1.10.3) (2026-06-08)
 
 
