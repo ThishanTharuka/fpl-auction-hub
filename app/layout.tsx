@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { Footer } from "@/components/footer";
 import { AuthProvider } from "@/components/auth-provider";
 import { NProgressProvider } from "@/components/nprogress-provider";
 import { Toaster } from "sonner";
@@ -28,6 +29,7 @@ export default function RootLayout({
           <NProgressProvider>
             <Nav />
             <main className="flex-1">{children}</main>
+            <Footer />
           </NProgressProvider>
         </AuthProvider>
         <Toaster position="top-right" />
