@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.9](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.8...v1.10.9) (2026-06-08)
+
+
+### Bug Fixes
+
+* add pagination to ranked player list in IndexBuilderClient ([cb939e5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cb939e5903a238f58842f90bba1180f89b72ea7e))
+
 ## [1.10.8](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.7...v1.10.8) (2026-06-08)
 
 
