@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.0...v1.10.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* add bid_increment_tiers column to leagues table ([8879349](https://github.com/ThishanTharuka/fpl-auction-hub/commit/88793493d739111ff0e1e43d9ee71d9fbac7a859))
+
 # [1.10.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.9.0...v1.10.0) (2026-06-08)
 
 
