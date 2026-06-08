@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.8](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.7...v1.10.8) (2026-06-08)
+
+
+### Bug Fixes
+
+* update release message format to include [skip ci] tag ([7e82487](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7e824873ab955c6de7da338e73bd5bbf94c9ec59))
+
 ## [1.10.7](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.6...v1.10.7) (2026-06-08)
 
 
