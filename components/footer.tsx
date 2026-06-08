@@ -1,18 +1,20 @@
 import Link from "next/link";
-import { version } from "../package.json";
 
 const REPO = "https://github.com/ThishanTharuka/fpl-auction-hub";
 
-function getCommitSha(): string | null {
-  if (typeof process === "undefined") return null;
-  return process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
-    ?? process.env.VERCEL_GIT_COMMIT_SHA
-    ?? null;
+function getVersion(): string {
+  if (typeof process === "undefined") return "0.0.0";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require("../package.json");
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
 }
 
 export function Footer() {
-  const commitSha = getCommitSha();
-  const shortSha = commitSha?.slice(0, 7) ?? null;
+  const version = getVersion();
 
   return (
     <footer className="border-t border-[#3b4b3d]/50">
@@ -27,19 +29,6 @@ export function Footer() {
         >
           v{version}
         </Link>
-        {shortSha && (
-          <>
-            <span aria-hidden="true">·</span>
-            <Link
-              href={`${REPO}/commit/${commitSha}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono hover:text-[#d6e4f9] transition-colors"
-            >
-              {shortSha}
-            </Link>
-          </>
-        )}
         <span aria-hidden="true">·</span>
         <Link
           href={`${REPO}/releases`}
