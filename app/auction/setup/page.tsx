@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { BidIncrementTierEditor } from "@/components/bid-increment-tiers";
+import { DEFAULT_TIERS } from "@/lib/bid-increment";
+import type { BidIncrementTier } from "@/lib/bid-increment";
 
 const supabase = createSupabaseBrowserClient();
 
@@ -46,7 +49,7 @@ export default function AuctionSetupPage() {
   const [roomPassword, setRoomPassword] = useState("");
   const [budget, setBudget] = useState(200);
   const [timerSeconds, setTimerSeconds] = useState(45);
-  const [bidIncrement, setBidIncrement] = useState(0.5);
+  const [bidIncrementTiers, setBidIncrementTiers] = useState<BidIncrementTier[]>(DEFAULT_TIERS);
 
   // Base prices per position
   const [baseGkp, setBaseGkp] = useState(4.0);
@@ -95,7 +98,8 @@ export default function AuctionSetupPage() {
         created_by: user.id,
         budget_per_team: budget,
         timer_seconds: timerSeconds,
-        bid_increment: bidIncrement,
+        bid_increment_tiers: bidIncrementTiers,
+        bid_increment: bidIncrementTiers[0]?.increment ?? 0.5,
         base_price_gkp: baseGkp,
         base_price_def: baseDef,
         base_price_mid: baseMid,
@@ -171,20 +175,18 @@ export default function AuctionSetupPage() {
 
       {/* Budget & timer */}
       <Section title="Rules">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <Field label="Budget per Team (£m)">
             <NumberInput value={budget} onChange={setBudget} min={50} max={1000} step={10} />
           </Field>
           <Field label="Timer (seconds)">
             <NumberInput value={timerSeconds} onChange={setTimerSeconds} min={15} max={120} step={5} />
           </Field>
-          <Field label="Bid Increment (£m)">
-            <NumberInput value={bidIncrement} onChange={setBidIncrement} min={0.1} max={2} step={0.1} decimals={1} />
-          </Field>
           <Field label="Max Players Per Club">
             <NumberInput value={maxPerClub} onChange={setMaxPerClub} min={1} max={5} step={1} />
           </Field>
         </div>
+        <BidIncrementTierEditor tiers={bidIncrementTiers} onChange={setBidIncrementTiers} />
       </Section>
 
       {/* Base prices */}

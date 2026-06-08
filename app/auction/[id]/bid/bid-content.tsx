@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
+import type { BidIncrementTier } from "@/lib/bid-increment";
 import { useServerClock } from "@/lib/use-server-clock";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
@@ -26,10 +28,7 @@ function normalizeNomination(raw: Record<string, unknown>): BidNomination {
   };
 }
 
-function resolveBidAmount(nomination: BidNomination, increment: number): number {
-  if (!nomination.current_bidder_id) return nomination.starting_price;
-  return Number((nomination.current_bid + increment).toFixed(1));
-}
+
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -323,8 +322,13 @@ export function BidContent({
     if (!nomination || !myTeam || !league) return;
     if (nomination.is_paused || secondsLeft <= 0) return;
     setBidding(true);
-    const inc = league.bid_increment ?? 0.5;
-    const bidAmount = resolveBidAmount(nomination, inc);
+    const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+    const bidAmount = resolveBidAmountWithTiers(
+      nomination.current_bid,
+      nomination.current_bidder_id,
+      nomination.starting_price,
+      tiers,
+    );
     const endTime = serverClock.toISO(
       serverClock.getServerNow() + (league.timer_seconds ?? 45) * 1000,
     );
@@ -377,8 +381,10 @@ export function BidContent({
     : league.budget_per_team;
   const squadSize = teamMeta?.squad.length ?? 0;
   const maxSquad = league.squad_size ?? 15;
-  const increment = league.bid_increment ?? 0.5;
-  const myBid = nomination ? resolveBidAmount(nomination, increment) : 0;
+  const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+  const myBid = nomination
+    ? resolveBidAmountWithTiers(nomination.current_bid, nomination.current_bidder_id, nomination.starting_price, tiers)
+    : 0;
   const posKey = nomination?.position.toLowerCase() as
     | "gkp"
     | "def"

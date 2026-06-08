@@ -10,6 +10,7 @@ export type BidLeague = {
   budget_per_team: number;
   timer_seconds: number | null;
   bid_increment: number | null;
+  bid_increment_tiers?: unknown;
   max_per_club: number | null;
   squad_size: number | null;
   max_gkp: number | null;
@@ -85,7 +86,7 @@ export async function BidLoader({
 
   return (
     <BidContent
-      league={leagueRes.data as BidLeague}
+      league={leagueRes.data as unknown as BidLeague}
       players={players}
       nomination={nomination}
       leagueId={id}
