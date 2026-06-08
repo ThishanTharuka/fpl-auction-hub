@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.6](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.5...v1.10.6) (2026-06-08)
+
+
+### Bug Fixes
+
+* simplify version retrieval in footer component ([602cfe0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/602cfe066c0fbefee33c40edfff62560d4a87df9))
+
 ## [1.10.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.4...v1.10.5) (2026-06-08)
 
 
