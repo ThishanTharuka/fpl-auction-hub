@@ -37,13 +37,13 @@ const POSITION_COLORS: Record<string, string> = {
   FWD: "bg-red-500/20 text-red-400 border-red-500/30",
 };
 
-interface Participant {
+export interface Participant {
   id: string;
   name: string;
   color: string | null;
 }
 
-interface SquadPlayer {
+export interface SquadPlayer {
   id: number;
   name: string;
   position: string;
@@ -51,7 +51,7 @@ interface SquadPlayer {
   team: string;
 }
 
-interface TeamMeta {
+export interface TeamMeta {
   budget_per_team: number;
   spent: number;
   squad: SquadPlayer[];
@@ -94,25 +94,25 @@ function checkCanBid(a: CanBidArgs): boolean {
 
 export function BidContent({
   league: initialLeague,
-  players: initialPlayers,
   nomination: initialNomination,
+  initialMyTeam,
+  initialTeamMeta,
 }: {
   league: BidLeague;
-  players: EnrichedPlayer[];
   nomination: BidNomination | null;
   leagueId: string;
+  initialMyTeam?: Participant | null;
+  initialTeamMeta?: TeamMeta | null;
 }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
   const [league] = useState<BidLeague>(initialLeague);
-  const [myTeam, setMyTeam] = useState<Participant | null>(null);
-  const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(null);
+  const [myTeam, setMyTeam] = useState<Participant | null>(initialMyTeam ?? null);
+  const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(initialTeamMeta ?? null);
   const [nomination, setNomination] = useState<BidNomination | null>(initialNomination);
-  const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(
-    initialNomination ? initialPlayers.find((p) => p.id === initialNomination.fpl_player_id) ?? null : null,
-  );
+  const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [bidding, setBidding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -121,9 +121,21 @@ export function BidContent({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const serverClock = useServerClock();
-  const fplPlayersMapRef = useRef<Map<number, EnrichedPlayer>>(
-    new Map(initialPlayers.map((p) => [p.id, p])),
-  );
+  const fplPlayersMapRef = useRef<Map<number, EnrichedPlayer>>(new Map());
+
+  useEffect(() => {
+    fetch("/api/fpl/bootstrap")
+      .then((r) => r.json())
+      .then((res) => {
+        const list = (res?.players ?? []) as EnrichedPlayer[];
+        fplPlayersMapRef.current = new Map(list.map((p) => [p.id, p]));
+        if (nomination) {
+          const p = fplPlayersMapRef.current.get(nomination.fpl_player_id) ?? null;
+          if (p) setFplPlayer(p);
+        }
+      })
+      .catch(() => {});
+  }, [nomination]);
 
   const loadMySquad = useCallback(
     async (
@@ -160,8 +172,9 @@ export function BidContent({
     [id],
   );
 
-  // Auth-dependent setup: find my team membership
+  // Auth-dependent setup: find my team membership (only if server didn't provide it)
   useEffect(() => {
+    if (myTeam) return;
     if (authLoading) return;
     if (!user) {
       router.replace("/login");
@@ -198,7 +211,7 @@ export function BidContent({
     };
 
     setup().catch(() => {});
-  }, [authLoading, user, router, id, league, loadMySquad]);
+  }, [myTeam, authLoading, user, router, id, league, loadMySquad]);
 
   // ── Auto-dismiss auction event ──────────────────────────────────────────────
   useEffect(() => {
@@ -643,9 +656,34 @@ function BidUI({
                 </div>
               </div>
 
-              {fplPlayer && (
-                <PlayerStatsBar player={fplPlayer} className="mb-4" />
-              )}
+              <div className="mb-4">
+                {fplPlayer ? (
+                  <PlayerStatsBar player={fplPlayer} />
+                ) : (
+                  <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
+                    <div className="flex gap-4 flex-wrap items-start">
+                      <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="h-5 w-44 rounded bg-[#0a1724]" />
+                        <div className="h-3 w-24 rounded bg-[#0a1724]" />
+                        <div className="h-5 w-16 rounded-full bg-[#102133]" />
+                        <div className="h-3 w-16 rounded bg-[#0a1724]" />
+                        <div className="h-3 w-20 rounded bg-[#0a1724]" />
+                      </div>
+                      <div className="shrink-0 grid grid-cols-1 gap-2">
+                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                      </div>
+                    </div>
+                    <div className="my-3 border-t border-[#1a2e42]" />
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="h-[52px] rounded-xl bg-[#0a1724]" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="bg-[#132030] rounded-lg p-4 mb-4">
                 <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">

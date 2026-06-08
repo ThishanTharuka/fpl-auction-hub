@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
-import { getFplData } from "@/lib/fpl-data";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { BidContent } from "./bid-content";
-import type { EnrichedPlayer } from "@/lib/fpl-types";
 
 export type BidLeague = {
   id: string;
@@ -22,6 +21,26 @@ export type BidLeague = {
   base_price_mid: number | null;
   base_price_fwd: number | null;
 };
+
+interface BidParticipant {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
+interface BidSquadPlayer {
+  id: number;
+  name: string;
+  position: string;
+  price: number;
+  team: string;
+}
+
+interface BidTeamMeta {
+  budget_per_team: number;
+  spent: number;
+  squad: BidSquadPlayer[];
+}
 
 export type BidNomination = {
   id: string;
@@ -58,7 +77,7 @@ export async function BidLoader({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [leagueRes, nomRes, fplData] = await Promise.all([
+  const [leagueRes, nomRes] = await Promise.all([
     supabase.from("leagues").select("*").eq("id", id).single(),
     supabase
       .from("auction_nominations")
@@ -68,7 +87,6 @@ export async function BidLoader({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    getFplData().catch(() => null),
   ]);
 
   if (!leagueRes.data) {
@@ -79,17 +97,73 @@ export async function BidLoader({
     );
   }
 
-  const players: EnrichedPlayer[] = fplData?.players ?? [];
+  const league = leagueRes.data as unknown as BidLeague;
   const nomination = nomRes.data
     ? normalizeNomination(nomRes.data as Record<string, unknown>)
     : null;
 
+  let initialMyTeam: BidParticipant | null = null;
+  let initialTeamMeta: BidTeamMeta | null = null;
+
+  try {
+    const serverSupabase = await createSupabaseServerClient();
+    const { data: authData } = await serverSupabase.auth.getUser();
+    const user = authData?.user;
+
+    if (user) {
+      const { data: membership } = await supabase
+        .from("team_members")
+        .select("participant_id")
+        .eq("league_id", id)
+        .eq("user_id", user.id)
+        .eq("status", "approved")
+        .single();
+
+      if (membership) {
+        const { data: participant } = await supabase
+          .from("participants")
+          .select("id,name,color")
+          .eq("id", membership.participant_id)
+          .single();
+
+        if (participant) {
+          initialMyTeam = participant as BidParticipant;
+
+          const { data: results } = await supabase
+            .from("auction_results")
+            .select("*")
+            .eq("league_id", id)
+            .eq("participant_id", membership.participant_id);
+
+          if (results) {
+            const squad: BidSquadPlayer[] = results.map((r) => ({
+              id: r.fpl_player_id,
+              name: r.player_name ?? "Unknown",
+              position: r.position_slot ?? "?",
+              price: r.price_paid,
+              team: r.player_team ?? "",
+            }));
+            const spent = results.reduce((s, r) => s + r.price_paid, 0);
+            initialTeamMeta = {
+              budget_per_team: league.budget_per_team,
+              spent,
+              squad,
+            };
+          }
+        }
+      }
+    }
+  } catch {
+    // Auth or team lookup failed — client will resolve on its own
+  }
+
   return (
     <BidContent
-      league={leagueRes.data as unknown as BidLeague}
-      players={players}
+      league={league}
       nomination={nomination}
       leagueId={id}
+      initialMyTeam={initialMyTeam}
+      initialTeamMeta={initialTeamMeta}
     />
   );
 }

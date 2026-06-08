@@ -29,13 +29,29 @@ export function BidSkeleton() {
                 <div className="h-3 w-10 rounded bg-[#1e2b3b] ml-auto" />
               </div>
             </div>
-            <div className="flex gap-4 mb-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex-1 space-y-1">
-                  <div className="h-3 w-12 rounded bg-[#1e2b3b]" />
-                  <div className="h-6 w-full rounded bg-[#1e2b3b]" />
+            <div className="mb-4">
+              <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
+                <div className="flex gap-4 flex-wrap items-start">
+                  <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-5 w-44 rounded bg-[#0a1724]" />
+                    <div className="h-3 w-24 rounded bg-[#0a1724]" />
+                    <div className="h-5 w-16 rounded-full bg-[#102133]" />
+                    <div className="h-3 w-16 rounded bg-[#0a1724]" />
+                    <div className="h-3 w-20 rounded bg-[#0a1724]" />
+                  </div>
+                  <div className="shrink-0 grid grid-cols-1 gap-2">
+                    <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                    <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                  </div>
                 </div>
-              ))}
+                <div className="my-3 border-t border-[#1a2e42]" />
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-[52px] rounded-xl bg-[#0a1724]" />
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="bg-[#132030] rounded-lg p-4 mb-4 space-y-2">
               <div className="h-3 w-24 rounded bg-[#1e2b3b]" />
