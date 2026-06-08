@@ -1,32 +1,20 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const REPO = "https://github.com/ThishanTharuka/fpl-auction-hub";
 
-let cachedVersion: string | null = null;
-let cacheExpiry = 0;
-const CACHE_TTL = 3_600_000;
+function getVersion(): string {
+  if (typeof process === "undefined") return "0.0.0";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require("../package.json");
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
 export function Footer() {
-  const [version, setVersion] = useState(cachedVersion ?? "...");
-
-  useEffect(() => {
-    if (cachedVersion && Date.now() < cacheExpiry) return;
-
-    fetch("https://api.github.com/repos/ThishanTharuka/fpl-auction-hub/releases/latest")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch release");
-        return res.json() as Promise<{ tag_name: string }>;
-      })
-      .then((data) => {
-        cachedVersion = data.tag_name.replace("v", "");
-        cacheExpiry = Date.now() + CACHE_TTL;
-        setVersion(cachedVersion);
-      })
-      .catch(() => setVersion("0.0.0"));
-  }, []);
+  const version = getVersion();
 
   return (
     <footer className="border-t border-[#3b4b3d]/50">
