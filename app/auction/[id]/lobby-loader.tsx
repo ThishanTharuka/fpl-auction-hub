@@ -25,7 +25,7 @@ export async function LobbyLoader({
 
   return (
     <LobbyContent
-      league={leagueRes.data as LobbyLeague}
+      league={leagueRes.data as unknown as LobbyLeague}
       participants={participantsRes.data as LobbyParticipant[] ?? []}
       members={membersRes.data as LobbyMember[] ?? []}
       leagueId={id}
@@ -39,6 +39,7 @@ export type LobbyLeague = {
   budget_per_team: number;
   timer_seconds: number;
   bid_increment: number;
+  bid_increment_tiers?: unknown;
   status: string | null;
   created_by: string | null;
   room_password: string | null;

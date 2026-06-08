@@ -41,6 +41,7 @@ interface League {
   budget_per_team: number;
   timer_seconds: number | null;
   bid_increment: number | null;
+  bid_increment_tiers?: unknown;
   base_price_gkp: number | null;
   base_price_def: number | null;
   base_price_mid: number | null;

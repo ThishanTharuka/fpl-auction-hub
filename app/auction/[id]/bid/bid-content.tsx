@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
+import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
+import type { BidIncrementTier } from "@/lib/bid-increment";
 import { useServerClock } from "@/lib/use-server-clock";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
@@ -26,10 +28,7 @@ function normalizeNomination(raw: Record<string, unknown>): BidNomination {
   };
 }
 
-function resolveBidAmount(nomination: BidNomination, increment: number): number {
-  if (!nomination.current_bidder_id) return nomination.starting_price;
-  return Number((nomination.current_bid + increment).toFixed(1));
-}
+
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -323,8 +322,13 @@ export function BidContent({
     if (!nomination || !myTeam || !league) return;
     if (nomination.is_paused || secondsLeft <= 0) return;
     setBidding(true);
-    const inc = league.bid_increment ?? 0.5;
-    const bidAmount = resolveBidAmount(nomination, inc);
+    const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+    const bidAmount = resolveBidAmountWithTiers(
+      nomination.current_bid,
+      nomination.current_bidder_id,
+      nomination.starting_price,
+      tiers,
+    );
     const endTime = serverClock.toISO(
       serverClock.getServerNow() + (league.timer_seconds ?? 45) * 1000,
     );
@@ -361,14 +365,7 @@ export function BidContent({
     setBidding(false);
   }
 
-  // ── Render guards ─────────────────────────────────────────────────────────
-  if (authLoading || (!myTeam && !loadError)) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[#849585]">
-        Loading...
-      </div>
-    );
-  }
+  // ── Error state ─────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-64 text-red-400">
@@ -376,21 +373,18 @@ export function BidContent({
       </div>
     );
   }
-  if (!myTeam || !league) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[#849585]">
-        Redirecting...
-      </div>
-    );
-  }
 
+  // ── Derived values (use fallbacks for pending team) ──────────────────────
+  const pendingTeam = !myTeam;
   const remaining = teamMeta
     ? teamMeta.budget_per_team - teamMeta.spent
     : league.budget_per_team;
   const squadSize = teamMeta?.squad.length ?? 0;
   const maxSquad = league.squad_size ?? 15;
-  const increment = league.bid_increment ?? 0.5;
-  const myBid = nomination ? resolveBidAmount(nomination, increment) : 0;
+  const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+  const myBid = nomination
+    ? resolveBidAmountWithTiers(nomination.current_bid, nomination.current_bidder_id, nomination.starting_price, tiers)
+    : 0;
   const posKey = nomination?.position.toLowerCase() as
     | "gkp"
     | "def"
@@ -461,18 +455,20 @@ export function BidContent({
     : totalRemainingSlots;
   const maxBid = Math.max(0, surplus + nomStartPrice);
 
-  const canBid = checkCanBid({
-    nomination,
-    myTeamId: myTeam.id,
-    myBid,
-    maxBid,
-    secondsLeft,
-    remaining,
-    myPosCount,
-    posLimit,
-    squadSize,
-    maxSquad,
-  });
+  const canBid = myTeam
+    ? checkCanBid({
+        nomination,
+        myTeamId: myTeam.id,
+        myBid,
+        maxBid,
+        secondsLeft,
+        remaining,
+        myPosCount,
+        posLimit,
+        squadSize,
+        maxSquad,
+      })
+    : false;
 
   let timerColor = "text-red-400";
   if (secondsLeft > 15) timerColor = "text-[#00e478]";
@@ -503,7 +499,7 @@ export function BidContent({
       totalMinAllocationAfterBid={totalMinAllocationAfterBid}
       totalRemainingSlotsAfterBid={totalRemainingSlotsAfterBid}
       auctionEvent={auctionEvent}
-      myTeamId={myTeam.id}
+      pendingTeam={pendingTeam}
       onBid={() => placeBid().catch(() => {})}
     />
   );
@@ -524,7 +520,7 @@ interface PositionRequirement {
 
 type BidUIProps = Readonly<{
   league: BidLeague;
-  myTeam: Participant;
+  myTeam: Participant | null;
   teamMeta: TeamMeta | null;
   nomination: BidNomination | null;
   fplPlayer: EnrichedPlayer | null;
@@ -546,7 +542,7 @@ type BidUIProps = Readonly<{
   totalMinAllocationAfterBid: number;
   totalRemainingSlotsAfterBid: number;
   auctionEvent: AuctionEvent | null;
-  myTeamId: string;
+  pendingTeam: boolean;
   onBid: () => void;
 }>;
 
@@ -574,7 +570,7 @@ function BidUI({
   totalMinAllocationAfterBid,
   totalRemainingSlotsAfterBid,
   auctionEvent,
-  myTeamId,
+  pendingTeam,
   onBid,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
@@ -596,16 +592,22 @@ function BidUI({
             <div>
               <p className="text-xs text-[#849585]">{league.name}</p>
               <h1 className="text-lg font-bold text-[#d6e4f9] flex items-center gap-2">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: myTeam.color ?? "#888" }}
-                />
-                {myTeam.name}
+                {pendingTeam ? (
+                  <span className="text-[#849585] text-base font-normal">Loading team info...</span>
+                ) : (
+                  <>
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: myTeam!.color ?? "#888" }}
+                    />
+                    {myTeam!.name}
+                  </>
+                )}
               </h1>
             </div>
             <div className="text-right">
               <div className="text-2xl font-mono font-bold text-[#00e478]">
-                &pound;{remaining.toFixed(1)}m
+                {pendingTeam ? "\u2014" : `\u00a3${remaining.toFixed(1)}m`}
               </div>
               <div className="text-xs text-[#849585]">remaining</div>
             </div>
@@ -656,7 +658,7 @@ function BidUI({
                 </div>
                 {nomination.current_bidder_name && (
                   <div className="text-xs text-[#849585] mt-1">
-                    {nomination.current_bidder_id === myTeam.id ? (
+                    {nomination.current_bidder_id === myTeam?.id ? (
                       <span className="text-[#00e478] font-semibold">
                         You are the highest bidder
                       </span>
@@ -687,7 +689,7 @@ function BidUI({
                 {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
               </Button>
 
-              {nomination.current_bidder_id === myTeam.id && (
+              {nomination.current_bidder_id === myTeam?.id && (
                 <p className="text-xs text-[#849585] text-center mt-2">
                   You are already the highest bidder
                 </p>
@@ -721,7 +723,7 @@ function BidUI({
               )}
             </div>
           ) : auctionEvent ? (
-            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeamId} />
+            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeam?.id ?? ""} />
           ) : (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
               <div className="text-center">

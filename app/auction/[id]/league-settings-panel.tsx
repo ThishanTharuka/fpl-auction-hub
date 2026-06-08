@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { BidIncrementTierEditor } from "@/components/bid-increment-tiers";
+import { DEFAULT_TIERS } from "@/lib/bid-increment";
+import type { BidIncrementTier } from "@/lib/bid-increment";
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400",
@@ -18,6 +21,7 @@ interface LeagueSettings {
   budget_per_team: number;
   timer_seconds: number;
   bid_increment: number;
+  bid_increment_tiers: BidIncrementTier[];
   max_per_club: number;
   base_price_gkp: number;
   base_price_def: number;
@@ -55,7 +59,11 @@ export function LeagueSettingsPanel({
 
   const [budget, setBudget] = useState(settings.budget_per_team);
   const [timerSeconds, setTimerSeconds] = useState(settings.timer_seconds);
-  const [bidIncrement, setBidIncrement] = useState(settings.bid_increment);
+  const [bidIncrementTiers, setBidIncrementTiers] = useState<BidIncrementTier[]>(
+    settings.bid_increment_tiers && settings.bid_increment_tiers.length > 0
+      ? settings.bid_increment_tiers
+      : DEFAULT_TIERS,
+  );
   const [maxPerClub, setMaxPerClub] = useState(settings.max_per_club);
 
   const [baseGkp, setBaseGkp] = useState(settings.base_price_gkp);
@@ -74,7 +82,11 @@ export function LeagueSettingsPanel({
     setRoomPassword(settings.room_password ?? "");
     setBudget(settings.budget_per_team);
     setTimerSeconds(settings.timer_seconds);
-    setBidIncrement(settings.bid_increment);
+    setBidIncrementTiers(
+      settings.bid_increment_tiers && settings.bid_increment_tiers.length > 0
+        ? settings.bid_increment_tiers
+        : DEFAULT_TIERS,
+    );
     setMaxPerClub(settings.max_per_club);
     setBaseGkp(settings.base_price_gkp);
     setBaseDef(settings.base_price_def);
@@ -113,7 +125,8 @@ export function LeagueSettingsPanel({
         room_password: roomPassword.trim() || null,
         budget_per_team: budget,
         timer_seconds: timerSeconds,
-        bid_increment: bidIncrement,
+        bid_increment_tiers: bidIncrementTiers,
+        bid_increment: bidIncrementTiers[0]?.increment ?? 0.5,
         max_per_club: maxPerClub,
         base_price_gkp: baseGkp,
         base_price_def: baseDef,
@@ -138,7 +151,8 @@ export function LeagueSettingsPanel({
       room_password: roomPassword.trim() || null,
       budget_per_team: budget,
       timer_seconds: timerSeconds,
-      bid_increment: bidIncrement,
+      bid_increment: bidIncrementTiers[0]?.increment ?? 0.5,
+      bid_increment_tiers: bidIncrementTiers,
       max_per_club: maxPerClub,
       base_price_gkp: baseGkp,
       base_price_def: baseDef,
@@ -184,8 +198,8 @@ export function LeagueSettingsPanel({
         <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
           Rules
         </h3>
-        <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-          <Field label="Budget (£m)">
+        <div className="grid grid-cols-3 gap-x-5 gap-y-3 mb-3">
+          <Field label="Budget (&pound;m)">
             <NumberInput
               value={budget}
               onChange={setBudget}
@@ -203,16 +217,6 @@ export function LeagueSettingsPanel({
               step={5}
             />
           </Field>
-          <Field label="Bid Inc (£m)">
-            <NumberInput
-              value={bidIncrement}
-              onChange={setBidIncrement}
-              min={0.1}
-              max={2}
-              step={0.1}
-              decimals={1}
-            />
-          </Field>
           <Field label="Max/Club">
             <NumberInput
               value={maxPerClub}
@@ -223,6 +227,7 @@ export function LeagueSettingsPanel({
             />
           </Field>
         </div>
+        <BidIncrementTierEditor tiers={bidIncrementTiers} onChange={setBidIncrementTiers} />
       </div>
 
       {/* Starting Prices */}

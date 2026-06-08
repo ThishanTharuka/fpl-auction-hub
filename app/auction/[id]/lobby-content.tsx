@@ -45,7 +45,7 @@ export function LobbyContent({
       supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
       supabase.from("team_members").select("id,participant_id,user_id,user_email,user_name,status").eq("league_id", id),
     ]);
-    if (lg) setLeague(lg as LobbyLeague);
+    if (lg) setLeague(lg as unknown as LobbyLeague);
     if (ps) setTeams(ps as LobbyParticipant[]);
     if (ms) setMembers(ms as LobbyMember[]);
   }, [id, supabase]);
@@ -285,7 +285,7 @@ export function LobbyContent({
           <aside className="w-full lg:w-[460px] shrink-0">
             <LeagueSettingsPanel
               leagueId={id}
-              settings={league}
+              settings={league as unknown as Parameters<typeof LeagueSettingsPanel>[0]['settings']}
               onSaved={onSettingsSaved}
               mobileOpen={mobileSettingsOpen}
               onMobileOpenChange={setMobileSettingsOpen}

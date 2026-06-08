@@ -5,6 +5,14 @@
       "type": "remote",
       "url": "https://mcp.supabase.com/mcp?project_ref=fmwspeazgltewhuknywb",
       "enabled": true
+    },
+    "stitch": {
+      "type": "remote",
+      "url": "https://stitch.googleapis.com/mcp",
+      "enabled": true,
+      "headers": {
+        "X-Goog-Api-Key": "{env:STITCH_API_KEY}"
+      }
     }
   }
 }
