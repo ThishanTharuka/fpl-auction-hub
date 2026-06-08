@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Info, SlidersHorizontal, X } from "lucide-react";
 import { applyIndexToPlayers } from "@/lib/index-calculator";
 import type {
@@ -306,6 +307,8 @@ export function IndexBuilderClient({
   const [metricPickerOpen, setMetricPickerOpen] = useState(false);
   const [activePreset, setActivePreset] = useState<string>("All");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0);
+  const PAGE_SIZE = 10;
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // Close metric picker on outside click
@@ -345,6 +348,22 @@ export function IndexBuilderClient({
         : players.filter((p) => p.position === posFilter);
     return applyIndexToPlayers(pool, effectiveWeights).slice(0, 50);
   }, [players, effectiveWeights, posFilter]);
+
+  const pageCount = useMemo(
+    () => Math.max(1, Math.ceil(ranked.length / PAGE_SIZE)),
+    [ranked.length],
+  );
+
+  const displayed = useMemo(
+    () => ranked.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE),
+    [ranked, pageIndex],
+  );
+
+  // Reset to first page when the ranked list changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset pagination when filtered data changes
+    setPageIndex(0);
+  }, [ranked.length]);
 
   function setWeight(key: keyof WeightConfig, val: number) {
     setActivePreset("");
@@ -555,13 +574,13 @@ export function IndexBuilderClient({
                 </tr>
               </thead>
               <tbody>
-                {ranked.map((p, i) => (
+                {displayed.map((p, i) => (
                   <tr
                     key={p.id}
                     className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
                   >
                     <td className="px-4 py-3 text-xs font-mono text-[#849585]">
-                      {String(i + 1).padStart(2, "0")}
+                      {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-[#d6e4f9]">
@@ -602,13 +621,13 @@ export function IndexBuilderClient({
 
           {/* Mobile card list */}
           <div className="lg:hidden">
-            {ranked.map((p, i) => (
+            {displayed.map((p, i) => (
               <div
                 key={p.id}
                 className="flex items-center gap-3 px-4 py-3 border-b border-[#3b4b3d]/40"
               >
                 <span className="text-xs font-mono text-[#849585] w-6 shrink-0">
-                  {String(i + 1).padStart(2, "0")}
+                  {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="font-medium text-[#d6e4f9] text-sm truncate">
@@ -628,6 +647,35 @@ export function IndexBuilderClient({
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 text-sm text-[#849585]">
+            <span className="text-xs sm:text-sm">
+              Showing {pageIndex * PAGE_SIZE + 1}–
+              {Math.min((pageIndex + 1) * PAGE_SIZE, ranked.length)} of{" "}
+              {ranked.length}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+                disabled={pageIndex === 0}
+                onClick={() => setPageIndex((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+                disabled={pageIndex >= pageCount - 1}
+                onClick={() => setPageIndex((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       </div>
