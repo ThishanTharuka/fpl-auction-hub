@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.10.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.9.0...v1.10.0) (2026-06-08)
+
+
+### Bug Fixes
+
+* add opencode configuration for MCP servers ([3008282](https://github.com/ThishanTharuka/fpl-auction-hub/commit/30082826f9a8a92795608efbb83c0349254e0d3e))
+
+
+### Features
+
+* add bid increment tiers functionality and editor component ([14f675d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/14f675d454ddae82d5576f557a37173642d4a292))
+* add Footer component with version and commit information ([325336b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/325336bc76528d2022e786f7a8cf5da9bb05ffe7))
+
 # [1.9.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.8.0...v1.9.0) (2026-06-07)
 
 
