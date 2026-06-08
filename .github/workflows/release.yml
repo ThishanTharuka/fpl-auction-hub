@@ -23,6 +23,7 @@ jobs:
       - run: npm test
 
   release:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
     needs: verify
     runs-on: ubuntu-latest
     steps:
