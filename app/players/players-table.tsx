@@ -791,35 +791,31 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             />
             <span className="text-xs text-[#849585]">m</span>
           </div>
+        </div>
 
-          <span className="hidden sm:inline text-xs text-[#849585]">
+        <div
+          ref={pickerRef}
+          className="relative hidden sm:flex items-center gap-3 ml-auto"
+        >
+          <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
             {filtered.length} players
           </span>
-
-          <div
-            ref={pickerRef}
-            className="relative hidden sm:flex items-center gap-3 ml-auto"
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+            onClick={() => setPickerOpen((o) => !o)}
           >
-            <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
-              {filtered.length} players
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
-              onClick={() => setPickerOpen((o) => !o)}
-            >
-              Columns ▾
-            </Button>
-            {pickerOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50">
-                <ColumnPickerContent
-                  colVisibility={colVisibility}
-                  setColVisibility={setColVisibility}
-                />
-              </div>
-            )}
-          </div>
+            Columns ▾
+          </Button>
+          {pickerOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50">
+              <ColumnPickerContent
+                colVisibility={colVisibility}
+                setColVisibility={setColVisibility}
+              />
+            </div>
+          )}
         </div>
       </div>
 

@@ -20,10 +20,10 @@ function PlayersTableSkeleton() {
             <div className="h-8 bg-[#1e2b3b] rounded w-14" />
             <div className="h-8 bg-[#1e2b3b] rounded w-14" />
           </div>
-          <div className="hidden sm:flex items-center gap-3 ml-auto">
-            <div className="h-4 bg-[#1e2b3b] rounded w-16" />
-            <div className="h-8 bg-[#1e2b3b] rounded w-24" />
-          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 ml-auto">
+          <div className="h-4 bg-[#1e2b3b] rounded w-16" />
+          <div className="h-8 bg-[#1e2b3b] rounded w-24" />
         </div>
       </div>
 
