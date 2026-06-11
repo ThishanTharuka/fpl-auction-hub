@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.10](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.9...v1.10.10) (2026-06-09)
+
+
+### Bug Fixes
+
+* adjust layout and spacing in PlayersTable component ([4450584](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4450584f26c4400df87885e85e1bc43b892f7373))
+
 ## [1.10.9](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.8...v1.10.9) (2026-06-08)
 
 
