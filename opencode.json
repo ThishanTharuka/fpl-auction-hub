@@ -13,6 +13,23 @@
       "headers": {
         "X-Goog-Api-Key": "{env:STITCH_API_KEY}"
       }
+    },
+    "nextjs-docs": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@taiyokimura/nextjs-docs-mcp@latest"
+      ],
+      "enabled": true
+    },
+    "next-devtools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "next-devtools-mcp@latest"
+      ]
     }
   }
 }
