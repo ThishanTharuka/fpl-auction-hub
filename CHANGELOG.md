@@ -1,5 +1,23 @@
 # Changelog
 
+# [1.11.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.10...v1.11.0) (2026-06-12)
+
+
+### Bug Fixes
+
+* remove unused POSITION_STAT object from players table ([bf4b31d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/bf4b31d450f150d1eac722bd036b4315cc22e598))
+
+
+### Features
+
+* add Accordion component using Radix UI ([1ebd7bd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/1ebd7bdfe3f95c8a2a3e73860224dc247f0e74e2))
+* add error handling with toast notifications for export status ([90137f0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/90137f0c7c99605c35a3a364c3300044449e95a4))
+* enhance export button with loading states and improved UI feedback ([cb6610d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cb6610d573570193873dc1842e2830c3dbf353ce))
+* enhance player export functionality with CSV download option and improved UI ([8529cf7](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8529cf749ed18a54681fb8f7fe0005a1fa07b02a))
+* enhance PlayersTableSkeleton with improved mobile layout and additional loading states ([b07515c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b07515cc63091ade5d5458323fe0cdc897ba882a))
+* integrate Google Sheets export functionality and add Google Client ID to environment ([0a7cc0c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0a7cc0c32e57a2fa53b6279f656c52140dd9922b))
+* replace dialog with drawer for export sheets functionality ([2bbded6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2bbded6d62deade15ab95493537032a5c78c74e0))
+
 ## [1.10.10](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.9...v1.10.10) (2026-06-09)
 
 
