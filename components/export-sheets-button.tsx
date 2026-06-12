@@ -197,6 +197,8 @@ export function ExportSheetsButton({
     });
   }, []);
 
+  const isExporting = status === "connecting" || status === "exporting";
+
   const handleExport = useCallback(async () => {
     const visible = ALL_FIELD_IDS.filter((id) => selectedFields.has(id));
     const headers = visible.map((id) => COLUMN_EXTRACTORS[id]!.header);
@@ -206,6 +208,13 @@ export function ExportSheetsButton({
     await exportToSheet(headers, rows);
     setDialogOpen(false);
   }, [selectedFields, players, exportToSheet]);
+
+  const loadingPhase =
+    status === "connecting"
+      ? "Authorizing with Google"
+      : status === "exporting"
+        ? "Creating spreadsheet..."
+        : null;
 
   const handleClick = useCallback(() => {
     if (status === "done" && sheetUrl) {
@@ -219,8 +228,6 @@ export function ExportSheetsButton({
     }
     setDialogOpen(true);
   }, [status, sheetUrl, reset]);
-
-  const isBusy = status === "connecting" || status === "exporting";
 
   let label: string;
   let variant: "default" | "outline" | "destructive";
@@ -241,7 +248,7 @@ export function ExportSheetsButton({
       variant = "outline";
       break;
     case "done":
-      label = "Open in Sheets \u2192";
+      label = "Open in Sheets";
       variant = "default";
       extraClass =
         "bg-green-700 text-white border-green-600 hover:bg-green-600";
@@ -258,7 +265,7 @@ export function ExportSheetsButton({
         <Button
           size="sm"
           variant={variant}
-          disabled={isBusy}
+          disabled={isExporting}
           onClick={handleClick}
           title={
             status === "error" && error
@@ -268,12 +275,12 @@ export function ExportSheetsButton({
                 : "Export player data to a new Google Sheet"
           }
           className={
-            variant === "outline" && !isBusy
+            variant === "outline" && !isExporting
               ? "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
               : extraClass
           }
         >
-          {isBusy ? (
+          {isExporting ? (
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
               {label}
@@ -291,44 +298,54 @@ export function ExportSheetsButton({
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] sm:w-[calc(100%-2rem)] max-w-4xl sm:max-w-4xl mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold">
-              Select fields to export
-            </DialogTitle>
-            <div className="flex items-center gap-3 mt-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#00e478]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#00e478] border border-[#00e478]/20">
-                Exporting {FILTER_LABELS[posFilter] ?? posFilter}
+          <div className="relative">
+            <DialogHeader>
+              <DialogTitle className="text-base font-semibold flex items-center">
+                Select fields to export
+                {/* <div className="flex items-center gap-3 mt-0.5 ml-2"> */}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#00e478]/10 ml-3 px-2 py-0.5 text-[11px] font-medium text-[#00e478] border border-[#00e478]/20">
+                  Exporting {FILTER_LABELS[posFilter] ?? posFilter}
+                </span>
+                {/* </div> */}
+              </DialogTitle>
+              <p className="text-xs text-[#849585] mb-3 leading-relaxed">
+                The OAuth app is still in test phase &mdash; if you haven&apos;t
+                been granted access yet, drop a message or an email to get added
+                to the test users. (thishantharuka4@gmail.com)
+              </p>
+            </DialogHeader>
+            <FieldPicker selected={selectedFields} onToggle={toggleField} />
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <span className="text-xs text-[#849585]">
+                {selectedFields.size} of {ALL_FIELD_IDS.length} fields selected
               </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+                  onClick={() => setDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
+                  disabled={selectedFields.size === 0}
+                  onClick={handleExport}
+                >
+                  Export
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-[#849585] mt-3 leading-relaxed">
-              The OAuth app is in test phase &mdash; if you haven&apos;t been
-              granted access yet, drop a msg to get added.
-            </p>
-          </DialogHeader>
-          <FieldPicker selected={selectedFields} onToggle={toggleField} />
-          <div className="flex items-center justify-between gap-2 pt-2">
-            <span className="text-xs text-[#849585]">
-              {selectedFields.size} of {ALL_FIELD_IDS.length} fields selected
-            </span>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
-                onClick={() => setDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
-                disabled={selectedFields.size === 0}
-                onClick={handleExport}
-              >
-                Export
-              </Button>
-            </div>
+
+            {isExporting && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-xl bg-[#0f1c2c]/90 backdrop-blur-xs">
+                <span className="inline-block w-8 h-8 rounded-full border-2 border-[#00e478] border-t-transparent animate-spin" />
+                <span className="text-sm text-[#d6e4f9]">{loadingPhase}</span>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
