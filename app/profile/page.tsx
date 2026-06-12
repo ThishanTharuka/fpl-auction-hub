@@ -13,6 +13,8 @@ export default function ProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingName, setSavingName] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -119,6 +121,36 @@ export default function ProfilePage() {
     setSavingPassword(false);
   }
 
+  async function handleDeleteAccount() {
+    setError(null);
+    setMessage(null);
+    setDeletingAccount(true);
+
+    let res: Response;
+    try {
+      res = await fetch("/api/account/delete", { method: "POST" });
+    } catch {
+      setError("Failed to delete account. Please try again.");
+      setDeletingAccount(false);
+      return;
+    }
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Failed to delete account.");
+      setDeletingAccount(false);
+      return;
+    }
+
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // signOut failed but account is already deleted — redirect anyway
+    }
+
+    window.location.href = "/login";
+  }
+
   if (loadingProfile) {
     return (
       <main className="min-h-screen px-6 py-10">
@@ -201,6 +233,42 @@ export default function ProfilePage() {
             {savingPassword ? "Updating..." : "Update password"}
           </Button>
         </form>
+
+        <div
+          className="space-y-4 rounded-xl border p-5"
+          style={{ borderColor: "var(--destructive-border, hsl(0 80% 50%))", background: "var(--card)" }}
+        >
+          <h2 className="text-lg font-semibold text-red-400">Delete Account</h2>
+          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+            Permanently delete your account and all associated data. This
+            action cannot be undone.
+          </p>
+          {!confirmDelete ? (
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete my account
+            </Button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="destructive"
+                disabled={deletingAccount}
+                onClick={handleDeleteAccount}
+              >
+                {deletingAccount ? "Deleting..." : "Yes, delete my account"}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={deletingAccount}
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
         {message && <p className="text-sm text-green-400">{message}</p>}

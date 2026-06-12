@@ -115,7 +115,7 @@ function LoginForm() {
   const showLinkExpiredError = urlError === "link_expired";
 
   return (
-    <main className="fixed inset-0 flex items-center justify-center px-4 overflow-hidden">
+    <main className="min-h-screen flex items-center justify-center px-4">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
         style={{ backgroundImage: "url(/fplbg.webp)" }}
