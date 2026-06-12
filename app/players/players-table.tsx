@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { Info } from "lucide-react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
+import { GoogleSheetsProvider } from "@/lib/google-sheets-context";
+import { ExportSheetsButton } from "@/components/export-sheets-button";
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -729,7 +731,8 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
   });
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
+    <GoogleSheetsProvider>
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-start sm:items-center gap-2 sm:gap-3">
         <Input
@@ -800,6 +803,11 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
           <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
             {filtered.length} players
           </span>
+          <ExportSheetsButton
+            players={filtered}
+            colVisibility={colVisibility}
+            posFilter={posFilter}
+          />
           <Button
             size="sm"
             variant="outline"
@@ -1065,5 +1073,6 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         </DialogContent>
       </Dialog>
     </div>
+    </GoogleSheetsProvider>
   );
 }
