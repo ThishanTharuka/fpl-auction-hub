@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -219,6 +220,12 @@ export function ExportSheetsButton({
   const isExporting = status === "connecting" || status === "exporting";
   const canClose = !isExporting;
 
+  useEffect(() => {
+    if (status === "error" && error) {
+      toast.error(error, { id: "export-google-sheets" });
+    }
+  }, [status, error]);
+
   const handleExport = useCallback(() => {
     if (selectedFields.size === 0) return;
     setStep("choice");
@@ -342,11 +349,6 @@ export function ExportSheetsButton({
             label
           )}
         </Button>
-        {status === "error" && error && (
-          <span className="absolute -bottom-5 right-0 text-[10px] text-red-400 whitespace-nowrap max-w-[200px] truncate">
-            {error}
-          </span>
-        )}
       </span>
 
       <Drawer
