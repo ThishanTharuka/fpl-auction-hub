@@ -27,6 +27,20 @@ export function Footer() {
         </Link>
         <span aria-hidden="true">·</span>
         <Link
+          href="/privacy"
+          className="hover:text-[#d6e4f9] transition-colors"
+        >
+          Privacy
+        </Link>
+        <span aria-hidden="true">·</span>
+        <Link
+          href="/terms"
+          className="hover:text-[#d6e4f9] transition-colors"
+        >
+          Terms
+        </Link>
+        <span aria-hidden="true">·</span>
+        <Link
           href={REPO}
           target="_blank"
           rel="noopener noreferrer"
