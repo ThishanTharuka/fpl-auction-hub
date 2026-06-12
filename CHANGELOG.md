@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.0...v1.12.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* add delete_user function to remove user from auth.users ([25a8f14](https://github.com/ThishanTharuka/fpl-auction-hub/commit/25a8f14035e77c03f0ec15815ab3ae0b24e7dbb6))
+
 # [1.12.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.11.0...v1.12.0) (2026-06-12)
 
 
