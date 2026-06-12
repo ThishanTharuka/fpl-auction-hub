@@ -827,8 +827,18 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         </div>
       </div>
 
-      <div className="sm:hidden text-xs text-[#849585] mb-2">
-        {filtered.length} players
+      <div className="sm:hidden flex items-center justify-between mb-2">
+        <span className="text-xs text-[#849585]">
+          {filtered.length} players
+        </span>
+        <div className="flex items-center gap-1.5">
+          <ExportSheetsButton
+            players={filtered}
+            colVisibility={colVisibility}
+            posFilter={posFilter}
+            direction="bottom"
+          />
+        </div>
       </div>
 
       {/* Desktop table */}

@@ -6,13 +6,14 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useGoogleSheets } from "@/lib/google-sheets-context";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
-import { XIcon, ArrowUpRightIcon } from "lucide-react";
+import { XIcon, ArrowUpRightIcon, FileDown } from "lucide-react";
 
 interface ColumnExtractor {
   header: string;
@@ -135,6 +136,7 @@ interface ExportSheetsButtonProps {
   players: EnrichedPlayer[];
   colVisibility: Record<string, boolean | undefined>;
   posFilter: string;
+  direction?: "top" | "right" | "bottom" | "left";
 }
 
 function FieldPicker({
@@ -178,15 +180,29 @@ function FieldPicker({
   );
 }
 
+function buildExportData(
+  fields: Set<string>,
+  players: EnrichedPlayer[],
+) {
+  const visible = ALL_FIELD_IDS.filter((id) => fields.has(id));
+  const headers = visible.map((id) => COLUMN_EXTRACTORS[id]!.header);
+  const rows = players.map((p) =>
+    visible.map((id) => COLUMN_EXTRACTORS[id]!.extract(p)),
+  );
+  return { headers, rows };
+}
+
 export function ExportSheetsButton({
   players,
   posFilter,
+  direction = "right",
 }: Readonly<ExportSheetsButtonProps>) {
   const { status, error, sheetUrl, exportToSheet, reset } = useGoogleSheets();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedFields, setSelectedFields] = useState<Set<string>>(
     new Set(PLAYER_INFO_IDS),
   );
+  const [step, setStep] = useState<"fields" | "choice">("fields");
 
   const toggleField = useCallback((id: string) => {
     setSelectedFields((prev) => {
@@ -203,14 +219,30 @@ export function ExportSheetsButton({
   const isExporting = status === "connecting" || status === "exporting";
   const canClose = !isExporting;
 
-  const handleExport = useCallback(async () => {
-    const visible = ALL_FIELD_IDS.filter((id) => selectedFields.has(id));
-    const headers = visible.map((id) => COLUMN_EXTRACTORS[id]!.header);
-    const rows = players.map((p) =>
-      visible.map((id) => COLUMN_EXTRACTORS[id]!.extract(p)),
-    );
+  const handleExport = useCallback(() => {
+    if (selectedFields.size === 0) return;
+    setStep("choice");
+  }, [selectedFields]);
+
+  const handleCsvExport = useCallback(() => {
+    const { headers, rows } = buildExportData(selectedFields, players);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "fpl-players.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    setDrawerOpen(false);
+    setStep("fields");
+  }, [selectedFields, players]);
+
+  const handleSheetsExport = useCallback(async () => {
+    const { headers, rows } = buildExportData(selectedFields, players);
     await exportToSheet(headers, rows);
     setDrawerOpen(false);
+    setStep("fields");
   }, [selectedFields, players, exportToSheet]);
 
   const loadingPhase =
@@ -224,6 +256,9 @@ export function ExportSheetsButton({
     (open: boolean) => {
       if (canClose) {
         setDrawerOpen(open);
+        if (!open) {
+          setStep("fields");
+        }
       }
     },
     [canClose],
@@ -285,7 +320,7 @@ export function ExportSheetsButton({
               ? error
               : status === "done"
                 ? "Open the spreadsheet in a new tab"
-                : "Export player data to a new Google Sheet"
+                : "Export player data"
           }
           className={
             variant === "outline" && !isExporting
@@ -315,41 +350,156 @@ export function ExportSheetsButton({
       </span>
 
       <Drawer
-        direction="right"
+        direction={direction}
         open={drawerOpen}
         onOpenChange={handleOpenChange}
       >
-        <DrawerContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[480px] max-w-[calc(100vw-2rem)] data-[vaul-drawer-direction=right]:w-[480px] data-[vaul-drawer-direction=right]:sm:max-w-[480px]">
-          <DrawerHeader className="flex flex-row items-center justify-between p-5 pb-0">
-            <DrawerTitle className="text-base font-semibold text-[#d6e4f9]">
-              Select fields to export
-            </DrawerTitle>
-            <DrawerClose disabled={!canClose}>
-              <XIcon className="w-5 h-5 text-[#849585] hover:text-[#d6e4f9] transition-colors" />
-              <span className="sr-only">Close</span>
-            </DrawerClose>
-          </DrawerHeader>
+        <DrawerContent
+          className={
+            `bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] ` +
+            (direction !== "bottom"
+              ? "w-[480px] max-w-[calc(100vw-2rem)]"
+              : "data-[vaul-drawer-direction=bottom]:max-h-[85vh]")
+          }
+        >
+          {step === "fields" ? (
+            <>
+              <DrawerHeader className="flex flex-row items-center justify-between p-5 pb-0">
+                <DrawerTitle className="text-base font-semibold text-[#d6e4f9]">
+                  Select fields to export
+                </DrawerTitle>
+                <DrawerClose asChild>
+                  <button
+                    disabled={!canClose}
+                    className="text-[#849585] hover:text-[#d6e4f9] transition-colors cursor-pointer"
+                    type="button"
+                  >
+                    <XIcon className="w-5 h-5" />
+                    <span className="sr-only">Close</span>
+                  </button>
+                </DrawerClose>
+              </DrawerHeader>
 
-          <div className="flex flex-col gap-4 px-5 pt-4">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#00e478]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#00e478] border border-[#00e478]/20">
-                Exporting {FILTER_LABELS[posFilter] ?? posFilter}
-              </span>
-            </div>
+              <DrawerDescription className="px-5 pt-4 text-xs text-[#849585] leading-relaxed">
+                The OAuth app is in test phase &mdash; if you haven&apos;t been
+                granted access yet, drop a msg to get added.
+              </DrawerDescription>
 
-            <p className="text-xs text-[#849585] leading-relaxed">
-              The OAuth app is in test phase &mdash; if you haven&apos;t been
-              granted access yet, drop a msg to get added.
-            </p>
+              <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 pt-4 min-h-0">
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#00e478]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#00e478] border border-[#00e478]/20">
+                    Exporting {FILTER_LABELS[posFilter] ?? posFilter}
+                  </span>
+                </div>
 
-            <FieldPicker selected={selectedFields} onToggle={toggleField} />
+                <FieldPicker selected={selectedFields} onToggle={toggleField} />
 
-            <div className="flex items-center justify-between gap-2 pt-2">
-              <span className="text-xs text-[#849585]">
-                {selectedFields.size} of {ALL_FIELD_IDS.length} fields selected
-              </span>
-            </div>
-          </div>
+                <div className="flex items-center gap-2 pt-2 shrink-0">
+                  <span className="text-xs text-[#849585]">
+                    {selectedFields.size} of{" "}
+                    {ALL_FIELD_IDS.length} fields selected
+                  </span>
+                </div>
+              </div>
+
+              <DrawerFooter className="border-t border-[#3b4b3d] p-5">
+                <div className="flex justify-end gap-2">
+                  <DrawerClose asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+                    >
+                      Cancel
+                    </Button>
+                  </DrawerClose>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
+                    disabled={selectedFields.size === 0}
+                    onClick={handleExport}
+                  >
+                    Export
+                  </Button>
+                </div>
+              </DrawerFooter>
+            </>
+          ) : (
+            <>
+              <DrawerHeader className="flex flex-row items-center justify-between p-5 pb-0">
+                <div className="flex items-center gap-2">
+                  <button
+                    className="text-[#849585] hover:text-[#d6e4f9] transition-colors"
+                    onClick={() => setStep("fields")}
+                    disabled={isExporting}
+                    type="button"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M12 4l-6 6 6 6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <DrawerTitle className="text-base font-semibold text-[#d6e4f9]">
+                    Export format
+                  </DrawerTitle>
+                </div>
+                <DrawerClose asChild>
+                  <button
+                    disabled={!canClose}
+                    className="text-[#849585] hover:text-[#d6e4f9] transition-colors cursor-pointer"
+                    type="button"
+                  >
+                    <XIcon className="w-5 h-5" />
+                    <span className="sr-only">Close</span>
+                  </button>
+                </DrawerClose>
+              </DrawerHeader>
+
+              <DrawerDescription className="px-5 pt-2 text-xs text-[#849585] leading-relaxed">
+                Choose how to export your {players.length} player{players.length !== 1 ? "s" : ""} with {selectedFields.size} field{selectedFields.size !== 1 ? "s" : ""}.
+              </DrawerDescription>
+
+              <div className="px-5 pb-6 pt-4 space-y-2">
+                <div
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#061423] border border-[#3b4b3d]/50 cursor-pointer hover:bg-[#132030] transition-colors"
+                  onClick={handleCsvExport}
+                >
+                  <FileDown className="w-5 h-5 text-[#849585]" />
+                  <div>
+                    <div className="text-sm text-[#d6e4f9] font-medium">
+                      Download CSV
+                    </div>
+                    <div className="text-[11px] text-[#849585]">
+                      {selectedFields.size} fields, {players.length} players
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[#061423] border border-[#3b4b3d]/50 cursor-pointer hover:bg-[#132030] transition-colors"
+                  onClick={handleSheetsExport}
+                >
+                  <svg className="w-5 h-5 text-[#849585]" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M3 8h14M3 12h14M8 3v14M12 3v14" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                  <div>
+                    <div className="text-sm text-[#d6e4f9] font-medium">
+                      Export to Google Sheets
+                    </div>
+                    <div className="text-[11px] text-[#849585]">
+                      Authenticate with Google
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {isExporting && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-[#0f1c2c]/90 backdrop-blur-xs">
@@ -357,29 +507,6 @@ export function ExportSheetsButton({
               <span className="text-sm text-[#d6e4f9]">{loadingPhase}</span>
             </div>
           )}
-
-          <DrawerFooter className="border-t border-[#3b4b3d] p-5">
-            <div className="flex justify-end gap-2">
-              <DrawerClose disabled={!canClose}>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
-                >
-                  Cancel
-                </Button>
-              </DrawerClose>
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
-                disabled={selectedFields.size === 0}
-                onClick={handleExport}
-              >
-                Export
-              </Button>
-            </div>
-          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </>
