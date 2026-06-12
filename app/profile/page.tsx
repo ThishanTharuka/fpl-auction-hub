@@ -126,7 +126,14 @@ export default function ProfilePage() {
     setMessage(null);
     setDeletingAccount(true);
 
-    const res = await fetch("/api/account/delete", { method: "POST" });
+    let res: Response;
+    try {
+      res = await fetch("/api/account/delete", { method: "POST" });
+    } catch {
+      setError("Failed to delete account. Please try again.");
+      setDeletingAccount(false);
+      return;
+    }
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);

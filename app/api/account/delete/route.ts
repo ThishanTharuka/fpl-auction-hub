@@ -1,7 +1,13 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  const expectedOrigin = new URL(request.url).origin;
+  if (origin && origin !== expectedOrigin) {
+    return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -15,7 +21,11 @@ export async function POST() {
   const { error } = await supabase.rpc("delete_user");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[account delete] delete_user RPC failed:", error);
+    return NextResponse.json(
+      { error: "Failed to delete account." },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });
