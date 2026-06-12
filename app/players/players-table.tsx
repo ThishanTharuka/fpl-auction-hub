@@ -29,7 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Info, Columns2, Upload } from "lucide-react";
+import { Info, Columns2 } from "lucide-react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import { GoogleSheetsProvider } from "@/lib/google-sheets-context";
 import { ExportSheetsButton } from "@/components/export-sheets-button";
@@ -54,13 +54,6 @@ const POSITION_LABELS: Record<string, string> = {
   DEF: "Defender",
   MID: "Midfielder",
   FWD: "Forward",
-};
-
-const POSITION_STAT: Record<string, { key: keyof EnrichedPlayer; label: string }> = {
-  GKP: { key: "clean_sheets", label: "CS" },
-  DEF: { key: "clean_sheets", label: "CS" },
-  MID: { key: "goals_scored", label: "Goals" },
-  FWD: { key: "goals_scored", label: "Goals" },
 };
 
 const COLUMN_TOOLTIPS: Record<string, string> = {
