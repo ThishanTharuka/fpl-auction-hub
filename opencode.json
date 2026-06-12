@@ -30,6 +30,15 @@
         "-y",
         "next-devtools-mcp@latest"
       ]
+    },
+    "shadcn": {
+      "type": "local",
+      "command": [
+        "npx",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "enabled": true
     }
   }
 }
