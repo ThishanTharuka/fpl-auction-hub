@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.12.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.11.0...v1.12.0) (2026-06-12)
+
+
+### Bug Fixes
+
+* improve error handling for account deletion API and validate request origin ([cba128c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cba128c53deddaa94f42d8edbfda0f047027f577))
+* update main layout class for LoginForm to ensure proper height and overflow handling ([7914596](https://github.com/ThishanTharuka/fpl-auction-hub/commit/79145968e6f58ec4b82bcd5c8a92739b473a1271))
+
+
+### Features
+
+* add account deletion functionality and privacy/terms pages ([b28619f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b28619f3642c4c81bf29417e0755f24ce8df025f))
+
 # [1.11.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.10...v1.11.0) (2026-06-12)
 
 
