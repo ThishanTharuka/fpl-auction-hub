@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.1...v1.13.2) (2026-06-13)
+
+
+### Bug Fixes
+
+* simplify auction start condition and update related message ([a980eab](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a980eab44622e1f83b49d403ed36c33b88361ac0))
+* update footer navigation styles and improve separator character ([f20a503](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f20a503e872d3f8a29dab9cba4c7c56e9f6cc2fd))
+
 ## [1.13.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.0...v1.13.1) (2026-06-13)
 
 
