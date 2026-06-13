@@ -1,23 +1,47 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { BackgroundPaths } from "@/components/ui/background-paths";
+import { BentoGrid, type BentoItem } from "@/components/ui/bento-grid";
 import { cn } from "@/lib/utils";
+import {
+  BarChart3,
+  Gavel,
+  Layers,
+  Shield,
+  Users,
+} from "lucide-react";
 
-const features = [
+const bentoItems: BentoItem[] = [
+  {
+    title: "Player Stats",
+    description:
+      "Browse comprehensive stats, form, ICT index, and pricing for every Premier League player.",
+    icon: <BarChart3 className="h-4 w-4 text-[#00e478]" />,
+  },
+  {
+    title: "Index Builder",
+    description:
+      "Build custom player indices by filtering positions, teams, and stat thresholds.",
+    icon: <Layers className="h-4 w-4 text-[#bbc6e2]" />,
+  },
   {
     title: "Custom Leagues",
     description:
       "Set your own budget, rules, squad size, and scoring for each league.",
+    icon: <Users className="h-4 w-4 text-[#c9e0ff]" />,
   },
   {
-    title: "Live Auctions",
+    title: "Auctions",
     description:
       "Host real-time player auctions with your league mates. Nominate, bid, and win.",
+    icon: <Gavel className="h-4 w-4 text-[#ffb4ab]" />,
+    colSpan: 2,
   },
   {
     title: "Squad Management",
     description:
       "Build and manage your squad after the draft. View stats, set lineups, and track performance.",
+    icon: <Shield className="h-4 w-4 text-[#afc9ea]" />,
   },
 ];
 
@@ -57,45 +81,10 @@ export default function Home() {
       <div className="w-full border-t border-border" />
 
       <section className="w-full px-4 py-28">
-        <div className="mx-auto max-w-5xl">
-          <p className="mb-12 text-center text-xs font-semibold tracking-[0.2em] text-muted-foreground">
-            AUCTION TOOLS
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-xl border p-5 text-center"
-                style={{
-                  background: "#0a1828",
-                  borderColor: "rgba(255,255,255,0.08)",
-                }}
-              >
-                <h3 className="mb-2 text-base font-semibold text-foreground">
-                  {f.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">{f.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="w-full border-t border-border" />
-
-      <section className="w-full px-4 py-28 text-center">
-        <h2 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
-          Ready to get started?
-        </h2>
-        <p className="mb-8 text-sm text-muted-foreground">
-          Create your league and start the auction draft today.
+        <p className="mb-12 text-center text-xs font-semibold tracking-[0.2em] text-muted-foreground">
+          AUCTION TOOLS
         </p>
-        <Link
-          href="/login?mode=sign_up"
-          className={cn(buttonVariants({ size: "lg" }))}
-        >
-          Get Started
-        </Link>
+        <BentoGrid items={bentoItems} />
       </section>
     </div>
   );
