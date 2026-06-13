@@ -23,7 +23,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
 
-  const [mode, setMode] = useState<Mode>("sign_in");
+  const initialMode = searchParams.get("mode") === "sign_up" ? "sign_up" : "sign_in";
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,13 +116,13 @@ function LoginForm() {
   const showLinkExpiredError = urlError === "link_expired";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="relative min-h-[calc(100dvh-56px-36px)] flex items-center justify-center px-4">
       <div
         className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
         style={{ backgroundImage: "url(/fplbg.webp)" }}
       />
       <div
-        className="relative z-10 w-full max-w-sm rounded-xl border p-8 space-y-6"
+        className="relative z-10 mx-auto w-full max-w-sm rounded-xl border p-8 space-y-6"
         style={{ background: "var(--card)", borderColor: "var(--border)" }}
       >
         {/* Logo / title */}

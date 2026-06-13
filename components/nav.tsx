@@ -22,6 +22,10 @@ export function Nav() {
   const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  if (pathname === "/") {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-[#3b4b3d] bg-[#020f1e]/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 sm:gap-8 px-4 sm:px-6">

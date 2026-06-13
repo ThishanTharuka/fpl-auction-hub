@@ -48,6 +48,7 @@ export async function proxy(request: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
+    pathname === "/" ||
     pathname === "/favicon.ico";
 
   if (!user && !isPublic) {
