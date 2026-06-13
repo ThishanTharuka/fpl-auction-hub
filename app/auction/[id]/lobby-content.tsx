@@ -97,9 +97,7 @@ export function LobbyContent({
     return <div className="flex items-center justify-center h-64 text-red-400">Auction not found.</div>;
   }
 
-  const approvedMembers = members.filter((m) => m.status === "approved");
-  const teamsWithApproved = new Set(approvedMembers.map((m) => m.participant_id));
-  const canStart = teams.length > 0 && teams.every((t) => teamsWithApproved.has(t.id));
+  const canStart = teams.length > 0;
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 lg:py-10">
@@ -157,7 +155,7 @@ export function LobbyContent({
               </div>
               {league.status === "setup" && !canStart && (
                 <p className="text-xs text-[#849585]">
-                  All teams need at least one approved manager before you can start.
+                  At least one team is required to start.
                 </p>
               )}
             </div>
