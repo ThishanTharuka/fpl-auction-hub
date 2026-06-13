@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.0...v1.13.1) (2026-06-13)
+
+
+### Bug Fixes
+
+* prevent rendering Nav component for unauthenticated users on home page ([6b334bd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/6b334bdd67233aa65955a404238c6481634a812e))
+
 # [1.13.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.1...v1.13.0) (2026-06-13)
 
 
