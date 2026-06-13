@@ -22,7 +22,7 @@ export function Nav() {
   const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  if (pathname === "/") {
+  if (pathname === "/" && !user) {
     return null;
   }
 
