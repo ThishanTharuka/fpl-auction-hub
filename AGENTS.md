@@ -6,76 +6,76 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # FPL Auction Hub
 
-## Commands
+## Commands — run in this order before committing
 
-| Command | What |
+| Command | Action |
 |---|---|
 | `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint (flat config in `eslint.config.mjs`) |
-| `npm run lint:fix` | Auto-fix lint |
 | `npm run type-check` | `tsc --noEmit` |
-| `npm run type-check && npm run lint` | Verify before committing |
+| `npm run lint` | ESLint flat config (`eslint.config.mjs`) |
+| `npm run lint:fix` | Auto-fix lint |
+| `npm test` | Vitest (node env) |
+| `npm run build` | Production build |
 
-CI runs `npm ci` + `npx semantic-release` (conventional commits required, pushes to master).
+CI: `npm ci && npm run type-check && npm run lint` (verify and release via `npx semantic-release` on push to master). Conventional commits required.
 
-## Supabase clients — pick the right one
+## Supabase clients — three, not one
 
-There are **three** clients with different auth behavior:
+| Module | Session? | When |
+|---|---|---|
+| `@/lib/supabase` (bare `createClient`) | No — `auth.uid()` always null | Server reads, RLS-unaware ops |
+| `@/lib/supabase-browser` (from `@supabase/ssr`) | Yes | RLS writes in client components |
+| `@/lib/supabase-server` (from `@supabase/ssr`) | Yes | RLS reads in Server Components |
 
-| Module | Import | Session? | When to use |
-|---|---|---|---|
-| `@/lib/supabase` | `createClient` | **No** — `auth.uid()` always null | Server-side reads, RLS-unaware ops |
-| `@/lib/supabase-browser` | `createSupabaseBrowserClient()` from `@supabase/ssr` | **Yes** — carries the user session | RLS-protected writes in client components |
-| `@/lib/supabase-server` | `createSupabaseServerClient()` from `@supabase/ssr` | **Yes** | RLS reads in Server Components |
+Rule: if the write hits an RLS policy, use `supabase-browser`.
 
-**Rule of thumb**: if the write hits an RLS policy, use `supabase-browser`. Bare `@/lib/supabase` has no session.
+## Auth middleware — `proxy.ts`
 
-## Streaming SSR with Suspense
+`proxy.ts` uses `getSession()` (cookie read, no network). **Public paths** (no redirect): `/`, `/login`, `/auth/*`, `/api/*`, `/_next/*`, `/favicon.ico`, `/privacy`, `/terms`.
 
-Pages that fetch `getFplData()` (`/players`, `/index-builder`, `/teams`) use Streaming SSR:
+The landing page (`/`) is public — Google OAuth requires it. The nav is hidden on `/` for unauthenticated visitors but visible for logged-in users.
 
-- `page.tsx` is **synchronous** — the server streams a skeleton immediately
-- `getFplData()` lives inside an async child component wrapped in `<Suspense>`
-- **Do not add `force-dynamic`** — it prevents static shell optimization. Without it, the skeleton HTML is cached at the edge.
-- Skeleton dimensions must match the real layout (same heights, responsive breakpoints, column widths) or the skeleton→content transition causes CLS.
+## Streaming SSR pattern
 
-Two of the three pages replace the skeleton atomically. `/teams` has a second loading layer: the Suspense skeleton covers the FPL data fetch, then the inner `teams-client.tsx` skeleton covers client-side Supabase DB queries (leagues, participants, formations). Both layers are correct and should be preserved.
+Pages with large FPL data fetches (`/players`, `/index-builder`, `/teams`):
+- `page.tsx` is synchronous — streams skeleton immediately
+- Data fetch (`getFplData()`) lives in an async child inside `<Suspense>`
+- **Do not add `force-dynamic`** — skeleton HTML must cache at edge
+- Skeleton dimensions must match real layout (prevents CLS)
+- `/teams` has two nested loading layers (FPL data + Supabase DB queries)
 
-## FPL data cache
+## FPL data cache (`fpl_cache` table)
 
-Custom Supabase JSONB cache (`fpl_cache` table) — Vercel free tier drops fetch entries >2MB and the FPL bootstrap payload is ~2.6MB.
-
-- Entry point: `getFplData()` in `lib/fpl-data.ts`
-- Cache key: `"fpl_data"`, stored as JSONB in `value` column with `ttl_ms`
-- Dynamic TTL: 5 min on matchday, 30 min day before, 2h otherwise
-- Read cast: `data.value as unknown as FplDataResult` (zero-cost JSONB boundary)
+Vercel free tier drops fetch entries >2MB; FPL bootstrap is ~2.6MB. Custom Supabase JSONB cache replaces `next: { revalidate }`.
+- Entry: `getFplData()` in `lib/fpl-data.ts`
+- Key: `"fpl_data"`, stored as JSONB with `ttl_ms`
+- TTL: 5 min matchday / 30 min day before / 2h otherwise
+- Read cast: `data.value as unknown as FplDataResult`
 - Write cast: `JSON.parse(JSON.stringify(fresh))` strips non-serializable values
-- Table has permissive RLS (public data — no auth needed)
+- Table has permissive RLS (public data)
 
-## Key codebase conventions
+## Codebase conventions
 
-- **Framework**: Next.js 16.2.7 + React 19.2 — breaking changes from your training data (see top of file)
-- **Styling**: Tailwind CSS v4 (`@import "tailwindcss"`, `@theme inline`, `@custom-variant dark`)
+- **Next.js 16.2.7 + React 19.2** — breaking changes from training data
+- **Tailwind CSS v4**: `@import "tailwindcss"`, `@theme inline`, `@custom-variant dark`
 - **Animations**: `tw-animate-css` (NOT `tailwindcss-animate`)
-- **shadcn/ui**: Style `"base-nova"` in `components.json`, uses `@/components/ui/` aliases
-- **Icons**: `lucide-react`
-- **Charts**: `recharts`
-- **DnD**: `@dnd-kit/core` + `@dnd-kit/sortable`
-- **Navigation**: `nprogress` for SSR transition feedback (tied to `<NProgressProvider>` in layout)
-- **Imports**: `@/*` path alias, `type-imports` preferred with `inline-type-imports` fix style
+- **shadcn/ui**: style `"base-nova"`, aliases `@/components/ui/`
+- **Dark-only theme**: page `#061423`, primary `#00e478`, card `#0f1c2c`, border `#3b4b3d` (full spec in `DESIGN.md`)
+- **Icons**: `lucide-react` | **Charts**: `recharts` | **DnD**: `@dnd-kit/core` + `@dnd-kit/sortable`
+- **Navigation feedback**: NProgress (no `loading.tsx`)
 - **`cn()`**: `clsx` + `tailwind-merge` via `@/lib/utils`
-- **`no-explicit-any`** is error — no `as any` casts
+- **`@/*` path alias**; type-imports with `inline-type-imports` fix style enforced
+- **`no-explicit-any` is error** — no `as any` casts
 - **No emojis** in code
-- **Auth middleware**: `proxy.ts` wraps all routes; uses `getSession()` (cookie read) NOT `getUser()` (network). Public: `/login`, `/auth/*`, `/api/*`, `/_next/*`.
-- **Database types**: Auto-generated from `supabase gen types typescript` into `lib/database.types.ts` — regenerate when schema changes
+- **Version**: auto-bumped by semantic-release — do not edit `package.json` version manually
+- **Database types**: auto-generated from `supabase gen types typescript` into `lib/database.types.ts` — regenerate when schema changes
+- **Supabase migrations**: `supabase/migrations/*.sql`, timestamped, apply via `supabase db push`
 
 ## Pitfalls
 
 - **TanStack Table v8 + React Compiler**: incompatible. Components using `useReactTable` must have `"use no memo"` at the top. `react-hooks/incompatible-library` is already OFF globally.
-- **`react-hooks/exhaustive-deps` is warn**, not error. Suppress with eslint-disable + comment when intentional (e.g. setState-in-effect, ref patterns).
-- **`<img>` without `priority` prop** gets lint warnings — use eslint-disable at file top or switch to `<Image>` with `remotePatterns` configured in `next.config.ts`.
-- **`@emnapi/runtime` / `@emnapi/core`** are optional deps but required at runtime. Use `npm ci --include=optional` locally or the lockfile will mismatch CI.
+- **`react-hooks/exhaustive-deps` is warn**, not error. Suppress with eslint-disable + comment when intentional (e.g. setState-in-effect).
+- **`@emnapi/runtime` / `@emnapi/core`**: optional deps required at runtime. Use `npm ci --include=optional` locally or lockfile mismatches CI.
 - **Vercel limits**: 10s function timeout, 100k invocations/month. Keep server components lean.
-- **No `loading.tsx`** — navigation feedback uses NProgress instead.
-- **Version**: Auto-bumped by semantic-release. Do not edit `package.json` version manually.
+- **Lobby constraint**: Auctioneer can start before all teams are claimed — managers claim teams at any status (setup or live). `canStart` only requires `teams.length > 0`.
+- **Tests**: Vitest (node env), `globals: true` in `vitest.config.ts`, `@/*` path alias resolved. Tests in `lib/__tests__/` and `components/__tests__/`.
