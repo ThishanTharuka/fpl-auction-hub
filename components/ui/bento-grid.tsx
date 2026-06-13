@@ -6,6 +6,7 @@ export interface BentoItem {
   icon: React.ReactNode;
   status?: string;
   colSpan?: number;
+  visual?: React.ReactNode;
 }
 
 interface BentoGridProps {
@@ -56,6 +57,11 @@ export function BentoGrid({ items }: BentoGridProps) {
                 {item.description}
               </p>
             </div>
+            {item.visual && (
+              <div className="pt-1">
+                {item.visual}
+              </div>
+            )}
           </div>
         </div>
       ))}
