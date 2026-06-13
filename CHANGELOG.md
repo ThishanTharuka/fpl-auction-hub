@@ -1,5 +1,20 @@
 # Changelog
 
+# [1.13.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.1...v1.13.0) (2026-06-13)
+
+
+### Bug Fixes
+
+* add visual representation to BentoItem and render in BentoGrid ([c1e9ceb](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c1e9cebde2347e697975da2223783b33ccfc398b))
+* adjust layout styles for LoginForm component ([c80e817](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c80e8179fda0b9c2955f2378de263c97d3036fe5))
+* update initial mode handling in LoginForm and enhance Home component layout ([2c1399f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2c1399fd4edc7caa5c817fd06bfb3077af72bab9))
+
+
+### Features
+
+* add design documentation and implement background animation component ([4a5f50a](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4a5f50a6607bb038abbaf22fc313fd9910cd60ba))
+* implement BentoGrid component for enhanced auction tools display ([b029be7](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b029be761b6643b020b36cd47586f642a291e62e))
+
 ## [1.12.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.0...v1.12.1) (2026-06-12)
 
 
