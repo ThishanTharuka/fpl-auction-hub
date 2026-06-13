@@ -23,7 +23,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
 
-  const [mode, setMode] = useState<Mode>("sign_in");
+  const initialMode = searchParams.get("mode") === "sign_up" ? "sign_up" : "sign_in";
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
