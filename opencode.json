@@ -3,7 +3,7 @@
   "mcp": {
     "supabase": {
       "type": "remote",
-      "url": "https://mcp.supabase.com/mcp?project_ref=fmwspeazgltewhuknywb",
+      "url": "https://mcp.supabase.com/mcp?project_ref=zjxfotjpizkrfchoqyya",
       "enabled": true
     },
     "stitch": {
@@ -40,5 +40,10 @@
       ],
       "enabled": true
     }
+  },
+  "permission": {
+    "webfetch": "allow",
+    "websearch": "allow",
+    "question": "allow"
   }
 }
