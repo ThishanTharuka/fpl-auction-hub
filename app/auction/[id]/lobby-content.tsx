@@ -172,12 +172,21 @@ export function LobbyContent({
                 </span>
                 <StatusPill status={myMembership.status} />
               </div>
-              {myMembership.status === "approved" && league.status === "active" && (
-                <Link href={`/auction/${id}/bid`}>
-                  <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold mt-2">
-                    Go to Live Auction →
-                  </Button>
-                </Link>
+              {myMembership.status === "approved" && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {league.status === "active" && (
+                    <Link href={`/auction/${id}/bid`}>
+                      <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
+                        Go to Live Auction →
+                      </Button>
+                    </Link>
+                  )}
+                  <Link href={`/auction/${id}/teams/${myMembership.participant_id}/edit`}>
+                    <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
+                      Edit Team
+                    </Button>
+                  </Link>
+                </div>
               )}
               {myMembership.status === "pending" && (
                 <p className="text-xs text-[#849585]">Waiting for the auctioneer to approve your claim.</p>
