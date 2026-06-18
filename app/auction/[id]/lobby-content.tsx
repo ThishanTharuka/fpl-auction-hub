@@ -8,16 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { LeagueSettingsPanel } from "./league-settings-panel";
-import type { LobbyLeague, LobbyParticipant, LobbyMember } from "./lobby-loader";
+import type { LobbyLeague, LobbyParticipant, LobbyMember, LobbyTournament } from "./lobby-loader";
 
 export function LobbyContent({
   league: initialLeague,
   participants: initialParticipants,
   members: initialMembers,
+  tournaments: initialTournaments,
 }: {
   league: LobbyLeague;
   participants: LobbyParticipant[];
   members: LobbyMember[];
+  tournaments: LobbyTournament[];
   leagueId: string;
 }) {
   const { id } = useParams<{ id: string }>();
@@ -107,7 +109,9 @@ export function LobbyContent({
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
+              <h1 className="text-2xl font-bold text-[#d6e4f9]">
+                {league.name}
+              </h1>
               <p className="text-sm text-[#849585] mt-1">
                 {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
               </p>
@@ -129,7 +133,9 @@ export function LobbyContent({
           {/* Auctioneer: start + manage */}
           {isAuctioneer && (
             <div className="rounded-lg border border-purple-500/30 bg-purple-900/10 p-5 space-y-4">
-              <h2 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Auctioneer Controls</h2>
+              <h2 className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                Auctioneer Controls
+              </h2>
               <div className="flex gap-3 flex-wrap">
                 {league.status === "setup" && (
                   <Button
@@ -148,8 +154,19 @@ export function LobbyContent({
                   </Link>
                 )}
                 <Link href={`/auction/${id}/teams`}>
-                  <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
+                  <Button
+                    variant="outline"
+                    className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
+                  >
                     View Teams
+                  </Button>
+                </Link>
+                <Link href={`/auction/${id}/tournament/new`}>
+                  <Button
+                    variant="outline"
+                    className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
+                  >
+                    Create New Tournament
                   </Button>
                 </Link>
               </div>
@@ -164,11 +181,19 @@ export function LobbyContent({
           {/* Manager: my status */}
           {!isAuctioneer && user && myMembership && (
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">Your Status</h2>
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                Your Status
+              </h2>
               <div className="flex items-center gap-3">
-                <TeamDot color={teams.find((t) => t.id === myMembership.participant_id)?.color ?? "#888"} />
+                <TeamDot
+                  color={
+                    teams.find((t) => t.id === myMembership.participant_id)
+                      ?.color ?? "#888"
+                  }
+                />
                 <span className="text-[#d6e4f9]">
-                  {teams.find((t) => t.id === myMembership.participant_id)?.name ?? "Unknown team"}
+                  {teams.find((t) => t.id === myMembership.participant_id)
+                    ?.name ?? "Unknown team"}
                 </span>
                 <StatusPill status={myMembership.status} />
               </div>
@@ -181,18 +206,27 @@ export function LobbyContent({
                       </Button>
                     </Link>
                   )}
-                  <Link href={`/auction/${id}/teams/${myMembership.participant_id}/edit`}>
-                    <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
+                  <Link
+                    href={`/auction/${id}/teams/${myMembership.participant_id}/edit`}
+                  >
+                    <Button
+                      variant="outline"
+                      className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
+                    >
                       Edit Team
                     </Button>
                   </Link>
                 </div>
               )}
               {myMembership.status === "pending" && (
-                <p className="text-xs text-[#849585]">Waiting for the auctioneer to approve your claim.</p>
+                <p className="text-xs text-[#849585]">
+                  Waiting for the auctioneer to approve your claim.
+                </p>
               )}
               {myMembership.status === "rejected" && (
-                <p className="text-xs text-red-400">Your claim was rejected. You can claim a different team.</p>
+                <p className="text-xs text-red-400">
+                  Your claim was rejected. You can claim a different team.
+                </p>
               )}
             </div>
           )}
@@ -201,7 +235,9 @@ export function LobbyContent({
           {!isAuctioneer && !user && (
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
               <p className="text-sm text-[#849585]">
-                <Link href="/login" className="text-[#00e478] hover:underline">Sign in</Link>{" "}
+                <Link href="/login" className="text-[#00e478] hover:underline">
+                  Sign in
+                </Link>{" "}
                 to claim a team and join this auction.
               </p>
             </div>
@@ -214,10 +250,18 @@ export function LobbyContent({
             </h2>
             <div className="space-y-3">
               {teams.map((team) => {
-                const teamMembers = members.filter((m) => m.participant_id === team.id);
-                const approvedManagers = teamMembers.filter((m) => m.status === "approved");
-                const pendingManagers = teamMembers.filter((m) => m.status === "pending");
-                const myClaimHere = user ? teamMembers.find((m) => m.user_id === user.id) : null;
+                const teamMembers = members.filter(
+                  (m) => m.participant_id === team.id,
+                );
+                const approvedManagers = teamMembers.filter(
+                  (m) => m.status === "approved",
+                );
+                const pendingManagers = teamMembers.filter(
+                  (m) => m.status === "pending",
+                );
+                const myClaimHere = user
+                  ? teamMembers.find((m) => m.user_id === user.id)
+                  : null;
                 const canClaim =
                   user &&
                   !isAuctioneer &&
@@ -231,15 +275,23 @@ export function LobbyContent({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <TeamDot color={team.color ?? "#888"} />
-                      <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
+                      <span className="text-sm text-[#d6e4f9] font-medium truncate">
+                        {team.name}
+                      </span>
                       <div className="flex gap-1.5 flex-wrap">
                         {approvedManagers.map((m) => (
-                          <span key={m.id} className="text-xs bg-green-500/15 text-green-400 rounded px-1.5 py-0.5">
+                          <span
+                            key={m.id}
+                            className="text-xs bg-green-500/15 text-green-400 rounded px-1.5 py-0.5"
+                          >
                             {m.user_name ?? m.user_email}
                           </span>
                         ))}
                         {pendingManagers.map((m) => (
-                          <span key={m.id} className="text-xs bg-yellow-500/15 text-yellow-500 rounded px-1.5 py-0.5">
+                          <span
+                            key={m.id}
+                            className="text-xs bg-yellow-500/15 text-yellow-500 rounded px-1.5 py-0.5"
+                          >
                             {m.user_name ?? m.user_email} (pending)
                           </span>
                         ))}
@@ -247,14 +299,15 @@ export function LobbyContent({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {isAuctioneer && pendingManagers.map((m) => (
-                        <ApproveRejectButtons
-                          key={m.id}
-                          memberId={m.id}
-                          onApprove={updateMemberStatus}
-                          onReject={updateMemberStatus}
-                        />
-                      ))}
+                      {isAuctioneer &&
+                        pendingManagers.map((m) => (
+                          <ApproveRejectButtons
+                            key={m.id}
+                            memberId={m.id}
+                            onApprove={updateMemberStatus}
+                            onReject={updateMemberStatus}
+                          />
+                        ))}
 
                       {canClaim && !myClaimHere && (
                         <Button
@@ -277,12 +330,63 @@ export function LobbyContent({
             </div>
           </div>
 
+          {/* Tournaments */}
+          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                Tournaments
+              </h2>
+              {isAuctioneer && (
+                <Link href={`/auction/${id}/tournament/new`}>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90"
+                  >
+                    Create New
+                  </Button>
+                </Link>
+              )}
+            </div>
+            {initialTournaments.length === 0 ? (
+              <p className="text-xs text-[#849585]">No tournaments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {initialTournaments.map((t) => {
+                  const statusColor =
+                    t.status === "active"
+                      ? "text-green-400"
+                      : t.status === "completed"
+                        ? "text-blue-400"
+                        : "text-yellow-400";
+                  return (
+                    <Link
+                      key={t.id}
+                      href={`/auction/${id}/tournament/${t.id}`}
+                      className="flex items-center justify-between p-2.5 rounded-lg border border-[#3b4b3d] bg-[#061423] hover:bg-[#132030] transition-colors"
+                    >
+                      <span className="text-sm text-[#d6e4f9]">{t.name}</span>
+                      <span className={`text-xs capitalize ${statusColor}`}>
+                        {t.status}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Quick links (auctioneer view) */}
           {isAuctioneer && (
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-2">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">Quick Links</h2>
+              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+                Quick Links
+              </h2>
               <CopyRow label="Lobby URL" url={`/auction/${id}`} />
               <CopyRow label="Teams View" url={`/auction/${id}/teams`} />
+              <CopyRow
+                label="Tournament Wizard"
+                url={`/auction/${id}/tournament/new`}
+              />
             </div>
           )}
         </div>
@@ -292,7 +396,11 @@ export function LobbyContent({
           <aside className="w-full lg:w-[460px] shrink-0">
             <LeagueSettingsPanel
               leagueId={id}
-              settings={league as unknown as Parameters<typeof LeagueSettingsPanel>[0]['settings']}
+              settings={
+                league as unknown as Parameters<
+                  typeof LeagueSettingsPanel
+                >[0]["settings"]
+              }
               onSaved={onSettingsSaved}
               mobileOpen={mobileSettingsOpen}
               onMobileOpenChange={setMobileSettingsOpen}

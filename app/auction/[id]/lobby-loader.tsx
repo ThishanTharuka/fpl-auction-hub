@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { LobbyContent } from "./lobby-content";
 
 export async function LobbyLoader({
@@ -7,10 +7,12 @@ export async function LobbyLoader({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [leagueRes, participantsRes, membersRes] = await Promise.all([
+  const supabase = await createSupabaseServerClient();
+  const [leagueRes, participantsRes, membersRes, tournamentsRes] = await Promise.all([
     supabase.from("leagues").select("*").eq("id", id).single(),
     supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
     supabase.from("team_members").select("id,participant_id,user_id,user_email,user_name,status").eq("league_id", id),
+    supabase.from("tournaments").select("id,name,status").eq("league_id", id).order("created_at", { ascending: false }),
   ]);
 
   if (!leagueRes.data) {
@@ -28,6 +30,7 @@ export async function LobbyLoader({
       league={leagueRes.data as unknown as LobbyLeague}
       participants={participantsRes.data as LobbyParticipant[] ?? []}
       members={membersRes.data as LobbyMember[] ?? []}
+      tournaments={tournamentsRes.data as LobbyTournament[] ?? []}
       leagueId={id}
     />
   );
@@ -68,4 +71,10 @@ export type LobbyMember = {
   user_email: string;
   user_name: string | null;
   status: string;
+};
+
+export type LobbyTournament = {
+  id: string;
+  name: string;
+  status: string | null;
 };

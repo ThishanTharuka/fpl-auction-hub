@@ -49,3 +49,6 @@ next-env.d.ts
 # opencode — contains API keys for MCP servers
 opencode.json
 opencode.jsonc
+
+# playwright MCP browser artifacts
+.playwright-mcp/

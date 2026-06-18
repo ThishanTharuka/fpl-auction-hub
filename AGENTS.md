@@ -78,4 +78,8 @@ Vercel free tier drops fetch entries >2MB; FPL bootstrap is ~2.6MB. Custom Supab
 - **`@emnapi/runtime` / `@emnapi/core`**: optional deps required at runtime. Use `npm ci --include=optional` locally or lockfile mismatches CI.
 - **Vercel limits**: 10s function timeout, 100k invocations/month. Keep server components lean.
 - **Lobby constraint**: Auctioneer can start before all teams are claimed — managers claim teams at any status (setup or live). `canStart` only requires `teams.length > 0`.
-- **Tests**: Vitest (node env), `globals: true` in `vitest.config.ts`, `@/*` path alias resolved. Tests in `lib/__tests__/` and `components/__tests__/`.
+- **Tests**: Vitest (node env), `globals: true` in `vitest.config.ts`, `@*/` path alias resolved. Tests in `lib/__tests__/` and `components/__tests__/`.
+- **CRON_SECRET**: required env var for `POST /api/tournament/auto-score`. Set it in `.env.local` and as Supabase secret. Supabase cron can hit `/api/tournament/auto-score` with `Authorization: Bearer ${CRON_SECRET}` header to auto-score finished GWs across all active tournaments.
+- **Swiss stages**: matches are generated on-the-fly per-round in the scoring API (not pre-generated like round-robin/knockout). The `POST /api/tournament/[id]/score` endpoint calls `generateSwissRound()` before scoring if no matches exist for the target GW. Same logic in `/api/tournament/auto-score`.
+- **Knockout bracket**: view page renders a visual bracket (`<KnockoutBracket>`) for knockout stages instead of the flat match table.
+- **RPC functions**: `insert_tournament_matches(jsonb)` and `upsert_tournament_standings(jsonb)` created via migration `atomic_tournament_insert_rpc` — use for atomic bulk inserts.
