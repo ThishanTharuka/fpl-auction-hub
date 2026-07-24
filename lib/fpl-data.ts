@@ -150,6 +150,22 @@ async function fetchFromUpstream(): Promise<{
   };
 }
 
+export async function fetchAndCacheFplData(): Promise<FplDataResult> {
+  const { data: fresh, ttl } = await fetchFromUpstream();
+  await supabase
+    .from("fpl_cache")
+    .upsert(
+      {
+        key: CACHE_KEY,
+        value: JSON.parse(JSON.stringify(fresh)),
+        updated_at: new Date().toISOString(),
+        ttl_ms: ttl,
+      },
+      { onConflict: "key" },
+    );
+  return fresh;
+}
+
 export async function getFplData(): Promise<FplDataResult> {
   const { data } = await supabase
     .from("fpl_cache")
@@ -165,19 +181,5 @@ export async function getFplData(): Promise<FplDataResult> {
     }
   }
 
-  const { data: fresh, ttl } = await fetchFromUpstream();
-
-  await supabase
-    .from("fpl_cache")
-    .upsert(
-      {
-        key: CACHE_KEY,
-        value: JSON.parse(JSON.stringify(fresh)),
-        updated_at: new Date().toISOString(),
-        ttl_ms: ttl,
-      },
-      { onConflict: "key" },
-    );
-
-  return fresh;
+  return fetchAndCacheFplData();
 }

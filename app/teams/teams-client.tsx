@@ -119,6 +119,7 @@ export function TeamsClient({
   const [dialogCrestError, setDialogCrestError] = useState(false);
   const [leaguesResolved, setLeaguesResolved] = useState(false);
   const [userParticipantIds, setUserParticipantIds] = useState<string[]>([]);
+  const [userLeagueIds, setUserLeagueIds] = useState<string[]>([]);
 
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset derived image state when switching players */
   useEffect(() => {
@@ -130,29 +131,49 @@ export function TeamsClient({
   /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
-    supabase.from("leagues").select("*").then(({ data: lgs }) => {
-      setLeagues(lgs ?? []);
-      if (lgs && lgs.length > 0) setSelectedLeague(lgs[0]?.id ?? null);
-      setLeaguesResolved(true);
-    });
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        setLeaguesResolved(true);
+        return;
+      }
+      Promise.all([
+        supabase.from("leagues").select("*"),
+        supabase.from("team_members").select("league_id, participant_id").eq("user_id", user.id),
+      ]).then(([leaguesResult, memberResult]) => {
+        const lgs = leaguesResult.data ?? [];
+        const members = memberResult.data ?? [];
+        const userLeagues = [...new Set(members.map((m: { league_id: string }) => m.league_id).filter(Boolean))] as string[];
+        const userPids = members.map((m: { participant_id: string }) => m.participant_id).filter(Boolean) as string[];
+        setUserLeagueIds(userLeagues);
+        setUserParticipantIds(userPids);
+        setLeagues(lgs);
+        const defaultLeague = userLeagues.length > 0
+          ? lgs.find((l: { id: string }) => userLeagues.includes(l.id))?.id
+          : lgs[0]?.id;
+        setSelectedLeague(defaultLeague ?? null);
+        setLeaguesResolved(true);
+      }).catch(() => setLeaguesResolved(true));
+    }).catch(() => setLeaguesResolved(true));
   }, [supabase]);
+
+  const loadedLeagueRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!selectedLeague) return;
+    const isNewLeague = loadedLeagueRef.current !== selectedLeague;
+    loadedLeagueRef.current = selectedLeague;
     supabase
       .from("participants")
       .select("*")
       .eq("league_id", selectedLeague)
       .then(async ({ data: ps }) => {
         const ids = (ps ?? []).map((p: ParticipantRow) => p.id);
-        const [fs, rs, tm] = await Promise.all([
+        const [fs, rs] = await Promise.all([
           ids.length > 0
             ? supabase.from("team_formations").select("*").in("participant_id", ids)
             : { data: [] as TeamFormation[] },
           supabase.from("auction_results").select("*").eq("league_id", selectedLeague),
-          supabase.from("team_members").select("participant_id").eq("league_id", selectedLeague).eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? ""),
         ]);
-        setUserParticipantIds((tm.data ?? []).map((r: { participant_id: string }) => r.participant_id));
         setParticipants(ps ?? []);
         setResults(rs.data ?? []);
         const fm: Record<string, string> = {};
@@ -160,14 +181,16 @@ export function TeamsClient({
           if (f.participant_id) { fm[f.participant_id] = f.formation ?? "4-3-3"; }
         }
         setFormationsMap(fm);
-        if ((ps ?? []).length > 0) {
-          const firstPid = ps![0]!.id;
-          if (!ps!.find((p: ParticipantRow) => p.id === selectedParticipant)) {
-            setSelectedParticipant(firstPid);
+        if (isNewLeague) {
+          const myPid = (ps ?? []).find((p: ParticipantRow) => userParticipantIds.includes(p.id))?.id;
+          if (myPid) {
+            setSelectedParticipant(myPid);
+          } else if ((ps ?? []).length > 0) {
+            setSelectedParticipant(ps![0]!.id);
           }
         }
       });
-  }, [selectedLeague, supabase, selectedParticipant]);
+  }, [selectedLeague, supabase, userParticipantIds]);
 
   const currentLeague = leagues.find((l) => l.id === selectedLeague);
   const currentFormation = selectedParticipant
@@ -412,11 +435,11 @@ export function TeamsClient({
     );
   }
 
-  if (leaguesResolved && leagues.length === 0) {
+  if (leaguesResolved && leagues.filter((l) => userLeagueIds.includes(l.id)).length === 0) {
     return (
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-12">
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-[#849585]">
-          <p>No leagues found. Create one in the Auction tab.</p>
+          <p>You are not participating in any leagues yet.</p>
         </div>
       </div>
     );
@@ -439,7 +462,7 @@ export function TeamsClient({
           </SelectTrigger>
           <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
             <SelectGroup>
-              {leagues.map((l) => (
+              {leagues.filter((l) => userLeagueIds.includes(l.id)).map((l) => (
                 <SelectItem key={l.id} value={l.id} className="text-xs">
                   {l.name}
                 </SelectItem>

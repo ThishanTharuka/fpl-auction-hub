@@ -33,6 +33,7 @@ import { Info, Columns2 } from "lucide-react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import { GoogleSheetsProvider } from "@/lib/google-sheets-context";
 import { ExportSheetsButton } from "@/components/export-sheets-button";
+import { RefreshFplDataButton } from "@/components/refresh-fpl-data-button";
 import {
   Drawer,
   DrawerClose,
@@ -884,6 +885,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
               {filtered.length} players
             </span>
+            <RefreshFplDataButton />
             <ExportSheetsButton
               players={filtered}
               colVisibility={colVisibility}

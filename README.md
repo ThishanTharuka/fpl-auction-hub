@@ -123,7 +123,7 @@ After creation you land on the lobby (`/auction/[id]`). Here you can:
 - **Share the lobby URL** — copy the URL from the Quick Links section and send it to managers
 - **Approve or reject** team claims — managers who claim a team appear with a yellow "pending" badge; click ✓ to approve or ✗ to reject
 - **Edit settings** — the right sidebar (or "Settings" button on mobile) lets you change league rules before the auction starts
-- **Start Auction** — once every team has at least one approved manager, click the green button to set the league to "Live"
+- **Start Auction** — click the green button to set the league to "Live" at any time. Managers can claim remaining teams after the auction starts.
 
 #### 3. Auctioneer Panel
 

@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth-provider";
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -47,13 +50,17 @@ export default function TeamsHubPage() {
   const [budget, setBudget] = useState(200);
   const [squadSize, setSquadSize] = useState(15);
   const [teams, setTeams] = useState<TeamView[]>([]);
+  const [myTeamIds, setMyTeamIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
+  const { user } = useAuth();
+
   const loadData = useCallback(async function loadData() {
-    const [{ data: lg }, { data: ps }, { data: results }] = await Promise.all([
+    const [{ data: lg }, { data: ps }, { data: results }, { data: members }] = await Promise.all([
       supabase.from("leagues").select("budget_per_team, squad_size").eq("id", id).single(),
       supabase.from("participants").select("*").eq("league_id", id).order("name"),
       supabase.from("auction_results").select("*").eq("league_id", id),
+      supabase.from("team_members").select("participant_id,user_id,status").eq("league_id", id),
     ]);
 
     const budg = (lg as { budget_per_team: number; squad_size: number | null } | null)?.budget_per_team ?? 200;
@@ -90,6 +97,15 @@ export default function TeamsHubPage() {
           })),
         };
       }),
+    );
+
+    const ms = (members ?? []) as { participant_id: string; user_id: string; status: string }[];
+    setMyTeamIds(
+      new Set(
+        ms
+          .filter((m) => m.user_id === user?.id && m.status === "approved")
+          .map((m) => m.participant_id),
+      ),
     );
 
     setLoading(false);
@@ -148,10 +164,20 @@ export default function TeamsHubPage() {
                     />
                     <h2 className="font-semibold text-[#d6e4f9] text-sm">{team.name}</h2>
                   </div>
-                  <span className="text-xs text-[#849585]">
-                    {team.squad.length}/{squadSize}
-                  </span>
-                </div>
+                    <span className="text-xs text-[#849585]">
+                      {team.squad.length}/{squadSize}
+                    </span>
+                    {myTeamIds.has(team.id) && (
+                      <Link href={`/auction/${id}/teams/${team.id}/edit`}>
+                        <Button
+                          size="sm"
+                          className="h-6 px-2 text-[10px] bg-[#1e2b3b] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#28394a]"
+                        >
+                          Edit
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
 
                 {/* Budget bar */}
                 <div className="mb-3">
