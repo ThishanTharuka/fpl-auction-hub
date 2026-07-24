@@ -1,5 +1,21 @@
 # Changelog
 
+# [1.14.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.2...v1.14.0) (2026-07-24)
+
+
+### Bug Fixes
+
+* add tournament management features including tables, RLS policies, and RPCs ([9a74a65](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9a74a652673c382de98bc6746843acde6fecaa7b))
+* update auction start instructions to allow starting at any time ([84fbd2f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/84fbd2f1471a6fafb98f6054be1a58293b5c3387))
+* update Supabase configuration and add .gitignore for local development ([2a1ef3f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2a1ef3fab6a64a47593793f5887841a5952199f6))
+
+
+### Features
+
+* add team avatar and FPL manager ID to participants, including storage policies ([4a67957](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4a6795771762a60510a5175bff9ad007305627e7))
+* enhance league management by adding user-specific league and participant tracking ([a706350](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a7063502284cec7eb9acd0a522c797886c1f1978))
+* implement FPL data refresh functionality with new button and API integration ([37ec624](https://github.com/ThishanTharuka/fpl-auction-hub/commit/37ec6247ce6fb1a380146bcf1b04c627d9b15be3))
+
 ## [1.13.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.1...v1.13.2) (2026-06-13)
 
 
