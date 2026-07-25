@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.18.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.17.0...v1.18.0) (2026-07-25)
+
+
+### Features
+
+* :sparkles: enhance bidding functionality with team budget tracker and real-time updates ([e3f2d84](https://github.com/ThishanTharuka/fpl-auction-hub/commit/e3f2d84ab5f9b4180c3b946ec555b6a840bf461d))
+
 # [1.17.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.16.0...v1.17.0) (2026-07-25)
 
 
