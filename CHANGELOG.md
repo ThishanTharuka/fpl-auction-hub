@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.16.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.15.1...v1.16.0) (2026-07-25)
+
+
+### Bug Fixes
+
+* :sparkles: fix team claim deletion for rejected members and update UI layout ([cbacebc](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cbacebca62746e2c7c479a5a8662065eb85cc545))
+
+
+### Features
+
+* :sparkles: add club count validation for bidding limits ([7b1e6d1](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7b1e6d1e370ca121f7f7430e4306c83bbaf06348))
+* :sparkles: add real-time updates for leagues in lobby content ([cd3806c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cd3806c75ffaaf67b4582ba246008370a4d1bb72))
+
 ## [1.15.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.15.0...v1.15.1) (2026-07-25)
 
 
