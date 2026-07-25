@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.1...v1.18.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* :zap: Refactor auction bid and lobby components to improve data handling and subscriptions ([0780279](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0780279a8240acf253a8a67960a2dcb762670dee))
+
 ## [1.18.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.0...v1.18.1) (2026-07-25)
 
 
