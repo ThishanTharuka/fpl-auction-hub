@@ -142,13 +142,15 @@ export function TeamsClient({
       ]).then(([leaguesResult, memberResult]) => {
         const lgs = leaguesResult.data ?? [];
         const members = memberResult.data ?? [];
-        const userLeagues = [...new Set(members.map((m: { league_id: string }) => m.league_id).filter(Boolean))] as string[];
+        const memberLeagueIds = new Set(members.map((m: { league_id: string }) => m.league_id).filter(Boolean)) as Set<string>;
+        const createdLeagueIds = new Set(lgs.filter((l: { created_by: string | null }) => l.created_by === user.id).map((l: { id: string }) => l.id));
+        const allUserLeagues = [...new Set([...memberLeagueIds, ...createdLeagueIds])] as string[];
         const userPids = members.map((m: { participant_id: string }) => m.participant_id).filter(Boolean) as string[];
-        setUserLeagueIds(userLeagues);
+        setUserLeagueIds(allUserLeagues);
         setUserParticipantIds(userPids);
         setLeagues(lgs);
-        const defaultLeague = userLeagues.length > 0
-          ? lgs.find((l: { id: string }) => userLeagues.includes(l.id))?.id
+        const defaultLeague = allUserLeagues.length > 0
+          ? lgs.find((l: { id: string }) => allUserLeagues.includes(l.id))?.id
           : lgs[0]?.id;
         setSelectedLeague(defaultLeague ?? null);
         setLeaguesResolved(true);
