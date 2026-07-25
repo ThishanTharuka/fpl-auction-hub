@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.17.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.16.0...v1.17.0) (2026-07-25)
+
+
+### Features
+
+* :sparkles: update foreign key constraints for auction tables and add leagues to realtime ([dfc25d3](https://github.com/ThishanTharuka/fpl-auction-hub/commit/dfc25d39fef563b5522ad4b9e637cb4b88d3d3fb))
+
 # [1.16.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.15.1...v1.16.0) (2026-07-25)
 
 
