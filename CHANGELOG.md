@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.15.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.14.0...v1.15.0) (2026-07-25)
+
+
+### Features
+
+* :arrow_up: add delete league functionality with confirmation dialog ([1c632b0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/1c632b09c9ae618038b96c3ea335c2d06937b041))
+
 # [1.14.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.2...v1.14.0) (2026-07-24)
 
 
