@@ -67,6 +67,7 @@ export function LobbyContent({
   async function claimTeam(participantId: string) {
     if (!user) { router.push("/login"); return; }
     setClaiming(participantId);
+    await supabase.from("team_members").delete().eq("league_id", id).eq("user_id", user.id).eq("status", "rejected");
     await supabase.from("team_members").insert({
       league_id: id,
       participant_id: participantId,
@@ -242,7 +243,7 @@ export function LobbyContent({
                 const canClaim =
                   user &&
                   !isAuctioneer &&
-                  !myMembership &&
+                  (!myMembership || myMembership.status === "rejected") &&
                   approvedManagers.length < 2;
 
                 return (
@@ -250,10 +251,12 @@ export function LobbyContent({
                     key={team.id}
                     className="flex items-center justify-between gap-3 rounded-md bg-[#132030] border border-[#3b4b3d] px-3 py-3"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <TeamDot color={team.color ?? "#888"} />
-                      <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
-                      <div className="flex gap-1.5 flex-wrap">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
+                      <div className="flex items-center gap-2.5">
+                        <TeamDot color={team.color ?? "#888"} />
+                        <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap pl-[18px] sm:pl-0">
                         {approvedManagers.map((m) => (
                           <span key={m.id} className="text-xs bg-green-500/15 text-green-400 rounded px-1.5 py-0.5">
                             {m.user_name ?? m.user_email}
