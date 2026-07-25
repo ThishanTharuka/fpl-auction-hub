@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,12 +100,23 @@ export function BidContent({
   nomination: initialNomination,
   initialMyTeam,
   initialTeamMeta,
+  initialAllParticipants,
+  initialAllResults,
 }: {
   league: BidLeague;
   nomination: BidNomination | null;
   leagueId: string;
   initialMyTeam?: Participant | null;
   initialTeamMeta?: TeamMeta | null;
+  initialAllParticipants: Participant[];
+  initialAllResults: {
+    fpl_player_id: number;
+    participant_id: string | null;
+    price_paid: number;
+    position_slot: string | null;
+    player_name: string | null;
+    player_team: string | null;
+  }[];
 }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -120,6 +131,9 @@ export function BidContent({
   const [bidding, setBidding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [auctionEvent, setAuctionEvent] = useState<AuctionEvent | null>(null);
+  const [allParticipants, setAllParticipants] = useState<Participant[]>(initialAllParticipants);
+  const [allResults, setAllResults] = useState(initialAllResults);
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -174,6 +188,15 @@ export function BidContent({
     },
     [id],
   );
+
+  const loadAllTeamData = useCallback(async () => {
+    const [psRes, rsRes] = await Promise.all([
+      supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
+      supabase.from("auction_results").select("*").eq("league_id", id),
+    ]);
+    if (psRes.data) setAllParticipants(psRes.data as Participant[]);
+    if (rsRes.data) setAllResults(rsRes.data);
+  }, [id]);
 
   // Auth-dependent setup: find my team membership (only if server didn't provide it)
   useEffect(() => {
@@ -287,6 +310,19 @@ export function BidContent({
     };
   }, [id, myTeam, league, loadMySquad]);
 
+  // ── Realtime: refresh team budget tracker on auction_results changes ─────────
+  useEffect(() => {
+    const channel = supabase
+      .channel(`budgets-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "auction_results", filter: `league_id=eq.${id}` },
+        () => { loadAllTeamData().catch(() => {}); },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel).catch(() => {}); };
+  }, [id, loadAllTeamData]);
+
   // ── Timer ─────────────────────────────────────────────────────────────────
   const tickTimer = useCallback(() => {
     if (!nomination) {
@@ -381,6 +417,23 @@ export function BidContent({
     setBidding(false);
   }
 
+  // ── Derived values (use fallbacks for pending team) ──────────────────────
+  const allTeams = useMemo(() => {
+    const budget = league.budget_per_team;
+    return allParticipants.map((p) => {
+      const teamResults = allResults.filter((r) => r.participant_id === p.id);
+      const squad: SquadPlayer[] = teamResults.map((r) => ({
+        id: r.fpl_player_id,
+        name: r.player_name ?? "Unknown",
+        position: r.position_slot ?? "?",
+        price: r.price_paid,
+        team: r.player_team ?? "",
+      }));
+      const spent = teamResults.reduce((s, r) => s + r.price_paid, 0);
+      return { ...p, spent, remaining: budget - spent, squad };
+    });
+  }, [allParticipants, allResults, league.budget_per_team]);
+
   // ── Error state ─────────────────────────────────────────────────────────
   if (loadError) {
     return (
@@ -390,7 +443,6 @@ export function BidContent({
     );
   }
 
-  // ── Derived values (use fallbacks for pending team) ──────────────────────
   const pendingTeam = !myTeam;
   const remaining = teamMeta
     ? teamMeta.budget_per_team - teamMeta.spent
@@ -527,6 +579,9 @@ export function BidContent({
       auctionEvent={auctionEvent}
       pendingTeam={pendingTeam}
       onBid={() => placeBid().catch(() => {})}
+      allTeams={allTeams}
+      expandedTeamId={expandedTeamId}
+      onToggleTeam={(id) => setExpandedTeamId(id)}
     />
   );
 }
@@ -543,6 +598,15 @@ interface PositionRequirement {
 }
 
 // ── BidUI ─────────────────────────────────────────────────────────────────────
+
+export interface TeamBudget {
+  id: string;
+  name: string;
+  color: string | null;
+  spent: number;
+  remaining: number;
+  squad: SquadPlayer[];
+}
 
 type BidUIProps = Readonly<{
   league: BidLeague;
@@ -572,6 +636,9 @@ type BidUIProps = Readonly<{
   auctionEvent: AuctionEvent | null;
   pendingTeam: boolean;
   onBid: () => void;
+  allTeams: TeamBudget[];
+  expandedTeamId: string | null;
+  onToggleTeam: (id: string | null) => void;
 }>;
 
 function BidUI({
@@ -602,6 +669,9 @@ function BidUI({
   auctionEvent,
   pendingTeam,
   onBid,
+  allTeams,
+  expandedTeamId,
+  onToggleTeam,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
   if (nomination) {
@@ -939,6 +1009,83 @@ function BidUI({
               </div>
             </div>
           )}
+
+          {/* ── All Teams Budget ───────────────────────────────────────── */}
+          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
+            <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+              All Teams
+            </h3>
+            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+              {allTeams.map((t) => (
+                <div key={t.id}>
+                  <button
+                    onClick={() =>
+                      onToggleTeam(
+                        expandedTeamId === t.id ? null : t.id,
+                      )
+                    }
+                    className="w-full flex items-center justify-between gap-2 rounded bg-[#132030] px-3 py-1.5 text-xs hover:bg-[#1a2e42] transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: t.color ?? "#888" }}
+                      />
+                      <span className="text-[#d6e4f9] truncate">
+                        {t.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`font-mono ${t.remaining >= 0 ? "text-[#b9cbb9]" : "text-red-400"}`}>
+                        &pound;{t.remaining.toFixed(1)}m
+                      </span>
+                      <span className="text-[#849585]">{t.squad.length}</span>
+                    </div>
+                  </button>
+                  {expandedTeamId === t.id && (
+                    <div className="ml-4 mt-1 mb-1 space-y-0.5">
+                      {t.squad.length === 0 && (
+                        <p className="text-[10px] text-[#849585] italic px-2 py-1">
+                          No players yet
+                        </p>
+                      )}
+                      {(["GKP", "DEF", "MID", "FWD"] as const).map((pos) => {
+                        const players = t.squad.filter(
+                          (p) => p.position === pos,
+                        );
+                        if (players.length === 0) return null;
+                        return (
+                          <div key={pos}>
+                            <div className="text-[10px] text-[#849585] font-semibold uppercase px-2 py-0.5">
+                              {pos} ({players.length})
+                            </div>
+                            {players.map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center justify-between text-[11px] bg-[#0f1c2c] rounded px-2 py-0.5"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-[#d6e4f9] truncate">
+                                    {p.name}
+                                  </span>
+                                  <span className="text-[#849585] shrink-0">
+                                    {p.team}
+                                  </span>
+                                </div>
+                                <span className="font-mono text-[#b9cbb9] shrink-0 ml-1">
+                                  &pound;{p.price}m
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </aside>
       </div>
     </div>
