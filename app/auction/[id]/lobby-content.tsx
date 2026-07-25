@@ -60,6 +60,11 @@ export function LobbyContent({
         { event: "*", schema: "public", table: "team_members", filter: `league_id=eq.${id}` },
         () => { reload().catch(() => {}); },
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "leagues", filter: `id=eq.${id}` },
+        () => { reload().catch(() => {}); },
+      )
       .subscribe();
     return () => { supabase.removeChannel(channel).catch(() => {}); };
   }, [id, reload, supabase]);
