@@ -80,6 +80,8 @@ interface CanBidArgs {
   posLimit: number;
   squadSize: number;
   maxSquad: number;
+  clubCount: number;
+  maxClub: number;
 }
 
 function checkCanBid(a: CanBidArgs): boolean {
@@ -89,6 +91,7 @@ function checkCanBid(a: CanBidArgs): boolean {
   if (a.nomination.current_bidder_id === a.myTeamId) return false;
   if (a.myBid > a.maxBid || a.myPosCount >= a.posLimit) return false;
   if (a.squadSize >= a.maxSquad) return false;
+  if (a.clubCount >= a.maxClub) return false;
   return true;
 }
 
@@ -468,6 +471,12 @@ export function BidContent({
     : totalRemainingSlots;
   const maxBid = Math.max(0, surplus + nomStartPrice);
 
+  const nominatedClub = nomination?.player_team ?? "";
+  const clubCount = nominatedClub && teamMeta
+    ? teamMeta.squad.filter((p) => p.team === nominatedClub).length
+    : 0;
+  const maxClub = league.max_per_club ?? 3;
+
   const canBid = myTeam
     ? checkCanBid({
         nomination,
@@ -480,6 +489,8 @@ export function BidContent({
         posLimit,
         squadSize,
         maxSquad,
+        clubCount,
+        maxClub,
       })
     : false;
 
@@ -511,6 +522,8 @@ export function BidContent({
       totalRemainingSlots={totalRemainingSlots}
       totalMinAllocationAfterBid={totalMinAllocationAfterBid}
       totalRemainingSlotsAfterBid={totalRemainingSlotsAfterBid}
+      clubCount={clubCount}
+      maxClub={maxClub}
       auctionEvent={auctionEvent}
       pendingTeam={pendingTeam}
       onBid={() => placeBid().catch(() => {})}
@@ -548,6 +561,8 @@ type BidUIProps = Readonly<{
   maxSquad: number;
   myPosCount: number;
   posLimit: number;
+  clubCount: number;
+  maxClub: number;
   timerColor: string;
   posRequirements: PositionRequirement[];
   totalMinAllocation: number;
@@ -576,6 +591,8 @@ function BidUI({
   maxSquad,
   myPosCount,
   posLimit,
+  clubCount,
+  maxClub,
   timerColor,
   posRequirements,
   totalMinAllocation,
@@ -735,6 +752,11 @@ function BidUI({
               {myPosCount >= posLimit && (
                 <p className="text-xs text-red-400 text-center mt-2">
                   Position limit reached ({posLimit} {nomination.position})
+                </p>
+              )}
+              {nomination && clubCount >= maxClub && (
+                <p className="text-xs text-red-400 text-center mt-2">
+                  Club limit reached ({maxClub} {nomination.player_team})
                 </p>
               )}
               {myBid > remaining && (
