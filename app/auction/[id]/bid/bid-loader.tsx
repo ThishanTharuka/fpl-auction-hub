@@ -102,6 +102,22 @@ export async function BidLoader({
     ? normalizeNomination(nomRes.data as Record<string, unknown>)
     : null;
 
+  // Fetch all participants + results for the team budget tracker
+  const [participantsRes, allResultsRes] = await Promise.all([
+    supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
+    supabase.from("auction_results").select("*").eq("league_id", id),
+  ]);
+
+  const allParticipants = (participantsRes.data ?? []) as BidParticipant[];
+  const allResults = (allResultsRes.data ?? []) as {
+    fpl_player_id: number;
+    participant_id: string | null;
+    price_paid: number;
+    position_slot: string | null;
+    player_name: string | null;
+    player_team: string | null;
+  }[];
+
   let initialMyTeam: BidParticipant | null = null;
   let initialTeamMeta: BidTeamMeta | null = null;
 
@@ -164,6 +180,8 @@ export async function BidLoader({
       leagueId={id}
       initialMyTeam={initialMyTeam}
       initialTeamMeta={initialTeamMeta}
+      initialAllParticipants={allParticipants}
+      initialAllResults={allResults}
     />
   );
 }
