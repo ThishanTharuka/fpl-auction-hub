@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { getFplData } from "@/lib/fpl-data";
 import { BidContent } from "./bid-content";
+import type { EnrichedPlayer } from "@/lib/fpl-types";
 
 export type BidLeague = {
   id: string;
@@ -77,7 +79,7 @@ export async function BidLoader({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [leagueRes, nomRes] = await Promise.all([
+  const [leagueRes, nomRes, fplData] = await Promise.all([
     supabase.from("leagues").select("*").eq("id", id).single(),
     supabase
       .from("auction_nominations")
@@ -87,7 +89,13 @@ export async function BidLoader({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    getFplData().catch(() => null) as Promise<{
+      players: EnrichedPlayer[];
+      teams: unknown[];
+      currentGameweek: number;
+    } | null>,
   ]);
+  const initialPlayers = fplData?.players ?? ([] as EnrichedPlayer[]);
 
   if (!leagueRes.data) {
     return (
@@ -105,7 +113,7 @@ export async function BidLoader({
   // Fetch all participants + results for the team budget tracker
   const [participantsRes, allResultsRes] = await Promise.all([
     supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
-    supabase.from("auction_results").select("*").eq("league_id", id),
+    supabase.from("auction_results").select("fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team").eq("league_id", id),
   ]);
 
   const allParticipants = (participantsRes.data ?? []) as BidParticipant[];
@@ -147,7 +155,7 @@ export async function BidLoader({
 
           const { data: results } = await supabase
             .from("auction_results")
-            .select("*")
+            .select("fpl_player_id,price_paid,position_slot,player_name,player_team")
             .eq("league_id", id)
             .eq("participant_id", membership.participant_id);
 
@@ -182,6 +190,7 @@ export async function BidLoader({
       initialTeamMeta={initialTeamMeta}
       initialAllParticipants={allParticipants}
       initialAllResults={allResults}
+      initialPlayers={initialPlayers}
     />
   );
 }

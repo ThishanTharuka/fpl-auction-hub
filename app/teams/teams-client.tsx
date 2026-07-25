@@ -137,7 +137,7 @@ export function TeamsClient({
         return;
       }
       Promise.all([
-        supabase.from("leagues").select("*"),
+        supabase.from("leagues").select("id,name,budget_per_team,created_by,max_gkp,max_def,max_mid,max_fwd,squad_size"),
         supabase.from("team_members").select("league_id, participant_id").eq("user_id", user.id),
       ]).then(([leaguesResult, memberResult]) => {
         const lgs = leaguesResult.data ?? [];
@@ -166,15 +166,15 @@ export function TeamsClient({
     loadedLeagueRef.current = selectedLeague;
     supabase
       .from("participants")
-      .select("*")
+      .select("id,name,color,league_id")
       .eq("league_id", selectedLeague)
       .then(async ({ data: ps }) => {
         const ids = (ps ?? []).map((p: ParticipantRow) => p.id);
         const [fs, rs] = await Promise.all([
           ids.length > 0
-            ? supabase.from("team_formations").select("*").in("participant_id", ids)
+            ? supabase.from("team_formations").select("participant_id,formation").in("participant_id", ids)
             : { data: [] as TeamFormation[] },
-          supabase.from("auction_results").select("*").eq("league_id", selectedLeague),
+          supabase.from("auction_results").select("id,participant_id,fpl_player_id,price_paid,position_slot,league_id").eq("league_id", selectedLeague),
         ]);
         setParticipants(ps ?? []);
         setResults(rs.data ?? []);

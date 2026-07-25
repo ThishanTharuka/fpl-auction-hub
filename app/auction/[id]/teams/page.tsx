@@ -58,8 +58,8 @@ export default function TeamsHubPage() {
   const loadData = useCallback(async function loadData() {
     const [{ data: lg }, { data: ps }, { data: results }, { data: members }] = await Promise.all([
       supabase.from("leagues").select("budget_per_team, squad_size").eq("id", id).single(),
-      supabase.from("participants").select("*").eq("league_id", id).order("name"),
-      supabase.from("auction_results").select("*").eq("league_id", id),
+      supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
+      supabase.from("auction_results").select("participant_id,fpl_player_id,player_name,player_team,position_slot,price_paid").eq("league_id", id),
       supabase.from("team_members").select("participant_id,user_id,status").eq("league_id", id),
     ]);
 
@@ -120,7 +120,29 @@ export default function TeamsHubPage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "auction_results", filter: `league_id=eq.${id}` },
-        () => { loadData().catch(() => {}); },
+        (payload) => {
+          const r = payload.new as AuctionResult;
+          setTeams((prev) =>
+            prev.map((t) =>
+              t.id === r.participant_id
+                ? {
+                    ...t,
+                    spent: t.spent + r.price_paid,
+                    squad: [
+                      ...t.squad,
+                      {
+                        id: r.fpl_player_id,
+                        name: r.player_name ?? "Unknown",
+                        team: r.player_team ?? "",
+                        position: r.position_slot ?? "?",
+                        price: r.price_paid,
+                      },
+                    ],
+                  }
+                : t,
+            ),
+          );
+        },
       )
       .subscribe();
 

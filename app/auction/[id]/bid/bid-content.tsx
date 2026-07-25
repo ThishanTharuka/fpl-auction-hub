@@ -102,6 +102,7 @@ export function BidContent({
   initialTeamMeta,
   initialAllParticipants,
   initialAllResults,
+  initialPlayers,
 }: {
   league: BidLeague;
   nomination: BidNomination | null;
@@ -117,6 +118,7 @@ export function BidContent({
     player_name: string | null;
     player_team: string | null;
   }[];
+  initialPlayers: EnrichedPlayer[];
 }) {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -141,17 +143,14 @@ export function BidContent({
   const fplPlayersMapRef = useRef<Map<number, EnrichedPlayer>>(new Map());
 
   useEffect(() => {
-    fetch("/api/fpl/bootstrap")
-      .then((r) => r.json())
-      .then((res) => {
-        const list = (res?.players ?? []) as EnrichedPlayer[];
-        fplPlayersMapRef.current = new Map(list.map((p) => [p.id, p]));
-        if (nomination) {
-          const p = fplPlayersMapRef.current.get(nomination.fpl_player_id) ?? null;
-          if (p) setFplPlayer(p);
-        }
-      })
-      .catch(() => {});
+    fplPlayersMapRef.current = new Map(initialPlayers.map((p) => [p.id, p]));
+  }, [initialPlayers]);
+
+  useEffect(() => {
+    if (nomination) {
+      const p = fplPlayersMapRef.current.get(nomination.fpl_player_id) ?? null;
+      setFplPlayer(p);
+    }
   }, [nomination]);
 
   const loadMySquad = useCallback(
@@ -162,7 +161,7 @@ export function BidContent({
     ) => {
       const { data: results } = await supabase
         .from("auction_results")
-        .select("*")
+        .select("fpl_player_id,price_paid,position_slot,player_name,player_team")
         .eq("league_id", id)
         .eq("participant_id", participantId);
 
@@ -192,7 +191,7 @@ export function BidContent({
   const loadAllTeamData = useCallback(async () => {
     const [psRes, rsRes] = await Promise.all([
       supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
-      supabase.from("auction_results").select("*").eq("league_id", id),
+      supabase.from("auction_results").select("fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team").eq("league_id", id),
     ]);
     if (psRes.data) setAllParticipants(psRes.data as Participant[]);
     if (rsRes.data) setAllResults(rsRes.data);
@@ -317,7 +316,32 @@ export function BidContent({
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "auction_results", filter: `league_id=eq.${id}` },
-        () => { loadAllTeamData().catch(() => {}); },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const r = payload.new as Record<string, unknown>;
+            setAllResults((prev) =>
+              prev.some(
+                (x) =>
+                  x.fpl_player_id === (r.fpl_player_id as number) &&
+                  x.participant_id === (r.participant_id as string | null),
+              )
+                ? prev
+                : [
+                    ...prev,
+                    {
+                      fpl_player_id: r.fpl_player_id as number,
+                      participant_id: r.participant_id as string | null,
+                      price_paid: r.price_paid as number,
+                      position_slot: r.position_slot as string | null,
+                      player_name: r.player_name as string | null,
+                      player_team: r.player_team as string | null,
+                    },
+                  ],
+            );
+          } else {
+            loadAllTeamData().catch(() => {});
+          }
+        },
       )
       .subscribe();
     return () => { supabase.removeChannel(channel).catch(() => {}); };

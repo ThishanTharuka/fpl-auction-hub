@@ -58,16 +58,55 @@ export function LobbyContent({
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "team_members", filter: `league_id=eq.${id}` },
-        () => { reload().catch(() => {}); },
+        (payload) => {
+          const m = payload.new as Record<string, unknown>;
+          const o = payload.old as Record<string, unknown>;
+          if (payload.eventType === "INSERT") {
+            setMembers((prev) =>
+              prev.some((x) => x.id === (m.id as string))
+                ? prev
+                : [
+                    ...prev,
+                    {
+                      id: m.id as string,
+                      participant_id: m.participant_id as string,
+                      user_id: m.user_id as string,
+                      user_email: m.user_email as string,
+                      user_name: (m.user_name as string) ?? null,
+                      status: m.status as string,
+                    },
+                  ],
+            );
+          } else if (payload.eventType === "UPDATE") {
+            setMembers((prev) =>
+              prev.map((x) =>
+                x.id === m.id
+                  ? {
+                      ...x,
+                      participant_id: (m.participant_id as string) ?? x.participant_id,
+                      user_id: (m.user_id as string) ?? x.user_id,
+                      user_email: (m.user_email as string) ?? x.user_email,
+                      user_name: (m.user_name as string) ?? x.user_name,
+                      status: (m.status as string) ?? x.status,
+                    }
+                  : x,
+              ),
+            );
+          } else if (payload.eventType === "DELETE") {
+            setMembers((prev) => prev.filter((x) => x.id !== (o.id as string)));
+          }
+        },
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "leagues", filter: `id=eq.${id}` },
-        () => { reload().catch(() => {}); },
+        (payload) => {
+          setLeague(payload.new as unknown as LobbyLeague);
+        },
       )
       .subscribe();
     return () => { supabase.removeChannel(channel).catch(() => {}); };
-  }, [id, reload, supabase]);
+  }, [id, supabase]);
 
   async function claimTeam(participantId: string) {
     if (!user) { router.push("/login"); return; }
