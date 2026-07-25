@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.0...v1.18.1) (2026-07-25)
+
+
+### Bug Fixes
+
+* :bug: add row-level security policy for participants update and include auction results in realtime ([01bb54a](https://github.com/ThishanTharuka/fpl-auction-hub/commit/01bb54ac6f8836b6312e3d66e973b112fe841880))
+
 # [1.18.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.17.0...v1.18.0) (2026-07-25)
 
 
