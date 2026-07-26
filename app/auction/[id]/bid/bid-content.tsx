@@ -4,6 +4,13 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
@@ -69,6 +76,26 @@ interface AuctionEvent {
   fullName: string;
 }
 
+interface BidEntry {
+  id: string;
+  nomination_id: string;
+  participant_name: string;
+  amount: number;
+  created_at: string | null;
+}
+
+function dedupeRecentBids(bids: BidEntry[]): BidEntry[] {
+  const seen = new Set<string>();
+  const unique: BidEntry[] = [];
+  for (const bid of bids) {
+    if (seen.has(bid.id)) continue;
+    seen.add(bid.id);
+    unique.push(bid);
+    if (unique.length === 10) break;
+  }
+  return unique;
+}
+
 interface CanBidArgs {
   nomination: BidNomination | null;
   myTeamId: string;
@@ -125,15 +152,24 @@ export function BidContent({
   const { user, loading: authLoading } = useAuth();
 
   const [league] = useState<BidLeague>(initialLeague);
-  const [myTeam, setMyTeam] = useState<Participant | null>(initialMyTeam ?? null);
-  const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(initialTeamMeta ?? null);
-  const [nomination, setNomination] = useState<BidNomination | null>(initialNomination);
+  const [myTeam, setMyTeam] = useState<Participant | null>(
+    initialMyTeam ?? null,
+  );
+  const [teamMeta, setTeamMeta] = useState<TeamMeta | null>(
+    initialTeamMeta ?? null,
+  );
+  const [nomination, setNomination] = useState<BidNomination | null>(
+    initialNomination,
+  );
   const [fplPlayer, setFplPlayer] = useState<EnrichedPlayer | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [bidding, setBidding] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [auctionEvent, setAuctionEvent] = useState<AuctionEvent | null>(null);
-  const [allParticipants, setAllParticipants] = useState<Participant[]>(initialAllParticipants);
+  const [recentBids, setRecentBids] = useState<BidEntry[]>([]);
+  const [allParticipants, setAllParticipants] = useState<Participant[]>(
+    initialAllParticipants,
+  );
   const [allResults, setAllResults] = useState(initialAllResults);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
 
@@ -161,7 +197,9 @@ export function BidContent({
     ) => {
       const { data: results } = await supabase
         .from("auction_results")
-        .select("fpl_player_id,price_paid,position_slot,player_name,player_team")
+        .select(
+          "fpl_player_id,price_paid,position_slot,player_name,player_team",
+        )
         .eq("league_id", id)
         .eq("participant_id", participantId);
 
@@ -188,10 +226,29 @@ export function BidContent({
     [id],
   );
 
+  const loadBids = async (nominationId: string) => {
+    const { data } = await supabase
+      .from("auction_bids")
+      .select("*")
+      .eq("nomination_id", nominationId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setRecentBids(dedupeRecentBids(data as BidEntry[]));
+  };
+
   const loadAllTeamData = useCallback(async () => {
     const [psRes, rsRes] = await Promise.all([
-      supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
-      supabase.from("auction_results").select("fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team").eq("league_id", id),
+      supabase
+        .from("participants")
+        .select("id,name,color")
+        .eq("league_id", id)
+        .order("name"),
+      supabase
+        .from("auction_results")
+        .select(
+          "fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team",
+        )
+        .eq("league_id", id),
     ]);
     if (psRes.data) setAllParticipants(psRes.data as Participant[]);
     if (rsRes.data) setAllResults(rsRes.data);
@@ -232,7 +289,11 @@ export function BidContent({
       }
 
       setMyTeam(participant as Participant);
-      await loadMySquad(membership.participant_id, league, fplPlayersMapRef.current);
+      await loadMySquad(
+        membership.participant_id,
+        league,
+        fplPlayersMapRef.current,
+      );
     };
 
     setup().catch(() => {});
@@ -257,6 +318,7 @@ export function BidContent({
         setNomination(row);
         setFplPlayer(fplPlayersMapRef.current.get(row.fpl_player_id) ?? null);
         setAuctionEvent(null);
+        loadBids(row.id);
         return;
       }
 
@@ -282,6 +344,7 @@ export function BidContent({
       setNomination(null);
       setFplPlayer(null);
       setSecondsLeft(0);
+      setRecentBids([]);
       if (row.status === "sold" && row.current_bidder_id === myTeam.id) {
         loadMySquad(myTeam.id, league, fplPlayersMapRef.current).catch(
           () => {},
@@ -315,7 +378,12 @@ export function BidContent({
       .channel(`budgets-${id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "auction_results", filter: `league_id=eq.${id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "auction_results",
+          filter: `league_id=eq.${id}`,
+        },
         (payload) => {
           if (payload.eventType === "INSERT") {
             const r = payload.new as Record<string, unknown>;
@@ -344,8 +412,47 @@ export function BidContent({
         },
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel).catch(() => {}); };
+    return () => {
+      supabase.removeChannel(channel).catch(() => {});
+    };
   }, [id, loadAllTeamData]);
+
+  // ── Realtime: bid history ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!nomination) return;
+
+    supabase
+      .from("auction_bids")
+      .select("*")
+      .eq("nomination_id", nomination.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setRecentBids(dedupeRecentBids(data as BidEntry[]));
+      });
+
+    const channel = supabase
+      .channel(`bid-history-${id}-${nomination.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "auction_bids",
+          filter: `nomination_id=eq.${nomination.id}`,
+        },
+        (payload) => {
+          const bid = payload.new as BidEntry;
+          setRecentBids((prev) => dedupeRecentBids([bid, ...prev]));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel).catch(() => {});
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, nomination?.id]);
 
   // ── Timer ─────────────────────────────────────────────────────────────────
   const tickTimer = useCallback(() => {
@@ -398,7 +505,10 @@ export function BidContent({
     if (!nomination || !myTeam || !league) return;
     if (nomination.is_paused || secondsLeft <= 0) return;
     setBidding(true);
-    const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+    const tiers = league.bid_increment_tiers as
+      | BidIncrementTier[]
+      | null
+      | undefined;
     const bidAmount = resolveBidAmountWithTiers(
       nomination.current_bid,
       nomination.current_bidder_id,
@@ -458,6 +568,29 @@ export function BidContent({
     });
   }, [allParticipants, allResults, league.budget_per_team]);
 
+  const soldPlayers = useMemo(() => {
+    const participantMap = new Map(allParticipants.map((p) => [p.id, p]));
+    const playerMap = new Map(initialPlayers.map((p) => [p.id, p]));
+    return allResults
+      .filter((r) => r.participant_id)
+      .map((r) => {
+        const fpl = playerMap.get(r.fpl_player_id);
+        const buyer = r.participant_id
+          ? participantMap.get(r.participant_id)
+          : undefined;
+        return {
+          playerName: r.player_name ?? fpl?.web_name ?? "Unknown",
+          playerTeam: r.player_team ?? fpl?.team_short ?? "",
+          position: r.position_slot ?? fpl?.position ?? "?",
+          price: r.price_paid,
+          buyerName: buyer?.name ?? "Unknown",
+          buyerColor: buyer?.color ?? null,
+          fplPlayerId: r.fpl_player_id,
+        };
+      })
+      .reverse();
+  }, [allResults, allParticipants, initialPlayers]);
+
   // ── Error state ─────────────────────────────────────────────────────────
   if (loadError) {
     return (
@@ -473,9 +606,17 @@ export function BidContent({
     : league.budget_per_team;
   const squadSize = teamMeta?.squad.length ?? 0;
   const maxSquad = league.squad_size ?? 15;
-  const tiers = league.bid_increment_tiers as BidIncrementTier[] | null | undefined;
+  const tiers = league.bid_increment_tiers as
+    | BidIncrementTier[]
+    | null
+    | undefined;
   const myBid = nomination
-    ? resolveBidAmountWithTiers(nomination.current_bid, nomination.current_bidder_id, nomination.starting_price, tiers)
+    ? resolveBidAmountWithTiers(
+        nomination.current_bid,
+        nomination.current_bidder_id,
+        nomination.starting_price,
+        tiers,
+      )
     : 0;
   const posKey = nomination?.position.toLowerCase() as
     | "gkp"
@@ -548,9 +689,10 @@ export function BidContent({
   const maxBid = Math.max(0, surplus + nomStartPrice);
 
   const nominatedClub = nomination?.player_team ?? "";
-  const clubCount = nominatedClub && teamMeta
-    ? teamMeta.squad.filter((p) => p.team === nominatedClub).length
-    : 0;
+  const clubCount =
+    nominatedClub && teamMeta
+      ? teamMeta.squad.filter((p) => p.team === nominatedClub).length
+      : 0;
   const maxClub = league.max_per_club ?? 3;
 
   const canBid = myTeam
@@ -606,6 +748,8 @@ export function BidContent({
       allTeams={allTeams}
       expandedTeamId={expandedTeamId}
       onToggleTeam={(id) => setExpandedTeamId(id)}
+      recentBids={recentBids}
+      soldPlayers={soldPlayers}
     />
   );
 }
@@ -630,6 +774,16 @@ export interface TeamBudget {
   spent: number;
   remaining: number;
   squad: SquadPlayer[];
+}
+
+interface SoldPlayer {
+  playerName: string;
+  playerTeam: string;
+  position: string;
+  price: number;
+  buyerName: string;
+  buyerColor: string | null;
+  fplPlayerId: number;
 }
 
 type BidUIProps = Readonly<{
@@ -663,6 +817,8 @@ type BidUIProps = Readonly<{
   allTeams: TeamBudget[];
   expandedTeamId: string | null;
   onToggleTeam: (id: string | null) => void;
+  recentBids: BidEntry[];
+  soldPlayers: SoldPlayer[];
 }>;
 
 function BidUI({
@@ -696,6 +852,8 @@ function BidUI({
   allTeams,
   expandedTeamId,
   onToggleTeam,
+  recentBids,
+  soldPlayers,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
   if (nomination) {
@@ -717,7 +875,9 @@ function BidUI({
               <p className="text-xs text-[#849585]">{league.name}</p>
               <h1 className="text-lg font-bold text-[#d6e4f9] flex items-center gap-2">
                 {pendingTeam ? (
-                  <span className="text-[#849585] text-base font-normal">Loading team info...</span>
+                  <span className="text-[#849585] text-base font-normal">
+                    Loading team info...
+                  </span>
                 ) : (
                   <>
                     <span
@@ -739,159 +899,214 @@ function BidUI({
 
           {/* Live nomination */}
           {nomination ? (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 min-h-[300px]">
+            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge
-                      variant="outline"
-                      className={POSITION_COLORS[nomination.position] ?? ""}
-                    >
-                      {nomination.position}
-                    </Badge>
-                    <span className="text-xs text-[#849585]">
-                      {fplPlayer?.team_name ?? nomination.player_team}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-[#d6e4f9]">
-                    {fplPlayer?.full_name ?? nomination.player_name}
-                  </h2>
-                </div>
-                <div className="text-right">
-                  <div className={`text-4xl font-mono font-bold ${timerColor}`}>
-                    {timerDisplayValue}
-                  </div>
-                  <div className="text-xs text-[#849585]">
-                    {nomination.is_paused ? "paused" : "secs"}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                {fplPlayer ? (
-                  <PlayerStatsBar player={fplPlayer} />
-                ) : (
-                  <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
-                    <div className="flex gap-4 flex-wrap items-start">
-                      <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="h-5 w-44 rounded bg-[#0a1724]" />
-                        <div className="h-3 w-24 rounded bg-[#0a1724]" />
-                        <div className="h-5 w-16 rounded-full bg-[#102133]" />
-                        <div className="h-3 w-16 rounded bg-[#0a1724]" />
-                        <div className="h-3 w-20 rounded bg-[#0a1724]" />
-                      </div>
-                      <div className="shrink-0 grid grid-cols-1 gap-2">
-                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
-                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
-                      </div>
-                    </div>
-                    <div className="my-3 border-t border-[#1a2e42]" />
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="h-[52px] rounded-xl bg-[#0a1724]" />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-[#132030] rounded-lg p-4 mb-4">
-                <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
-                  {nomination.current_bidder_id === null
-                    ? "Starting Price"
-                    : "Current Bid"}
-                </div>
-                <div className="text-3xl font-mono font-bold text-[#00e478]">
-                  &pound;{nomination.current_bid}m
-                </div>
-                {nomination.current_bidder_name && (
-                  <div className="text-xs text-[#849585] mt-1">
-                    {nomination.current_bidder_id === myTeam?.id ? (
-                      <span className="text-[#00e478] font-semibold">
-                        You are the highest bidder
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge
+                        variant="outline"
+                        className={POSITION_COLORS[nomination.position] ?? ""}
+                      >
+                        {nomination.position}
+                      </Badge>
+                      <span className="text-xs text-[#849585]">
+                        {fplPlayer?.team_name ?? nomination.player_team}
                       </span>
-                    ) : (
-                      <span>by {nomination.current_bidder_name}</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#d6e4f9]">
+                      {fplPlayer?.full_name ?? nomination.player_name}
+                    </h2>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className={`text-4xl font-mono font-bold ${timerColor}`}
+                    >
+                      {timerDisplayValue}
+                    </div>
+                    <div className="text-xs text-[#849585]">
+                      {nomination.is_paused ? "paused" : "secs"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  {fplPlayer ? (
+                    <PlayerStatsBar player={fplPlayer} />
+                  ) : (
+                    <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
+                      <div className="flex gap-4 flex-wrap items-start">
+                        <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="h-5 w-44 rounded bg-[#0a1724]" />
+                          <div className="h-3 w-24 rounded bg-[#0a1724]" />
+                          <div className="h-5 w-16 rounded-full bg-[#102133]" />
+                          <div className="h-3 w-16 rounded bg-[#0a1724]" />
+                          <div className="h-3 w-20 rounded bg-[#0a1724]" />
+                        </div>
+                        <div className="shrink-0 grid grid-cols-1 gap-2">
+                          <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                          <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                        </div>
+                      </div>
+                      <div className="my-3 border-t border-[#1a2e42]" />
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="h-[52px] rounded-xl bg-[#0a1724]"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[#132030] rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs text-[#849585] uppercase tracking-wider">
+                      {nomination.current_bidder_id === null
+                        ? "Starting Price"
+                        : "Current Bid"}
+                    </div>
+                    <Drawer direction="left">
+                      <DrawerTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs py-1.5 h-auto px-3"
+                        >
+                          Bid History ({recentBids.length})
+                        </Button>
+                      </DrawerTrigger>
+                      <DrawerContent>
+                        <DrawerHeader>
+                          <DrawerTitle className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                            Bid History
+                          </DrawerTitle>
+                        </DrawerHeader>
+                        <div className="space-y-1 overflow-y-auto flex-1 px-4 pb-4">
+                          {recentBids.map((b) => (
+                            <div
+                              key={b.id}
+                              className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
+                            >
+                              <span className="text-[#d6e4f9]">
+                                {b.participant_name}
+                              </span>
+                              <span className="font-mono text-[#00e478]">
+                                £{b.amount}m
+                              </span>
+                            </div>
+                          ))}
+                          {recentBids.length === 0 && (
+                            <p className="text-xs text-[#849585] italic text-center py-4">
+                              No bids yet
+                            </p>
+                          )}
+                        </div>
+                      </DrawerContent>
+                    </Drawer>
+                  </div>
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="text-3xl font-mono font-bold text-[#00e478]">
+                      &pound;{nomination.current_bid}m
+                    </div>
+                    {nomination.current_bidder_name && (
+                      <div className="text-sm text-[#b9cbb9] text-right">
+                        {nomination.current_bidder_id === myTeam?.id ? (
+                          <span className="text-[#00e478] font-semibold">
+                            You are the highest bidder
+                          </span>
+                        ) : (
+                          <span>
+                            by{" "}
+                            <span className="font-semibold text-[#d6e4f9]">
+                              {nomination.current_bidder_name}
+                            </span>
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
-                <span>
-                  Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
-                </span>
-                {myBid > maxBid && nomination && (
-                  <span className="text-yellow-400">
-                    Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
-                    for remaining slots
+                <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
+                  <span>
+                    Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
                   </span>
+                  {myBid > maxBid && nomination && (
+                    <span className="text-yellow-400">
+                      Must reserve &pound;
+                      {totalMinAllocationAfterBid.toFixed(1)}m for remaining
+                      slots
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  onClick={onBid}
+                  disabled={!canBid || bidding}
+                  className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-xl py-7 disabled:opacity-40"
+                >
+                  {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
+                </Button>
+
+                {nomination.current_bidder_id === myTeam?.id && (
+                  <p className="text-xs text-[#849585] text-center mt-2">
+                    You are already the highest bidder
+                  </p>
                 )}
-              </div>
-
-              <Button
-                onClick={onBid}
-                disabled={!canBid || bidding}
-                className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-xl py-7 disabled:opacity-40"
-              >
-                {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
-              </Button>
-
-              {nomination.current_bidder_id === myTeam?.id && (
-                <p className="text-xs text-[#849585] text-center mt-2">
-                  You are already the highest bidder
-                </p>
-              )}
-              {myPosCount >= posLimit && (
-                <p className="text-xs text-red-400 text-center mt-2">
-                  Position limit reached ({posLimit} {nomination.position})
-                </p>
-              )}
-              {nomination && clubCount >= maxClub && (
-                <p className="text-xs text-red-400 text-center mt-2">
-                  Club limit reached ({maxClub} {nomination.player_team})
-                </p>
-              )}
-              {myBid > remaining && (
-                <p className="text-xs text-red-400 text-center mt-2">
-                  Insufficient budget
-                </p>
-              )}
-              {myBid > maxBid && myBid <= remaining && (
-                <p className="text-xs text-yellow-400 text-center mt-2">
-                  Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
-                  for remaining {totalRemainingSlotsAfterBid} slot
-                  {totalRemainingSlotsAfterBid === 1 ? "" : "s"}
-                </p>
-              )}
-              {nomination.is_paused && (
-                <p className="text-xs text-yellow-400 text-center mt-2">
-                  Bidding is paused by the auctioneer
-                </p>
-              )}
-              {secondsLeft <= 0 && (
-                <p className="text-xs text-yellow-400 text-center mt-2">
-                  Timer expired. Waiting for auctioneer action.
-                </p>
-              )}
+                {myPosCount >= posLimit && (
+                  <p className="text-xs text-red-400 text-center mt-2">
+                    Position limit reached ({posLimit} {nomination.position})
+                  </p>
+                )}
+                {nomination && clubCount >= maxClub && (
+                  <p className="text-xs text-red-400 text-center mt-2">
+                    Club limit reached ({maxClub} {nomination.player_team})
+                  </p>
+                )}
+                {myBid > remaining && (
+                  <p className="text-xs text-red-400 text-center mt-2">
+                    Insufficient budget
+                  </p>
+                )}
+                {myBid > maxBid && myBid <= remaining && (
+                  <p className="text-xs text-yellow-400 text-center mt-2">
+                    Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
+                    for remaining {totalRemainingSlotsAfterBid} slot
+                    {totalRemainingSlotsAfterBid === 1 ? "" : "s"}
+                  </p>
+                )}
+                {nomination.is_paused && (
+                  <p className="text-xs text-yellow-400 text-center mt-2">
+                    Bidding is paused by the auctioneer
+                  </p>
+                )}
+                {secondsLeft <= 0 && (
+                  <p className="text-xs text-yellow-400 text-center mt-2">
+                    Timer expired. Waiting for auctioneer action.
+                  </p>
+                )}
             </div>
           ) : auctionEvent ? (
-            <AuctionEventDisplay event={auctionEvent} myTeamId={myTeam?.id ?? ""} />
+            <AuctionEventDisplay
+              event={auctionEvent}
+              myTeamId={myTeam?.id ?? ""}
+            />
           ) : (
             <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
               <div className="text-center">
-                <div className="text-4xl mb-3">{/* hourglass placeholder */}</div>
-                <p className="text-[#849585]">
-                  Waiting for next nomination...
-                </p>
+                <div className="text-4xl mb-3">
+                  {/* hourglass placeholder */}
+                </div>
+                <p className="text-[#849585]">Waiting for next nomination...</p>
               </div>
             </div>
           )}
         </main>
 
         {/* ── Right: Team Requirement ────────────────────────────────────── */}
-        <aside className="w-full lg:w-72 shrink-0 lg:order-3">
+        <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-3 lg:order-3">
           <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
             <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
               Team Requirement
@@ -956,6 +1171,44 @@ function BidUI({
                   &pound;{surplus.toFixed(1)}m
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Sold Players */}
+          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
+            <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+              Sold Players ({soldPlayers.length})
+            </h3>
+            <div className="space-y-1 max-h-87 overflow-y-auto">
+              {soldPlayers.length === 0 ? (
+                <p className="text-xs text-[#849585] italic text-center py-2">
+                  No sales yet
+                </p>
+              ) : (
+                soldPlayers.map((s, i) => (
+                  <div
+                    key={`${s.fplPlayerId}-${i}`}
+                    className="text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>
+                        <span className="text-[#d6e4f9] font-medium">
+                          {s.playerName}
+                        </span>
+                        <span className="text-[#849585] ml-1">
+                          {s.position}
+                        </span>
+                      </span>
+                      <span className="font-mono text-[#00e478] shrink-0 ml-2">
+                        &pound;{s.price}m
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-[#849585] truncate">
+                      {s.buyerName}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </aside>
@@ -1044,9 +1297,7 @@ function BidUI({
                 <div key={t.id}>
                   <button
                     onClick={() =>
-                      onToggleTeam(
-                        expandedTeamId === t.id ? null : t.id,
-                      )
+                      onToggleTeam(expandedTeamId === t.id ? null : t.id)
                     }
                     className="w-full flex items-center justify-between gap-2 rounded bg-[#132030] px-3 py-1.5 text-xs hover:bg-[#1a2e42] transition-colors cursor-pointer"
                   >
@@ -1055,12 +1306,12 @@ function BidUI({
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: t.color ?? "#888" }}
                       />
-                      <span className="text-[#d6e4f9] truncate">
-                        {t.name}
-                      </span>
+                      <span className="text-[#d6e4f9] truncate">{t.name}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`font-mono ${t.remaining >= 0 ? "text-[#b9cbb9]" : "text-red-400"}`}>
+                      <span
+                        className={`font-mono ${t.remaining >= 0 ? "text-[#b9cbb9]" : "text-red-400"}`}
+                      >
                         &pound;{t.remaining.toFixed(1)}m
                       </span>
                       <span className="text-[#849585]">{t.squad.length}</span>
