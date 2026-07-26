@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
   Select,
   SelectValue,
   SelectTrigger,
@@ -37,6 +44,15 @@ interface ParticipantRow {
   name: string;
   color: string | null;
   league_id: string | null;
+  fpl_manager_id: number | null;
+}
+
+interface FPLPick {
+  element: number;
+  position: number;
+  multiplier: number;
+  is_captain: boolean;
+  is_vice_captain: boolean;
 }
 
 interface TeamFormation {
@@ -98,7 +114,8 @@ function getFormationSlots(formation: string) {
 
 export function TeamsClient({
   players,
-}: Readonly<{ players: EnrichedPlayer[] }>) {
+  currentGameweek,
+}: Readonly<{ players: EnrichedPlayer[]; currentGameweek: number }>) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
@@ -120,6 +137,11 @@ export function TeamsClient({
   const [leaguesResolved, setLeaguesResolved] = useState(false);
   const [userParticipantIds, setUserParticipantIds] = useState<string[]>([]);
   const [userLeagueIds, setUserLeagueIds] = useState<string[]>([]);
+  const [fplTeamOpen, setFplTeamOpen] = useState(false);
+  const [fplTeamPicks, setFplTeamPicks] = useState<FPLPick[] | null>(null);
+  const [fplTeamLoading, setFplTeamLoading] = useState(false);
+  const [fplTeamError, setFplTeamError] = useState<string | null>(null);
+  const [fplTeamManager, setFplTeamManager] = useState<string | null>(null);
 
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset derived image state when switching players */
   useEffect(() => {
@@ -166,7 +188,7 @@ export function TeamsClient({
     loadedLeagueRef.current = selectedLeague;
     supabase
       .from("participants")
-      .select("id,name,color,league_id")
+      .select("id,name,color,league_id,fpl_manager_id")
       .eq("league_id", selectedLeague)
       .then(async ({ data: ps }) => {
         const ids = (ps ?? []).map((p: ParticipantRow) => p.id);
@@ -256,6 +278,10 @@ export function TeamsClient({
   const budget = currentLeague?.budget_per_team ?? 200;
   const remaining = budget - totalSpent;
   const budgetPct = (totalSpent / budget) * 100;
+
+  const fplManagerId = selectedParticipant
+    ? (participants.find((p) => p.id === selectedParticipant)?.fpl_manager_id ?? null)
+    : null;
   const budgetBarColor =
     remaining > budget * 0.5
       ? "bg-[#00d166]"
@@ -350,6 +376,64 @@ export function TeamsClient({
     }
     setSaving(false);
   }, [selectedParticipant, squad, currentFormation, supabase]);
+
+  useEffect(() => {
+    if (!fplTeamOpen || !fplManagerId) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const entryRes = await fetch(`/api/fpl/entry/${fplManagerId}`);
+        if (!entryRes.ok) throw new Error("Failed to load FPL entry");
+
+        const entryData = await entryRes.json();
+        if (cancelled) return;
+
+        const managerName =
+          `${entryData.player_first_name ?? ""} ${entryData.player_last_name ?? ""}`.trim();
+        setFplTeamManager(managerName);
+
+        const candidates = [
+          currentGameweek,
+          entryData.current_event,
+          entryData.started_event,
+        ].filter((e): e is number => typeof e === "number" && e > 0);
+        const seen = new Set<number>();
+
+        let picksData: { picks: FPLPick[] } | null = null;
+        for (const event of candidates) {
+          if (seen.has(event)) continue;
+          seen.add(event);
+          const res = await fetch(`/api/fpl/entry/${fplManagerId}/picks?event=${event}`);
+          if (res.ok) {
+            picksData = await res.json();
+            break;
+          }
+        }
+
+        if (!picksData) {
+          throw new Error(
+            `No team data found for ${managerName} — they may not have registered for any gameweek yet`,
+          );
+        }
+
+        if (!cancelled) setFplTeamPicks(picksData.picks ?? []);
+      } catch (err) {
+        if (!cancelled) {
+          setFplTeamError(
+            err instanceof Error ? err.message : "Failed to load FPL team",
+          );
+        }
+      } finally {
+        if (!cancelled) setFplTeamLoading(false);
+      }
+    };
+
+    load();
+
+    return () => { cancelled = true; };
+  }, [fplTeamOpen, fplManagerId, currentGameweek]);
 
   const selectedLeagueName = useMemo(
     () => leagues.find((l) => l.id === selectedLeague)?.name ?? "Select League",
@@ -495,6 +579,115 @@ export function TeamsClient({
           <div className="bg-[#132030] border border-[#3b4b3d] text-[#6b7b6b] h-8 text-xs w-auto min-w-[100px] rounded px-3 py-1.5 flex items-center select-none cursor-not-allowed">
             {currentFormation}
           </div>
+        )}
+
+        {fplManagerId && (
+          <Drawer
+            open={fplTeamOpen}
+            onOpenChange={(open) => {
+              setFplTeamOpen(open);
+              if (open && fplManagerId) {
+                setFplTeamLoading(true);
+                setFplTeamError(null);
+                setFplTeamPicks(null);
+              }
+            }}
+            direction="right"
+          >
+            <DrawerTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-8 text-xs border-[#3b4b3d] bg-[#132030] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+              >
+                FPL Team
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="bg-[#0f1c2c] border-l border-[#3b4b3d] text-[#d6e4f9] max-w-[400px]">
+              <DrawerHeader className="border-b border-[#3b4b3d]/50">
+                <DrawerTitle className="text-sm font-semibold text-[#d6e4f9]">
+                  {fplTeamLoading ? "Loading..." : fplTeamManager ? `${fplTeamManager}'s FPL Team` : "FPL Team"}
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="flex-1 overflow-y-auto p-4">
+                {fplTeamLoading && (
+                  <div className="space-y-2">
+                    {Array.from({ length: 11 }).map((_, i) => (
+                      <div key={i} className="h-10 bg-[#1e2b3b] rounded animate-pulse" />
+                    ))}
+                  </div>
+                )}
+                {fplTeamError && (
+                  <div className="flex items-center justify-center h-32 text-sm text-red-400">
+                    {fplTeamError}
+                  </div>
+                )}
+                {fplTeamPicks && fplTeamPicks.length > 0 && (
+                  <div className="space-y-0.5">
+                    {fplTeamPicks
+                      .sort((a, b) => a.position - b.position)
+                      .map((pick) => {
+                        const player = players.find((p) => p.id === pick.element);
+                        if (!player) return null;
+                        const isStarting = pick.position <= 11;
+                        return (
+                          <div
+                            key={pick.position}
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs ${
+                              isStarting ? "bg-[#132030]" : "bg-[#0d1824]"
+                            }`}
+                          >
+                            <span className="w-5 text-center text-[#6b7b6b] font-mono text-[10px]">
+                              {pick.position}
+                            </span>
+                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                              {(player as EnrichedPlayer).team_crest_url && (
+                                <img
+                                  src={(player as EnrichedPlayer).team_crest_url}
+                                  alt=""
+                                  className="w-4 h-4 object-contain"
+                                />
+                              )}
+                              <span className="font-medium truncate text-[#d6e4f9]">
+                                {player.web_name}
+                              </span>
+                              <span className="text-[#6b7b6b] text-[10px] uppercase">
+                                {player.element_type === 1
+                                  ? "GKP"
+                                  : player.element_type === 2
+                                    ? "DEF"
+                                    : player.element_type === 3
+                                      ? "MID"
+                                      : "FWD"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px]">
+                              {pick.is_captain && (
+                                <span className="text-amber-400 font-bold">(C)</span>
+                              )}
+                              {pick.is_vice_captain && !pick.is_captain && (
+                                <span className="text-sky-400 font-bold">(VC)</span>
+                              )}
+                              <span className="text-[#849585]">
+                                £{(player.now_cost / 10).toFixed(1)}m
+                              </span>
+                              <span className="text-[#00ff87] w-6 text-right">
+                                {player.total_points}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+                {fplTeamPicks && fplTeamPicks.length === 0 && !fplTeamLoading && !fplTeamError && (
+                  <div className="flex items-center justify-center h-32 text-sm text-[#6b7b6b]">
+                    No picks found for any gameweek
+                  </div>
+                )}
+              </div>
+            </DrawerContent>
+          </Drawer>
         )}
 
         {currentLeague && (

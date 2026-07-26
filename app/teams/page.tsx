@@ -113,7 +113,7 @@ async function TeamsLoader() {
       </div>
     );
   }
-  return <TeamsClient players={data.players} />;
+  return <TeamsClient players={data.players} currentGameweek={data.currentGameweek} />;
 }
 
 export default function TeamsPage() {
