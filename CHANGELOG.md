@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.2...v1.18.3) (2026-07-26)
+
+
+### Bug Fixes
+
+* :sparkles: Add bid history and sold players display in BidContent component ([dd4f58b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/dd4f58b0825f897287e44e25d8b902621c546944))
+
 ## [1.18.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.1...v1.18.2) (2026-07-25)
 
 
