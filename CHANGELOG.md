@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.19.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.3...v1.19.0) (2026-07-26)
+
+
+### Features
+
+* :sparkles: Implement FPL picks API integration and enhance TeamsClient with FPL team drawer ([7a6e47d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7a6e47d3da8e922cde2c81a7ff69b1933a86353f))
+
 ## [1.18.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.2...v1.18.3) (2026-07-26)
 
 
