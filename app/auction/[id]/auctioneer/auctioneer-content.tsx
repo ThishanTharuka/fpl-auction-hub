@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
 import { TeamAvatar } from "@/components/team-avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -1200,9 +1201,12 @@ function BudgetList({ teams, budget }: { teams: TeamBudget[]; budget: number }) 
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <TeamAvatar name={t.name} color={t.color} src={t.avatar_url} size="sm" />
-                  <span className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
-                    {t.name}
-                  </span>
+                  <Tooltip>
+                    <TooltipTrigger className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
+                      {t.name}
+                    </TooltipTrigger>
+                    <TooltipContent>{t.name}</TooltipContent>
+                  </Tooltip>
                 </div>
                 <span className="text-xs font-mono text-[#00e478]">
                   £{remaining}m

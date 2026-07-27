@@ -14,6 +14,7 @@ import {
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
 import { TeamAvatar } from "@/components/team-avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
@@ -1350,7 +1351,12 @@ function BidUI({
                         src={t.avatar_url}
                         size="sm"
                       />
-                      <span className="text-[#d6e4f9] truncate">{t.name}</span>
+                      <Tooltip>
+                        <TooltipTrigger className="text-[#d6e4f9] truncate">
+                          {t.name}
+                        </TooltipTrigger>
+                        <TooltipContent>{t.name}</TooltipContent>
+                      </Tooltip>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span

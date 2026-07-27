@@ -4,6 +4,7 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { AuthProvider } from "@/components/auth-provider";
 import { NProgressProvider } from "@/components/nprogress-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -27,9 +28,11 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#061423] text-[#d6e4f9] font-sans">
         <AuthProvider>
           <NProgressProvider>
-            <Nav />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <TooltipProvider>
+              <Nav />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </TooltipProvider>
           </NProgressProvider>
         </AuthProvider>
         <Toaster position="top-right" />
