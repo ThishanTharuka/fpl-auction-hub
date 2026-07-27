@@ -20,6 +20,7 @@ import { useAuth } from "@/components/auth-provider";
 import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
 import type { BidIncrementTier } from "@/lib/bid-increment";
 import { useServerClock } from "@/lib/use-server-clock";
+import { ChatDrawer } from "@/components/auction-chat/chat-drawer";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type {
   RealtimeChannel,
@@ -756,6 +757,14 @@ export function BidContent({
       maxClub={maxClub}
       auctionEvent={auctionEvent}
       pendingTeam={pendingTeam}
+      leagueId={id}
+      userId={user!.id}
+      userName={
+        myTeam && user
+          ? `${myTeam.name} - ${user.user_metadata?.display_name ?? user.user_metadata?.["full_name"] ?? user.email ?? "Unknown"}`
+          : "Unknown"
+      }
+      participantId={myTeam?.id ?? null}
       onBid={() => placeBid().catch(() => {})}
       allTeams={allTeams}
       expandedTeamId={expandedTeamId}
@@ -833,6 +842,10 @@ type BidUIProps = Readonly<{
   onToggleTeam: (id: string | null) => void;
   recentBids: BidEntry[];
   soldPlayers: SoldPlayer[];
+  leagueId: string;
+  userId: string;
+  userName: string;
+  participantId: string | null;
 }>;
 
 function BidUI({
@@ -869,6 +882,10 @@ function BidUI({
   onToggleTeam,
   recentBids,
   soldPlayers,
+  leagueId,
+  userId,
+  userName,
+  participantId,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
   if (nomination) {
@@ -906,11 +923,19 @@ function BidUI({
                 )}
               </h1>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-mono font-bold text-[#00e478]">
-                {pendingTeam ? "\u2014" : `\u00a3${remaining.toFixed(1)}m`}
+            <div className="flex items-center gap-3">
+              <ChatDrawer
+                leagueId={leagueId}
+                userId={userId}
+                userName={userName}
+                participantId={participantId}
+              />
+              <div className="text-right">
+                <div className="text-2xl font-mono font-bold text-[#00e478]">
+                  {pendingTeam ? "\u2014" : `\u00a3${remaining.toFixed(1)}m`}
+                </div>
+                <div className="text-xs text-[#849585]">remaining</div>
               </div>
-              <div className="text-xs text-[#849585]">remaining</div>
             </div>
           </div>
 
