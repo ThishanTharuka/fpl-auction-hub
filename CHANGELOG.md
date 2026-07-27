@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.21.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.20.0...v1.21.0) (2026-07-27)
+
+
+### Features
+
+* :sparkles: Implement chat functionality with ChatDrawer, ChatInput, and ChatMessageList components; add chat_messages table to database ([2473f07](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2473f07e8fc4e98f30650807eacf5cfafaf57f9c))
+
 # [1.20.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.1...v1.20.0) (2026-07-27)
 
 
