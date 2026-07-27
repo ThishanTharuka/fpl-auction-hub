@@ -1352,7 +1352,7 @@ function BidUI({
                         size="sm"
                       />
                       <Tooltip>
-                        <TooltipTrigger className="text-[#d6e4f9] truncate">
+                        <TooltipTrigger render={<span />} className="text-[#d6e4f9] truncate">
                           {t.name}
                         </TooltipTrigger>
                         <TooltipContent>{t.name}</TooltipContent>
