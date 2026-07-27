@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.0...v1.19.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* :bug: Update motion library import from "motion/react" to "framer-motion" ([8a77be8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8a77be8adf84db8ba3536f81c8cd2a373ada559f))
+
 # [1.19.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.3...v1.19.0) (2026-07-26)
 
 
