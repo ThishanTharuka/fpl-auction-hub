@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { useServerClock } from "@/lib/use-server-clock";
+import { ChatDrawer } from "@/components/auction-chat/chat-drawer";
 import { toast } from "sonner";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
@@ -666,9 +667,19 @@ export function AuctioneerContent({
         <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
           <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
-                Nominate Player
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                  Nominate Player
+                </h2>
+                {user ? (
+                  <ChatDrawer
+                    leagueId={id}
+                    userId={user.id}
+                    userName={`Auctioneer - ${user.user_metadata?.display_name ?? user.user_metadata?.["full_name"] ?? user.email ?? "Unknown"}`}
+                    participantId={null}
+                  />
+                ) : null}
+              </div>
               {/* Mobile: bottom sheet toggle */}
               <div className="flex items-center gap-2 lg:hidden">
                 <button
