@@ -30,10 +30,11 @@ export function ChatInput({
     >
       <input
         ref={inputRef}
-        type="text"
-        name="chat-msg-x7q"
-        id="chat-msg-x7q"
+        type="search"
+        name="msg983"
+        id="msg983"
         inputMode="text"
+        enterKeyHint="send"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="sentences"
