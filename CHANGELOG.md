@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.0...v1.21.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* :sparkles: Add chat_messages table with row-level security and policies for select and insert ([77ae35d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/77ae35dc16b6b450edca66bd5a46192c076320be))
+
 # [1.21.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.20.0...v1.21.0) (2026-07-27)
 
 
