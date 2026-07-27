@@ -1,5 +1,5 @@
-import { motion, useSpring, useTransform } from "motion/react";
-import type { MotionValue } from "motion/react";
+import { motion, useSpring, useTransform } from "framer-motion";
+import type { MotionValue } from "framer-motion";
 import type React from "react";
 import { useEffect } from "react";
 import "./counter.css";
