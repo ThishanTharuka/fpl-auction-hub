@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.1...v1.21.2) (2026-07-27)
+
+
+### Bug Fixes
+
+* :bug: Change input type to "search" and update name and id attributes in ChatInput component for better accessibility ([7402b15](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7402b15a36a77ed1d2c6c92d7329d7c296031df9))
+
 ## [1.21.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.0...v1.21.1) (2026-07-27)
 
 
