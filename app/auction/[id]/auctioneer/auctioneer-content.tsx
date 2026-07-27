@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useServerClock } from "@/lib/use-server-clock";
 import { toast } from "sonner";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
+import Counter from "@/components/counter";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -20,10 +21,15 @@ function normalizeNomination(raw: Record<string, unknown>): Nomination {
     ...(raw as unknown as Nomination),
     starting_price: Number(raw.starting_price),
     current_bid: Number(raw.current_bid),
-    current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
-    current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+    current_bidder_id:
+      typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
+    current_bidder_name:
+      typeof raw.current_bidder_name === "string"
+        ? raw.current_bidder_name
+        : null,
     is_paused: Boolean(raw.is_paused),
-    paused_seconds: typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
+    paused_seconds:
+      typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
   };
 }
 
@@ -110,7 +116,14 @@ export function AuctioneerContent({
   const [nomination, setNomination] = useState<Nomination | null>(null);
   const [recentBids, setRecentBids] = useState<BidEntry[]>([]);
   const [soldLog, setSoldLog] = useState<
-    { name: string; team: string; price: number; pos: string; playerId: number; participantId: string }[]
+    {
+      name: string;
+      team: string;
+      price: number;
+      pos: string;
+      playerId: number;
+      participantId: string;
+    }[]
   >([]);
 
   const [players] = useState<EnrichedPlayer[]>(initialPlayers);
@@ -126,7 +139,12 @@ export function AuctioneerContent({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTab, setSheetTab] = useState<"sold" | "budgets">("sold");
   const [confirmRebid, setConfirmRebid] = useState<{
-    name: string; team: string; price: number; pos: string; playerId: number; participantId: string
+    name: string;
+    team: string;
+    price: number;
+    pos: string;
+    playerId: number;
+    participantId: string;
   } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -137,7 +155,9 @@ export function AuctioneerContent({
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [sheetOpen]);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const serverClock = useServerClock();
@@ -146,15 +166,22 @@ export function AuctioneerContent({
   useEffect(() => {
     if (authLoading) return;
     async function load() {
-      const [{ data: lg }, { data: ps }, { data: results }] =
-        await Promise.all([
+      const [{ data: lg }, { data: ps }, { data: results }] = await Promise.all(
+        [
           supabase.from("leagues").select("*").eq("id", id).single(),
-          supabase.from("participants").select("id,name,color").eq("league_id", id).order("name"),
+          supabase
+            .from("participants")
+            .select("id,name,color")
+            .eq("league_id", id)
+            .order("name"),
           supabase
             .from("auction_results")
-            .select("fpl_player_id, price_paid, participant_id, position_slot, player_name, player_team")
+            .select(
+              "fpl_player_id, price_paid, participant_id, position_slot, player_name, player_team",
+            )
             .eq("league_id", id),
-        ]);
+        ],
+      );
 
       if (lg) {
         if (user?.id !== (lg as League).created_by) {
@@ -167,13 +194,23 @@ export function AuctioneerContent({
         const spentMap: Record<string, number> = {};
         const squadMap: Record<string, number> = {};
         const teamMap = new Map(ps.map((p) => [p.id, p.name]));
-        const playersById = new Map<number, EnrichedPlayer>(players.map((p) => [p.id, p]));
+        const playersById = new Map<number, EnrichedPlayer>(
+          players.map((p) => [p.id, p]),
+        );
         const soldSet = new Set<number>();
-        const restoredSoldLog: { name: string; team: string; price: number; pos: string; playerId: number; participantId: string }[] = [];
+        const restoredSoldLog: {
+          name: string;
+          team: string;
+          price: number;
+          pos: string;
+          playerId: number;
+          participantId: string;
+        }[] = [];
         for (const r of results) {
           soldSet.add(r.fpl_player_id);
           if (r.participant_id) {
-            spentMap[r.participant_id] = (spentMap[r.participant_id] ?? 0) + r.price_paid;
+            spentMap[r.participant_id] =
+              (spentMap[r.participant_id] ?? 0) + r.price_paid;
             squadMap[r.participant_id] = (squadMap[r.participant_id] ?? 0) + 1;
             const playerInfo = playersById.get(r.fpl_player_id);
             restoredSoldLog.push({
@@ -233,13 +270,24 @@ export function AuctioneerContent({
       .channel(`auctioneer-${id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "auction_nominations", filter: `league_id=eq.${id}` },
+        {
+          event: "*",
+          schema: "public",
+          table: "auction_nominations",
+          filter: `league_id=eq.${id}`,
+        },
         (payload) => {
-          const row = normalizeNomination(payload.new as Record<string, unknown>);
+          const row = normalizeNomination(
+            payload.new as Record<string, unknown>,
+          );
           if (row.status === "open") {
             setNomination(row);
             loadBids(row.id);
-          } else if (row.status === "sold" || row.status === "cancelled" || row.status === "unsold") {
+          } else if (
+            row.status === "sold" ||
+            row.status === "cancelled" ||
+            row.status === "unsold"
+          ) {
             setNomination(null);
             setRecentBids([]);
           }
@@ -265,7 +313,8 @@ export function AuctioneerContent({
       .subscribe();
 
     return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current).catch(() => {});
+      if (channelRef.current)
+        supabase.removeChannel(channelRef.current).catch(() => {});
     };
   }, [id]);
 
@@ -285,7 +334,11 @@ export function AuctioneerContent({
     }
     const remaining = Math.max(
       0,
-      Math.round((new Date(nomination.bid_end_time).getTime() - serverClock.getServerNow()) / 1000),
+      Math.round(
+        (new Date(nomination.bid_end_time).getTime() -
+          serverClock.getServerNow()) /
+          1000,
+      ),
     );
     setSecondsLeft(remaining);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -293,24 +346,45 @@ export function AuctioneerContent({
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (nomination?.bid_end_time && nomination.status === "open" && nomination.is_paused === false) {
+    if (
+      nomination?.bid_end_time &&
+      nomination.status === "open" &&
+      nomination.is_paused === false
+    ) {
       timerRef.current = setInterval(tickTimer, 500);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [nomination?.bid_end_time, nomination?.status, nomination?.is_paused, nomination?.paused_seconds, tickTimer]);
+  }, [
+    nomination?.bid_end_time,
+    nomination?.status,
+    nomination?.is_paused,
+    nomination?.paused_seconds,
+    tickTimer,
+  ]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
   function stagePlayer(player: EnrichedPlayer) {
     setStagedPlayer(player);
-    setStartTimerInput(String(Math.min(60, Math.max(5, Math.round((league?.timer_seconds ?? 45) / 5) * 5))));
+    setStartTimerInput(
+      String(
+        Math.min(
+          60,
+          Math.max(5, Math.round((league?.timer_seconds ?? 45) / 5) * 5),
+        ),
+      ),
+    );
     setSearch("");
   }
 
   async function startBidding() {
     if (!stagedPlayer) return;
-    const posKey = stagedPlayer.position.toLowerCase() as "gkp" | "def" | "mid" | "fwd";
+    const posKey = stagedPlayer.position.toLowerCase() as
+      | "gkp"
+      | "def"
+      | "mid"
+      | "fwd";
     const basePriceMap = {
       gkp: league?.base_price_gkp ?? 4,
       def: league?.base_price_def ?? 4.5,
@@ -318,8 +392,13 @@ export function AuctioneerContent({
       fwd: league?.base_price_fwd ?? 5,
     };
     const startingPrice = basePriceMap[posKey] ?? 4;
-    const timerSecs = Math.max(5, Number(startTimerInput) || (league?.timer_seconds ?? 45));
-    const endTime = serverClock.toISO(serverClock.getServerNow() + timerSecs * 1000);
+    const timerSecs = Math.max(
+      5,
+      Number(startTimerInput) || (league?.timer_seconds ?? 45),
+    );
+    const endTime = serverClock.toISO(
+      serverClock.getServerNow() + timerSecs * 1000,
+    );
 
     const { data } = await supabase
       .from("auction_nominations")
@@ -379,7 +458,11 @@ export function AuctioneerContent({
     setTeams((prev) =>
       prev.map((t) =>
         t.id === nomination.current_bidder_id
-          ? { ...t, spent: t.spent + nomination.current_bid, squad: t.squad + 1 }
+          ? {
+              ...t,
+              spent: t.spent + nomination.current_bid,
+              squad: t.squad + 1,
+            }
           : t,
       ),
     );
@@ -410,8 +493,14 @@ export function AuctioneerContent({
       .delete()
       .eq("league_id", id)
       .eq("fpl_player_id", confirmRebid.playerId);
-    setSoldIds((prev) => { const next = new Set(prev); next.delete(confirmRebid.playerId); return next; });
-    setSoldLog((prev) => (prev ?? []).filter((s) => s.playerId !== confirmRebid.playerId));
+    setSoldIds((prev) => {
+      const next = new Set(prev);
+      next.delete(confirmRebid.playerId);
+      return next;
+    });
+    setSoldLog((prev) =>
+      (prev ?? []).filter((s) => s.playerId !== confirmRebid.playerId),
+    );
     setTeams((prev) =>
       prev.map((t) =>
         t.id === confirmRebid.participantId
@@ -553,8 +642,9 @@ export function AuctioneerContent({
   });
 
   let timerColor = "text-red-400";
-  if (secondsLeft > 15) timerColor = "text-[#00e478]";
-  else if (secondsLeft > 5) timerColor = "text-yellow-400";
+  let timerHexColor = "#f87171";
+  if (secondsLeft > 15) { timerColor = "text-[#00e478]"; timerHexColor = "#00e478"; }
+  else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
   let timerDisplayValue: number | string = "—";
   if (nomination) {
     if (nomination.is_paused) {
@@ -787,10 +877,12 @@ export function AuctioneerContent({
                   </div>
                   {/* Timer */}
                   <div className="text-right">
-                    <div
-                      className={`text-3xl sm:text-5xl font-mono font-bold ${timerColor}`}
-                    >
-                      {timerDisplayValue}
+                    <div className="font-mono font-bold">
+                      {typeof timerDisplayValue === "number" ? (
+                        <Counter value={timerDisplayValue} fontSize={40} textColor={timerHexColor} fontWeight={700} gradientHeight={8} gradientFrom="#132030" gap={2} horizontalPadding={0} places={[...String(timerDisplayValue)].map((_, i, a) => 10 ** (a.length - i - 1))} />
+                      ) : (
+                        <span className={`text-3xl sm:text-5xl ${timerColor}`}>{timerDisplayValue}</span>
+                      )}
                     </div>
                     <div className="text-xs text-[#849585] mt-1">
                       {timerDisplayUnit}
@@ -815,8 +907,19 @@ export function AuctioneerContent({
                       ? "Starting Price"
                       : "Current Bid"}
                   </div>
-                  <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478]">
-                    £{nomination.current_bid}m
+                  <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478] inline-flex items-center">
+                    £
+                    <Counter
+                      value={nomination.current_bid}
+                      fontSize={34}
+                      textColor="#00e478"
+                      fontWeight={700}
+                      gradientHeight={5}
+                      gradientFrom="#132030"
+                      gap={0}
+                      horizontalPadding={2}
+                    />
+                    m
                   </div>
                   {nomination.current_bidder_name && (
                     <div className="text-sm text-[#b9cbb9] mt-1">

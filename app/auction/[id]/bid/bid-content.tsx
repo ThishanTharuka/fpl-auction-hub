@@ -12,13 +12,17 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
+import Counter from "@/components/counter";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
 import type { BidIncrementTier } from "@/lib/bid-increment";
 import { useServerClock } from "@/lib/use-server-clock";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type {
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from "@supabase/supabase-js";
 import type { BidLeague, BidNomination } from "./bid-loader";
 
 const supabase = createSupabaseBrowserClient();
@@ -28,14 +32,17 @@ function normalizeNomination(raw: Record<string, unknown>): BidNomination {
     ...(raw as unknown as BidNomination),
     starting_price: Number(raw.starting_price),
     current_bid: Number(raw.current_bid),
-    current_bidder_id: typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
-    current_bidder_name: typeof raw.current_bidder_name === "string" ? raw.current_bidder_name : null,
+    current_bidder_id:
+      typeof raw.current_bidder_id === "string" ? raw.current_bidder_id : null,
+    current_bidder_name:
+      typeof raw.current_bidder_name === "string"
+        ? raw.current_bidder_name
+        : null,
     is_paused: Boolean(raw.is_paused),
-    paused_seconds: typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
+    paused_seconds:
+      typeof raw.paused_seconds === "number" ? raw.paused_seconds : null,
   };
 }
-
-
 
 const POSITION_COLORS: Record<string, string> = {
   GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -713,8 +720,9 @@ export function BidContent({
     : false;
 
   let timerColor = "text-red-400";
-  if (secondsLeft > 15) timerColor = "text-[#00e478]";
-  else if (secondsLeft > 5) timerColor = "text-yellow-400";
+  let timerHexColor = "#f87171";
+  if (secondsLeft > 15) { timerColor = "text-[#00e478]"; timerHexColor = "#00e478"; }
+  else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
 
   return (
     <BidUI
@@ -735,6 +743,7 @@ export function BidContent({
       myPosCount={myPosCount}
       posLimit={posLimit}
       timerColor={timerColor}
+      timerHexColor={timerHexColor}
       posRequirements={posRequirements}
       totalMinAllocation={totalMinAllocation}
       totalRemainingSlots={totalRemainingSlots}
@@ -806,6 +815,7 @@ type BidUIProps = Readonly<{
   clubCount: number;
   maxClub: number;
   timerColor: string;
+  timerHexColor: string;
   posRequirements: PositionRequirement[];
   totalMinAllocation: number;
   totalRemainingSlots: number;
@@ -841,6 +851,7 @@ function BidUI({
   clubCount,
   maxClub,
   timerColor,
+  timerHexColor,
   posRequirements,
   totalMinAllocation,
   totalRemainingSlots,
@@ -901,192 +912,204 @@ function BidUI({
           {nomination ? (
             <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
               <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge
-                        variant="outline"
-                        className={POSITION_COLORS[nomination.position] ?? ""}
-                      >
-                        {nomination.position}
-                      </Badge>
-                      <span className="text-xs text-[#849585]">
-                        {fplPlayer?.team_name ?? nomination.player_team}
-                      </span>
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#d6e4f9]">
-                      {fplPlayer?.full_name ?? nomination.player_name}
-                    </h2>
-                  </div>
-                  <div className="text-right">
-                    <div
-                      className={`text-4xl font-mono font-bold ${timerColor}`}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge
+                      variant="outline"
+                      className={POSITION_COLORS[nomination.position] ?? ""}
                     >
-                      {timerDisplayValue}
-                    </div>
-                    <div className="text-xs text-[#849585]">
-                      {nomination.is_paused ? "paused" : "secs"}
-                    </div>
+                      {nomination.position}
+                    </Badge>
+                    <span className="text-xs text-[#849585]">
+                      {fplPlayer?.team_name ?? nomination.player_team}
+                    </span>
                   </div>
+                  <h2 className="text-2xl font-bold text-[#d6e4f9]">
+                    {fplPlayer?.full_name ?? nomination.player_name}
+                  </h2>
                 </div>
-
-                <div className="mb-4">
-                  {fplPlayer ? (
-                    <PlayerStatsBar player={fplPlayer} />
-                  ) : (
-                    <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
-                      <div className="flex gap-4 flex-wrap items-start">
-                        <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
-                        <div className="flex-1 min-w-0 space-y-2">
-                          <div className="h-5 w-44 rounded bg-[#0a1724]" />
-                          <div className="h-3 w-24 rounded bg-[#0a1724]" />
-                          <div className="h-5 w-16 rounded-full bg-[#102133]" />
-                          <div className="h-3 w-16 rounded bg-[#0a1724]" />
-                          <div className="h-3 w-20 rounded bg-[#0a1724]" />
-                        </div>
-                        <div className="shrink-0 grid grid-cols-1 gap-2">
-                          <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
-                          <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
-                        </div>
-                      </div>
-                      <div className="my-3 border-t border-[#1a2e42]" />
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-[52px] rounded-xl bg-[#0a1724]"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-[#132030] rounded-lg p-4 mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-[#849585] uppercase tracking-wider">
-                      {nomination.current_bidder_id === null
-                        ? "Starting Price"
-                        : "Current Bid"}
-                    </div>
-                    <Drawer direction="left">
-                      <DrawerTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs py-1.5 h-auto px-3"
-                        >
-                          Bid History ({recentBids.length})
-                        </Button>
-                      </DrawerTrigger>
-                      <DrawerContent>
-                        <DrawerHeader>
-                          <DrawerTitle className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
-                            Bid History
-                          </DrawerTitle>
-                        </DrawerHeader>
-                        <div className="space-y-1 overflow-y-auto flex-1 px-4 pb-4">
-                          {recentBids.map((b) => (
-                            <div
-                              key={b.id}
-                              className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
-                            >
-                              <span className="text-[#d6e4f9]">
-                                {b.participant_name}
-                              </span>
-                              <span className="font-mono text-[#00e478]">
-                                £{b.amount}m
-                              </span>
-                            </div>
-                          ))}
-                          {recentBids.length === 0 && (
-                            <p className="text-xs text-[#849585] italic text-center py-4">
-                              No bids yet
-                            </p>
-                          )}
-                        </div>
-                      </DrawerContent>
-                    </Drawer>
-                  </div>
-                  <div className="flex items-end justify-between gap-3">
-                    <div className="text-3xl font-mono font-bold text-[#00e478]">
-                      &pound;{nomination.current_bid}m
-                    </div>
-                    {nomination.current_bidder_name && (
-                      <div className="text-sm text-[#b9cbb9] text-right">
-                        {nomination.current_bidder_id === myTeam?.id ? (
-                          <span className="text-[#00e478] font-semibold">
-                            You are the highest bidder
-                          </span>
-                        ) : (
-                          <span>
-                            by{" "}
-                            <span className="font-semibold text-[#d6e4f9]">
-                              {nomination.current_bidder_name}
-                            </span>
-                          </span>
-                        )}
-                      </div>
+                <div className="text-right">
+                  <div className="font-mono font-bold">
+                    {typeof timerDisplayValue === "number" ? (
+                      <Counter value={timerDisplayValue} fontSize={36} textColor={timerHexColor} fontWeight={700} gradientHeight={8} gradientFrom="#132030" gap={2} horizontalPadding={0} places={[...String(timerDisplayValue)].map((_, i, a) => 10 ** (a.length - i - 1))} />
+                    ) : (
+                      <span className={`text-4xl ${timerColor}`}>{timerDisplayValue}</span>
                     )}
                   </div>
+                  <div className="text-xs text-[#849585]">
+                    {nomination.is_paused ? "paused" : "secs"}
+                  </div>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
-                  <span>
-                    Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
-                  </span>
-                  {myBid > maxBid && nomination && (
-                    <span className="text-yellow-400">
-                      Must reserve &pound;
-                      {totalMinAllocationAfterBid.toFixed(1)}m for remaining
-                      slots
-                    </span>
+              <div className="mb-4">
+                {fplPlayer ? (
+                  <PlayerStatsBar player={fplPlayer} />
+                ) : (
+                  <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
+                    <div className="flex gap-4 flex-wrap items-start">
+                      <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="h-5 w-44 rounded bg-[#0a1724]" />
+                        <div className="h-3 w-24 rounded bg-[#0a1724]" />
+                        <div className="h-5 w-16 rounded-full bg-[#102133]" />
+                        <div className="h-3 w-16 rounded bg-[#0a1724]" />
+                        <div className="h-3 w-20 rounded bg-[#0a1724]" />
+                      </div>
+                      <div className="shrink-0 grid grid-cols-1 gap-2">
+                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                      </div>
+                    </div>
+                    <div className="my-3 border-t border-[#1a2e42]" />
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-[52px] rounded-xl bg-[#0a1724]"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-[#132030] rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs text-[#849585] uppercase tracking-wider">
+                    {nomination.current_bidder_id === null
+                      ? "Starting Price"
+                      : "Current Bid"}
+                  </div>
+                  <Drawer direction="left">
+                    <DrawerTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs py-1.5 h-auto px-3"
+                      >
+                        Bid History ({recentBids.length})
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent>
+                      <DrawerHeader>
+                        <DrawerTitle className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                          Bid History
+                        </DrawerTitle>
+                      </DrawerHeader>
+                      <div className="space-y-1 overflow-y-auto flex-1 px-4 pb-4">
+                        {recentBids.map((b) => (
+                          <div
+                            key={b.id}
+                            className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
+                          >
+                            <span className="text-[#d6e4f9]">
+                              {b.participant_name}
+                            </span>
+                            <span className="font-mono text-[#00e478]">
+                              £{b.amount}m
+                            </span>
+                          </div>
+                        ))}
+                        {recentBids.length === 0 && (
+                          <p className="text-xs text-[#849585] italic text-center py-4">
+                            No bids yet
+                          </p>
+                        )}
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                </div>
+                <div className="flex items-end justify-between gap-3">
+                  <div className="text-3xl font-mono font-bold text-[#00e478] inline-flex items-center">
+                    &pound;
+                    <Counter
+                      value={nomination.current_bid}
+                      fontSize={34}
+                      textColor="#00e478"
+                      fontWeight={700}
+                      gradientHeight={5}
+                      gradientFrom="#132030"
+                      gap={0}
+                      horizontalPadding={2}
+                    />
+                    m
+                  </div>
+                  {nomination.current_bidder_name && (
+                    <div className="text-sm text-[#b9cbb9] text-right">
+                      {nomination.current_bidder_id === myTeam?.id ? (
+                        <span className="text-[#00e478] font-semibold">
+                          You are the highest bidder
+                        </span>
+                      ) : (
+                        <span>
+                          by{" "}
+                          <span className="font-semibold text-[#d6e4f9]">
+                            {nomination.current_bidder_name}
+                          </span>
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
+              </div>
 
-                <Button
-                  onClick={onBid}
-                  disabled={!canBid || bidding}
-                  className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-xl py-7 disabled:opacity-40"
-                >
-                  {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
-                </Button>
+              <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
+                <span>
+                  Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
+                </span>
+                {myBid > maxBid && nomination && (
+                  <span className="text-yellow-400">
+                    Must reserve &pound;
+                    {totalMinAllocationAfterBid.toFixed(1)}m for remaining slots
+                  </span>
+                )}
+              </div>
 
-                {nomination.current_bidder_id === myTeam?.id && (
-                  <p className="text-xs text-[#849585] text-center mt-2">
-                    You are already the highest bidder
-                  </p>
-                )}
-                {myPosCount >= posLimit && (
-                  <p className="text-xs text-red-400 text-center mt-2">
-                    Position limit reached ({posLimit} {nomination.position})
-                  </p>
-                )}
-                {nomination && clubCount >= maxClub && (
-                  <p className="text-xs text-red-400 text-center mt-2">
-                    Club limit reached ({maxClub} {nomination.player_team})
-                  </p>
-                )}
-                {myBid > remaining && (
-                  <p className="text-xs text-red-400 text-center mt-2">
-                    Insufficient budget
-                  </p>
-                )}
-                {myBid > maxBid && myBid <= remaining && (
-                  <p className="text-xs text-yellow-400 text-center mt-2">
-                    Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
-                    for remaining {totalRemainingSlotsAfterBid} slot
-                    {totalRemainingSlotsAfterBid === 1 ? "" : "s"}
-                  </p>
-                )}
-                {nomination.is_paused && (
-                  <p className="text-xs text-yellow-400 text-center mt-2">
-                    Bidding is paused by the auctioneer
-                  </p>
-                )}
-                {secondsLeft <= 0 && (
-                  <p className="text-xs text-yellow-400 text-center mt-2">
-                    Timer expired. Waiting for auctioneer action.
-                  </p>
-                )}
+              <Button
+                onClick={onBid}
+                disabled={!canBid || bidding}
+                className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-xl py-7 disabled:opacity-40"
+              >
+                {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
+              </Button>
+
+              {nomination.current_bidder_id === myTeam?.id && (
+                <p className="text-xs text-[#849585] text-center mt-2">
+                  You are already the highest bidder
+                </p>
+              )}
+              {myPosCount >= posLimit && (
+                <p className="text-xs text-red-400 text-center mt-2">
+                  Position limit reached ({posLimit} {nomination.position})
+                </p>
+              )}
+              {nomination && clubCount >= maxClub && (
+                <p className="text-xs text-red-400 text-center mt-2">
+                  Club limit reached ({maxClub} {nomination.player_team})
+                </p>
+              )}
+              {myBid > remaining && (
+                <p className="text-xs text-red-400 text-center mt-2">
+                  Insufficient budget
+                </p>
+              )}
+              {myBid > maxBid && myBid <= remaining && (
+                <p className="text-xs text-yellow-400 text-center mt-2">
+                  Must reserve &pound;{totalMinAllocationAfterBid.toFixed(1)}m
+                  for remaining {totalRemainingSlotsAfterBid} slot
+                  {totalRemainingSlotsAfterBid === 1 ? "" : "s"}
+                </p>
+              )}
+              {nomination.is_paused && (
+                <p className="text-xs text-yellow-400 text-center mt-2">
+                  Bidding is paused by the auctioneer
+                </p>
+              )}
+              {secondsLeft <= 0 && (
+                <p className="text-xs text-yellow-400 text-center mt-2">
+                  Timer expired. Waiting for auctioneer action.
+                </p>
+              )}
             </div>
           ) : auctionEvent ? (
             <AuctionEventDisplay
