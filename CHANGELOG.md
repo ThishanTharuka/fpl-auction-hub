@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.20.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.1...v1.20.0) (2026-07-27)
+
+
+### Bug Fixes
+
+* :bug: Update TooltipTrigger component to use render prop for improved functionality ([38b1ab6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/38b1ab63638d274c5ca6965182ad4598e10b6e32))
+
+
+### Features
+
+* :sparkles: Add TeamAvatar component and integrate avatar_url in participants data for enhanced team representation ([a5d01b5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a5d01b5d288cb68c9cdc61f3f8e2eda5a8d2a48c))
+* :sparkles: Add Tooltip component and integrate it into Auctioneer and BidContent for enhanced user experience ([515527d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/515527d50ec47ffbeab136d51eddbff8b6b86443))
+
 ## [1.19.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.0...v1.19.1) (2026-07-27)
 
 
