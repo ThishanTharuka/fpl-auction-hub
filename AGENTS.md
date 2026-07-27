@@ -14,12 +14,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | `npm run type-check` | `tsc --noEmit` |
 | `npm run lint` | ESLint flat config (`eslint.config.mjs`) |
 | `npm run lint:fix` | Auto-fix lint |
-| `npm test` | Vitest (node env, `globals: true`, `@/*` alias) |
-| `npm run build` | Production build |
+| `npm test` | Vitest (node env, `globals: true`, `@/*` alias) | `*_test` / `*_spec` auto-detected |
+| `npm run test:watch` | Vitest watch mode |
 
-Pre-commit order: `npm run type-check && npm run lint`. CI: `npm ci && npm run type-check && npm run lint && npm test` (verify job), then `npx semantic-release` on push to `master`. Conventional commits required.
+Pre-commit order: `npm run type-check && npm run lint`. CI: `npm ci --include=optional && npm run type-check && npm run lint && npm test` (verify job), then `npx semantic-release` on push to `master`. Conventional commits required.
 
-Node 24 (`.nvmrc`). Install with `npm ci --include=optional` (emnapi optional deps).
+Node 24 (`.nvmrc`). Install with `npm ci --include=optional` (`@emnapi/runtime` + `@emnapi/core` are optional deps required at runtime).
 
 ## Supabase — three clients
 
@@ -31,9 +31,13 @@ Node 24 (`.nvmrc`). Install with `npm ci --include=optional` (emnapi optional de
 
 Rule: if the write hits an RLS policy, use `supabase-browser`.
 
-## Auth middleware — `proxy.ts`
+## Supabase free tier constraints
 
-Uses `getSession()` (cookie-only, no network). Public paths (no redirect): `/`, `/login`, `/auth/*`, `/privacy`, `/terms`, `/api/*`, `/_next/*`, `/favicon.ico`. Nav is hidden on `/` for unauthenticated visitors.
+Free plan: 2 GB egress, 500 MB DB, 50k users, 200 realtime connections. Every query matters — prefer `select(cols)` over `select(*)`, batch writes, paginate list queries, and keep realtime subscriptions scoped to the minimum data needed. The FPL cache (`fpl_cache` table) already follows this: server-side reads only, single JSONB row, never piped raw to the client.
+
+## Auth middleware — `proxy.ts` (root, not `middleware.ts`)
+
+Next.js 16 convention: the root `proxy.ts` IS the middleware (no `middleware.ts` file exists). Uses `getSession()` (cookie-only, no network). Public paths (no redirect): `/`, `/login`, `/auth/*`, `/privacy`, `/terms`, `/api/*`, `/_next/*`, `/favicon.ico`. Nav is hidden on `/` for unauthenticated visitors.
 
 ## Streaming SSR
 
@@ -54,7 +58,7 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 
 ## Codebase conventions
 
-- **Next.js 16.2.7 + React 19.2** — breaking changes from training data
+- **Next.js ^16.2.11 + React 19.2.4** — breaking changes from training data
 - **Tailwind CSS v4**: `@import "tailwindcss"`, `@theme inline`, `postcss.config.mjs` uses `@tailwindcss/postcss`
 - **Animations**: `tw-animate-css` (NOT `tailwindcss-animate`)
 - **shadcn/ui**: style `"base-nova"`, aliases `@/components/ui/`
@@ -78,7 +82,6 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 
 - **TanStack Table v8 + React Compiler**: incompatible. Components using `useReactTable` must have `"use no memo"` at the top. `react-hooks/incompatible-library` is already OFF globally.
 - **`react-hooks/exhaustive-deps` is warn**, not error. Suppress with eslint-disable + comment when intentional.
-- **`@emnapi/runtime` / `@emnapi/core`**: optional deps required at runtime. `npm ci --include=optional` avoids lockfile mismatch with CI.
 - **Vercel limits**: 10s function timeout, 100k invocations/month. `next.config.ts` has image remotePatterns for `resources.premierleague.com` + security headers.
 - **Lobby constraint**: Auctioneer can start before all teams are claimed. `canStart` only requires `teams.length > 0`.
 - **Tests**: Vitest (node env). `*_test` and `*_spec` patterns auto-detected. Tests in `lib/__tests__/` and `components/__tests__/`. No Playwright/e2e.

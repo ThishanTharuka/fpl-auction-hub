@@ -11,6 +11,8 @@ import { useServerClock } from "@/lib/use-server-clock";
 import { toast } from "sonner";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
+import { TeamAvatar } from "@/components/team-avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -97,6 +99,7 @@ interface TeamBudget {
   id: string;
   name: string;
   color: string | null;
+  avatar_url: string | null;
   spent: number;
   squad: number;
 }
@@ -171,7 +174,7 @@ export function AuctioneerContent({
           supabase.from("leagues").select("*").eq("id", id).single(),
           supabase
             .from("participants")
-            .select("id,name,color")
+            .select("id,name,color,avatar_url")
             .eq("league_id", id)
             .order("name"),
           supabase
@@ -231,6 +234,7 @@ export function AuctioneerContent({
             id: p.id,
             name: p.name,
             color: p.color,
+            avatar_url: p.avatar_url,
             spent: spentMap[p.id] ?? 0,
             squad: squadMap[p.id] ?? 0,
           })),
@@ -1196,13 +1200,13 @@ function BudgetList({ teams, budget }: { teams: TeamBudget[]; budget: number }) 
             <div key={t.id} className="bg-[#132030] rounded p-2.5">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: t.color ?? "#888" }}
-                  />
-                  <span className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
-                    {t.name}
-                  </span>
+                  <TeamAvatar name={t.name} color={t.color} src={t.avatar_url} size="sm" />
+                  <Tooltip>
+                    <TooltipTrigger className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
+                      {t.name}
+                    </TooltipTrigger>
+                    <TooltipContent>{t.name}</TooltipContent>
+                  </Tooltip>
                 </div>
                 <span className="text-xs font-mono text-[#00e478]">
                   £{remaining}m

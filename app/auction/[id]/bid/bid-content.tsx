@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/drawer";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
+import { TeamAvatar } from "@/components/team-avatar";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
@@ -55,6 +57,7 @@ export interface Participant {
   id: string;
   name: string;
   color: string | null;
+  avatar_url: string | null;
 }
 
 export interface SquadPlayer {
@@ -247,7 +250,7 @@ export function BidContent({
     const [psRes, rsRes] = await Promise.all([
       supabase
         .from("participants")
-        .select("id,name,color")
+        .select("id,name,color,avatar_url")
         .eq("league_id", id)
         .order("name"),
       supabase
@@ -286,7 +289,7 @@ export function BidContent({
 
       const { data: participant } = await supabase
         .from("participants")
-        .select("id,name,color")
+        .select("id,name,color,avatar_url")
         .eq("id", membership.participant_id)
         .single();
 
@@ -780,6 +783,7 @@ export interface TeamBudget {
   id: string;
   name: string;
   color: string | null;
+  avatar_url: string | null;
   spent: number;
   remaining: number;
   squad: SquadPlayer[];
@@ -883,7 +887,7 @@ function BidUI({
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-[#849585]">{league.name}</p>
+              <p className="text-xs text-[#849585] pb-1">{league.name}</p>
               <h1 className="text-lg font-bold text-[#d6e4f9] flex items-center gap-2">
                 {pendingTeam ? (
                   <span className="text-[#849585] text-base font-normal">
@@ -891,9 +895,11 @@ function BidUI({
                   </span>
                 ) : (
                   <>
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: myTeam!.color ?? "#888" }}
+                    <TeamAvatar
+                      name={myTeam!.name}
+                      color={myTeam!.color}
+                      src={myTeam!.avatar_url}
+                      size="sm"
                     />
                     {myTeam!.name}
                   </>
@@ -931,9 +937,23 @@ function BidUI({
                 <div className="text-right">
                   <div className="font-mono font-bold">
                     {typeof timerDisplayValue === "number" ? (
-                      <Counter value={timerDisplayValue} fontSize={36} textColor={timerHexColor} fontWeight={700} gradientHeight={8} gradientFrom="#132030" gap={2} horizontalPadding={0} places={[...String(timerDisplayValue)].map((_, i, a) => 10 ** (a.length - i - 1))} />
+                      <Counter
+                        value={timerDisplayValue}
+                        fontSize={36}
+                        textColor={timerHexColor}
+                        fontWeight={700}
+                        gradientHeight={8}
+                        gradientFrom="#132030"
+                        gap={2}
+                        horizontalPadding={0}
+                        places={[...String(timerDisplayValue)].map(
+                          (_, i, a) => 10 ** (a.length - i - 1),
+                        )}
+                      />
                     ) : (
-                      <span className={`text-4xl ${timerColor}`}>{timerDisplayValue}</span>
+                      <span className={`text-4xl ${timerColor}`}>
+                        {timerDisplayValue}
+                      </span>
                     )}
                   </div>
                   <div className="text-xs text-[#849585]">
@@ -1325,11 +1345,18 @@ function BidUI({
                     className="w-full flex items-center justify-between gap-2 rounded bg-[#132030] px-3 py-1.5 text-xs hover:bg-[#1a2e42] transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: t.color ?? "#888" }}
+                      <TeamAvatar
+                        name={t.name}
+                        color={t.color}
+                        src={t.avatar_url}
+                        size="sm"
                       />
-                      <span className="text-[#d6e4f9] truncate">{t.name}</span>
+                      <Tooltip>
+                        <TooltipTrigger render={<span />} className="text-[#d6e4f9] truncate">
+                          {t.name}
+                        </TooltipTrigger>
+                        <TooltipContent>{t.name}</TooltipContent>
+                      </Tooltip>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span

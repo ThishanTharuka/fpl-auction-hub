@@ -184,7 +184,7 @@ export default function TeamEditPage() {
         .from("team-avatars")
         .getPublicUrl(storagePath);
 
-      avatarUrl = urlData?.publicUrl ?? avatarUrl;
+      avatarUrl = urlData?.publicUrl ? `${urlData.publicUrl}?v=${Date.now()}` : avatarUrl;
     }
 
     const updateData: Database["public"]["Tables"]["participants"]["Update"] = {
