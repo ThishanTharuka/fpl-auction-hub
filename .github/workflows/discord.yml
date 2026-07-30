@@ -1,0 +1,82 @@
+name: Discord Notifications
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+    tags:
+      - v*
+  release:
+    types: [published]
+
+jobs:
+  notify-push:
+    name: Notify Push
+    if: github.event_name == 'push' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Push Notification
+        run: |
+          curl -sf -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "embeds":[
+              {
+                "title":"🚀 Push to ${{ github.ref_name }}",
+                "color":5814783,
+                "url":"${{ github.server_url }}/${{ github.repository }}",
+                "fields":[
+                  {
+                    "name":"Author",
+                    "value":"${{ github.actor }}"
+                  },
+                  {
+                    "name":"Commit",
+                    "value":"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
+                  },
+                  {
+                    "name":"Message",
+                    "value":"${{ github.event.head_commit.message }}"
+                  }
+                ],
+                "timestamp":"${{ github.event.head_commit.timestamp }}"
+              }
+            ]
+          }' \
+          ${{ secrets.DISCORD_WEBHOOK }}
+
+  notify-tag:
+    name: Notify Release
+    if: github.event_name == 'push' && github.ref_type == 'tag' || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Release Notification
+        run: |
+          curl -sf -H "Content-Type: application/json" \
+          -X POST \
+          -d '{
+            "embeds":[
+              {
+                "title":"🏷 Release ${{ github.ref_name }}",
+                "color":15258703,
+                "url":"${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}",
+                "fields":[
+                  {
+                    "name":"Repository",
+                    "value":"${{ github.repository }}"
+                  },
+                  {
+                    "name":"Tag",
+                    "value":"${{ github.ref_name }}"
+                  },
+                  {
+                    "name":"Published by",
+                    "value":"${{ github.actor }}"
+                  }
+                ],
+                "timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              }
+            ]
+          }' \
+          ${{ secrets.DISCORD_WEBHOOK }}
