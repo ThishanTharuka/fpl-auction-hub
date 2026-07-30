@@ -80,7 +80,7 @@ jobs:
 
       - name: Send Notification
         run: |
-          curl -sf -H "Content-Type: application/json" \
+          curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "embeds":[
