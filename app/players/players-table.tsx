@@ -29,7 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Info, Columns2 } from "lucide-react";
+import { Info, Columns2, ChevronDown } from "lucide-react";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import { GoogleSheetsProvider } from "@/lib/google-sheets-context";
 import { ExportSheetsButton } from "@/components/export-sheets-button";
@@ -207,7 +207,7 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
         }}
         onMouseLeave={() => setCoords(null)}
       >
-        <Info className="w-3 h-3 text-[#849585] hover:text-[#b9cbb9] cursor-default shrink-0" />
+        <Info className="w-3 h-3 text-foreground-dim hover:text-muted-foreground cursor-default shrink-0" />
       </span>
       {coords &&
         createPortal(
@@ -219,7 +219,7 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
               transform: "translate(-50%, -100%)",
               zIndex: 9999,
             }}
-            className="w-48 rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1.5 text-[11px] text-[#d6e4f9] whitespace-normal text-center shadow-lg pointer-events-none"
+            className="w-48 rounded bg-secondary border border-border px-2 py-1.5 text-[11px] text-foreground whitespace-normal text-center shadow-lg pointer-events-none"
           >
             {text}
           </div>,
@@ -239,23 +239,21 @@ function FdrPip({ diff }: Readonly<{ diff: number }>) {
   );
 }
 
+const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string; chip: string }> = {
+  a: { label: "Available", dot: "bg-green-400", text: "text-green-400", chip: "bg-green-500/15 border-green-500/30 text-green-400" },
+  d: { label: "Doubt", dot: "bg-orange-400", text: "text-orange-400", chip: "bg-orange-500/15 border-orange-500/30 text-orange-400" },
+  i: { label: "Injured", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
+  s: { label: "Suspended", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
+  n: { label: "Intl", dot: "bg-[#849585]", text: "text-foreground-dim", chip: "bg-[#849585]/15 border-[#849585]/30 text-foreground-dim" },
+  u: { label: "Out", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
+};
+
 function getStatusInfo(status: string, chance: number | null) {
-  switch (status) {
-    case "a":
-      return { label: "Available", dot: "bg-green-400", text: "text-green-400", ring: "ring-green-400/30" };
-    case "d":
-      return { label: `Doubt${chance !== null ? ` ${chance}%` : ""}`, dot: "bg-orange-400", text: "text-orange-400", ring: "ring-orange-400/30" };
-    case "i":
-      return { label: "Injured", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
-    case "s":
-      return { label: "Suspended", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
-    case "n":
-      return { label: "Intl", dot: "bg-[#849585]", text: "text-[#849585]", ring: "ring-[#849585]/30" };
-    case "u":
-      return { label: "Unavailable", dot: "bg-red-400", text: "text-red-400", ring: "ring-red-400/30" };
-    default:
-      return { label: "Available", dot: "bg-green-400", text: "text-green-400", ring: "ring-green-400/30" };
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["a"]!;
+  if (status === "d" && chance !== null) {
+    return { ...cfg, label: `Doubt ${chance}%` };
   }
+  return cfg;
 }
 
 function StatusChip({
@@ -265,31 +263,12 @@ function StatusChip({
   status: string;
   chance: number | null;
 }) {
-  const chip = (label: string, color: string) => (
-    <span
-      className={`inline-flex items-center justify-center rounded-full border w-20 sm:w-24 py-0.5 text-[10px] sm:text-[11px] font-medium ${color}`}
-    >
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["a"]!;
+  const label = status === "d" && chance !== null ? `Doubt ${chance}%` : cfg.label;
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full border w-20 sm:w-24 py-0.5 text-[10px] sm:text-[11px] font-medium ${cfg.chip}`}>
       {label}
     </span>
-  );
-  if (status === "a")
-    return chip("Available", "bg-green-500/15 border-green-500/30 text-green-400");
-  if (status === "d")
-    return chip(
-      `Doubt${chance !== null ? ` ${chance}%` : ""}`,
-      "bg-orange-500/15 border-orange-500/30 text-orange-400",
-    );
-  if (status === "i")
-    return chip("Injured", "bg-red-500/15 border-red-500/30 text-red-400");
-  if (status === "s")
-    return chip("Suspended", "bg-red-500/15 border-red-500/30 text-red-400");
-  if (status === "n")
-    return chip("Intl", "bg-[#849585]/15 border-[#849585]/30 text-[#849585]");
-  if (status === "u")
-    return chip("Out", "bg-red-500/15 border-red-500/30 text-red-400");
-  return chip(
-    "Available",
-    "bg-green-500/15 border-green-500/30 text-green-400",
   );
 }
 
@@ -303,24 +282,24 @@ function ColumnPickerContent({
   ) => void;
 }) {
   return (
-    <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-lg shadow-xl p-4 overflow-y-auto w-72 max-h-[min(90vh,680px)]">
-      <div className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+    <div className="bg-card border border-border rounded-lg shadow-xl p-4 overflow-y-auto w-72 max-h-[min(90vh,680px)]">
+      <div className="text-xs font-semibold text-foreground-dim uppercase tracking-wider mb-3">
         Toggle Columns
       </div>
       {COLUMN_GROUPS.map(({ group, columns: cols }) => (
         <div key={group} className="mb-4">
-          <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 border-b border-[#3b4b3d] pb-1">
+          <div className="text-[10px] text-foreground-dim uppercase tracking-wider mb-1.5 border-b border-border pb-1">
             {group}
           </div>
           <div className="grid grid-cols-2 gap-1">
             {cols.map(({ id, label }) => (
               <label
                 key={id}
-                className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478] py-0.5"
+                className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-primary py-0.5"
               >
                 <input
                   type="checkbox"
-                  className="accent-[#00e478]"
+                  className="accent-primary"
                   checked={colVisibility[id] !== false}
                   onChange={(e) =>
                     setColVisibility((v) => ({
@@ -339,7 +318,7 @@ function ColumnPickerContent({
       <Button
         size="sm"
         variant="outline"
-        className="w-full mt-1 border-[#3b4b3d] text-[#849585] text-xs hover:bg-[#1e2b3b]"
+        className="w-full mt-1 border-border text-foreground-dim text-xs hover:bg-secondary"
         onClick={() => setColVisibility(DEFAULT_VISIBLE)}
       >
         Reset to default
@@ -362,19 +341,25 @@ function PlayerCard({
   const statusInfo = getStatusInfo(player.status, player.chance_of_playing_next_round);
 
   return (
-    <div className="bg-[#0a1828] rounded-lg border border-[#3b4b3d]/50">
+    <div className="bg-[#0a1828] rounded-lg border border-border/50">
       <Accordion type="single" collapsible>
         <AccordionItem value="more" className="border-0">
           <div
-            className="flex items-center gap-2 px-3.5 pt-3 pb-2.5 cursor-pointer hover:bg-[#132030] transition-colors"
+            className="flex items-center gap-2 px-3.5 pt-3 pb-2.5 cursor-pointer hover:bg-muted transition-colors"
             onClick={onSelect}
             role="button"
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            }}
           >
-            <span className="font-medium text-[#d6e4f9] text-sm min-w-0 truncate">
+            <span className="font-medium text-foreground text-sm min-w-0 truncate">
               {player.web_name}
             </span>
-            <span className="text-xs text-[#b9cbb9] shrink-0">
+            <span className="text-xs text-muted-foreground shrink-0">
               ({player.team_short})
             </span>
             <div
@@ -396,7 +381,7 @@ function PlayerCard({
           <div className="px-3.5 pb-3">
             <div className="grid grid-cols-4 gap-1">
               {visibleStats.map((stat) => (
-                <div key={stat.key} className="bg-[#061423] rounded-md p-1.5 text-center">
+                <div key={stat.key} className="bg-background rounded-md p-1.5 text-center">
                   <div className="text-[12px] font-medium text-slate-200">
                     {stat.get(player)}
                   </div>
@@ -407,9 +392,9 @@ function PlayerCard({
 
             {remainingStats.length > 0 && (
               <AccordionContent>
-                <div className="grid grid-cols-4 gap-1 pt-2.5 mt-2.5 border-t border-[#3b4b3d]/40">
+                <div className="grid grid-cols-4 gap-1 pt-2.5 mt-2.5 border-t border-border/40">
                   {remainingStats.map((stat) => (
-                    <div key={stat.key} className="bg-[#061423] rounded-md p-1.5 text-center">
+                    <div key={stat.key} className="bg-background rounded-md p-1.5 text-center">
                       <div className="text-[12px] font-medium text-slate-200">
                         {stat.get(player)}
                       </div>
@@ -432,12 +417,12 @@ function Stat({
   highlight,
 }: Readonly<{ label: string; value: string | number; highlight?: boolean }>) {
   return (
-    <div className="bg-[#132030] rounded p-2 sm:p-3">
-      <div className="text-[9px] sm:text-[10px] text-[#849585] uppercase tracking-wider mb-0.5 sm:mb-1">
+    <div className="bg-muted rounded p-2 sm:p-3">
+      <div className="text-[9px] sm:text-[10px] text-foreground-dim uppercase tracking-wider mb-0.5 sm:mb-1">
         {label}
       </div>
       <div
-        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
+        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-primary" : "text-foreground"}`}
       >
         {value}
       </div>
@@ -515,13 +500,13 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         enableHiding: false,
         cell: ({ row }) => (
           <button
-            className="text-left hover:text-[#00e478] transition-colors underline-offset-2 hover:underline cursor-pointer"
+            className="text-left hover:text-primary transition-colors underline-offset-2 hover:underline cursor-pointer"
             onClick={() => setSelected(row.original)}
           >
-            <div className="font-medium text-[#d6e4f9]">
+            <div className="font-medium text-foreground">
               {row.original.web_name}
             </div>
-            <div className="text-xs text-[#b9cbb9]">
+            <div className="text-xs text-muted-foreground">
               {row.original.team_short}
             </div>
           </button>
@@ -546,7 +531,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "Price",
         accessorFn: (r) => r.price,
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#b9cbb9]">
+          <span className="font-mono text-muted-foreground">
             £{(getValue() as number).toFixed(1)}m
           </span>
         ),
@@ -574,7 +559,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "Own %",
         accessorFn: (r) => parseFloat(r.selected_by_percent),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#b9cbb9]">
+          <span className="font-mono text-muted-foreground">
             {(getValue() as number).toFixed(1)}%
           </span>
         ),
@@ -584,7 +569,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "Form",
         accessorFn: (r) => parseFloat(r.form),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#00e478]">
+          <span className="font-mono text-primary">
             {(getValue() as number).toFixed(1)}
           </span>
         ),
@@ -626,7 +611,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xG",
         accessorFn: (r) => parseFloat(r.expected_goals),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#bbc6e2]">
+          <span className="font-mono text-chart-2">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -636,7 +621,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xA",
         accessorFn: (r) => parseFloat(r.expected_assists),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#bbc6e2]">
+          <span className="font-mono text-chart-2">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -646,7 +631,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xGI",
         accessorFn: (r) => parseFloat(r.expected_goal_involvements),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#bbc6e2]">
+          <span className="font-mono text-chart-2">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -656,7 +641,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xGC",
         accessorFn: (r) => parseFloat(r.expected_goals_conceded),
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#bbc6e2]">
+          <span className="font-mono text-chart-2">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -690,7 +675,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "Mins",
         accessorFn: (r) => r.minutes,
         cell: ({ getValue }) => (
-          <span className="font-mono text-[#b9cbb9]">
+          <span className="font-mono text-muted-foreground">
             {getValue() as number}
           </span>
         ),
@@ -798,7 +783,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             placeholder="Search player or team…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-56 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
+            className="w-full sm:w-56 bg-muted border-border text-foreground placeholder:text-foreground-dim"
           />
 
           <div className="flex gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
@@ -809,8 +794,8 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                 variant={posFilter === pos ? "default" : "outline"}
                 className={
                   posFilter === pos
-                    ? "bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 shrink-0"
-                    : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] shrink-0"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary shrink-0"
                 }
                 onClick={() => setPosFilter(pos)}
               >
@@ -824,7 +809,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                 className={
                   availFilter === "available"
                     ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
-                    : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
+                    : "border-border text-muted-foreground hover:text-white hover:bg-green-900/40 hover:border-green-700"
                 }
                 onClick={() =>
                   setAvailFilter((v) => (v === "all" ? "available" : "all"))
@@ -835,7 +820,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
               <Button
                 size="icon"
                 variant="outline"
-                className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] h-7 w-7 shrink-0"
+                className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary h-7 w-7 shrink-0"
                 onClick={() => setMobileStatsDrawerOpen(true)}
               >
                 <Columns2 className="w-4 h-4" />
@@ -850,7 +835,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
               className={
                 availFilter === "available"
                   ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
-                  : "border-[#3b4b3d] text-[#b9cbb9] hover:text-white hover:bg-green-900/40 hover:border-green-700"
+                  : "border-border text-muted-foreground hover:text-white hover:bg-green-900/40 hover:border-green-700"
               }
               onClick={() =>
                 setAvailFilter((v) => (v === "all" ? "available" : "all"))
@@ -860,21 +845,21 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             </Button>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-[#849585]">£</span>
+              <span className="text-xs text-foreground-dim">£</span>
               <Input
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-14 sm:w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+                className="w-14 sm:w-16 h-8 bg-muted border-border text-foreground placeholder:text-foreground-dim text-xs"
               />
-              <span className="text-xs text-[#849585]">–</span>
+              <span className="text-xs text-foreground-dim">–</span>
               <Input
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-14 sm:w-16 h-8 bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] text-xs"
+                className="w-14 sm:w-16 h-8 bg-muted border-border text-foreground placeholder:text-foreground-dim text-xs"
               />
-              <span className="text-xs text-[#849585]">m</span>
+              <span className="text-xs text-foreground-dim">m</span>
             </div>
           </div>
 
@@ -882,7 +867,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             ref={pickerRef}
             className="relative hidden sm:flex items-center gap-3 ml-auto"
           >
-            <span className="text-xs text-[#849585] min-w-[7ch] inline-block text-right">
+            <span className="text-xs text-foreground-dim min-w-[7ch] inline-block text-right">
               {filtered.length} players
             </span>
             <RefreshFplDataButton />
@@ -894,10 +879,10 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             <Button
               size="sm"
               variant="outline"
-              className="border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+              className="border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
               onClick={() => setPickerOpen((o) => !o)}
             >
-              Columns ▾
+              Columns <ChevronDown className="w-3 h-3 inline" />
             </Button>
             {pickerOpen && (
               <div className="absolute right-0 top-full mt-1 z-50">
@@ -911,7 +896,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         </div>
 
         <div className="sm:hidden flex items-center justify-between mb-2">
-          <span className="text-xs text-[#849585]">
+          <span className="text-xs text-foreground-dim">
             {filtered.length} players
           </span>
           <div className="flex items-center gap-1.5">
@@ -925,16 +910,16 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block rounded-lg border border-[#3b4b3d] overflow-hidden">
+        <div className="hidden md:block rounded-lg border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-[#0f1c2c] border-b border-[#3b4b3d]">
+              <thead className="bg-card border-b border-border">
                 {table.getHeaderGroups().map((hg) => (
                   <tr key={hg.id}>
                     {hg.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="px-4 py-3 text-left text-xs font-semibold text-[#849585] uppercase tracking-wider cursor-pointer select-none hover:text-[#d6e4f9] whitespace-nowrap"
+                        className="px-4 py-3 text-left text-xs font-semibold text-foreground-dim uppercase tracking-wider cursor-pointer select-none hover:text-foreground whitespace-nowrap"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         <span className="inline-flex items-center gap-1">
@@ -962,7 +947,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                 {table.getRowModel().rows.map((row, i) => (
                   <tr
                     key={row.id}
-                    className={`border-b border-[#3b4b3d]/50 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "bg-[#061423]" : "bg-[#0a1828]"}`}
+                    className={`border-b border-border/50 hover:bg-muted transition-colors ${i % 2 === 0 ? "bg-background" : "bg-[#0a1828]"}`}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
@@ -988,12 +973,12 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
           open={mobileStatsDrawerOpen}
           onOpenChange={setMobileStatsDrawerOpen}
         >
-          <DrawerContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+          <DrawerContent className="bg-card border-border text-foreground">
             <DrawerHeader>
-              <DrawerTitle className="text-base font-semibold text-[#d6e4f9]">
+              <DrawerTitle className="text-base font-semibold text-foreground">
                 Visible stats on cards
               </DrawerTitle>
-              <DrawerDescription className="text-xs text-[#849585]">
+              <DrawerDescription className="text-xs text-foreground-dim">
                 Choose up to 4 stats to show on each player card. Tap a card to
                 see all selected stats.
               </DrawerDescription>
@@ -1009,14 +994,14 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                   >
                     <label
                       htmlFor={`mobile-stat-${stat.key}`}
-                      className="text-sm text-[#d6e4f9] cursor-pointer"
+                      className="text-sm text-foreground cursor-pointer"
                     >
                       {stat.label}
                     </label>
                     <input
                       id={`mobile-stat-${stat.key}`}
                       type="checkbox"
-                      className="accent-[#00e478] w-4 h-4"
+                      className="accent-primary w-4 h-4"
                       checked={isActive}
                       disabled={atMax}
                       onChange={(e) => {
@@ -1034,7 +1019,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             <DrawerClose asChild>
               <Button
                 variant="outline"
-                className="w-full border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+                className="w-full border-border text-muted-foreground hover:bg-secondary"
               >
                 Done
               </Button>
@@ -1045,7 +1030,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         {/* Mobile card list */}
         <div className="md:hidden space-y-2">
           {filtered.length === 0 ? (
-            <div className="text-center py-8 text-[#849585] text-sm">
+            <div className="text-center py-8 text-foreground-dim text-sm">
               No players match your filters
             </div>
           ) : (
@@ -1064,7 +1049,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         </div>
 
         {/* Pagination */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-[#849585]">
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-foreground-dim">
           <span className="text-xs sm:text-sm">
             Showing {table.getState().pagination.pageIndex * 25 + 1}–
             {Math.min(
@@ -1077,7 +1062,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             <Button
               size="sm"
               variant="outline"
-              className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+              className="border-border text-muted-foreground hover:bg-secondary text-xs sm:text-sm"
               disabled={!table.getCanPreviousPage()}
               onClick={() => table.previousPage()}
             >
@@ -1086,7 +1071,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
             <Button
               size="sm"
               variant="outline"
-              className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+              className="border-border text-muted-foreground hover:bg-secondary text-xs sm:text-sm"
               disabled={!table.getCanNextPage()}
               onClick={() => table.nextPage()}
             >
@@ -1097,7 +1082,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
 
         {/* Player detail modal */}
         <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-          <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
+          <DialogContent className="bg-card border-border text-foreground w-[calc(100%-2rem)] max-w-3xl mx-auto">
             {displayPlayer && (
               <>
                 <DialogHeader>
@@ -1112,7 +1097,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                           alt={displayPlayer.web_name}
                           width={1024}
                           height={1024}
-                          className="h-full w-full rounded object-cover bg-[#132030]"
+                          className="h-full w-full rounded object-cover bg-muted"
                         />
                       ) : (
                         <img
@@ -1120,7 +1105,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                           alt={displayPlayer.web_name}
                           width={110}
                           height={140}
-                          className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
+                          className={`h-full w-full rounded object-cover bg-muted ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
                           loading="lazy"
                           onLoad={() => {
                             setDialogImgLoaded(true);
@@ -1137,7 +1122,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                       <DialogTitle className="text-lg sm:text-xl font-bold truncate">
                         {displayPlayer.web_name}
                       </DialogTitle>
-                      <p className="text-xs sm:text-sm text-[#b9cbb9]">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {POSITION_LABELS[displayPlayer.position] ??
                           displayPlayer.position}
                         {" · "}
