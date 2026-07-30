@@ -1,6 +1,13 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { IndexBuilderClient } from "./index-builder-client";
 import { getFplData } from "@/lib/fpl-data";
+
+export const metadata: Metadata = {
+  title: "Index Builder | FPL Auction Hub",
+  description:
+    "Build your own FPL player index with weighted custom stats. Rank players by the metrics that matter most to your auction strategy.",
+};
 
 function IndexBuilderSkeleton() {
   const tableCols = ["#", "Player", "Pos", "Pts", "Key Stats", "Score"];
