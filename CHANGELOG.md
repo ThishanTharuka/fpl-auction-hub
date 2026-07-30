@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.2...v1.22.3) (2026-07-30)
+
+
+### Bug Fixes
+
+* add metadata for auction pages and layouts ([50da32b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/50da32bceefa77614465f4b938ade9ae44204cc4))
+
 ## [1.22.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.1...v1.22.2) (2026-07-30)
 
 
