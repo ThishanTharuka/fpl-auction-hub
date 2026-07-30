@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.22.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.2...v1.22.0) (2026-07-30)
+
+
+### Bug Fixes
+
+* add missing ignore pattern for .agents directory in ESLint configuration ([089d99b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/089d99b8eac8e10bd755ca79243b120cb2ab0d8a))
+* remove unnecessary 'f' flag from curl commands in CI and Discord workflows ([0e070b4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0e070b4555640c6e67e51e270b589fc70d913f09))
+
+
+### Features
+
+* **impeccable:** add surface brief management script and configuration ([01d48a0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/01d48a064de3eaa162980185e13a43a8476a764b))
+
 ## [1.21.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.1...v1.21.2) (2026-07-27)
 
 
