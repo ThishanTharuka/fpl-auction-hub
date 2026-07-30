@@ -1,5 +1,12 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { AuctioneerLoader } from "./auctioneer-loader";
+
+export const metadata: Metadata = {
+  title: "Auctioneer Dashboard | FPL Auction Hub",
+  description:
+    "Run your FPL auction live — nominate players, manage the queue, and control the bidding flow.",
+};
 
 function AuctioneerSkeleton() {
   return (
