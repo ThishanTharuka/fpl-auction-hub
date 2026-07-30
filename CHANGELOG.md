@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.0...v1.22.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* add metadata for Players page with title and description ([aef9499](https://github.com/ThishanTharuka/fpl-auction-hub/commit/aef9499bc3eb110518498555af4b7d0538512bae))
+
 # [1.22.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.2...v1.22.0) (2026-07-30)
 
 
