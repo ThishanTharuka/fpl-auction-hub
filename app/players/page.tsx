@@ -1,6 +1,13 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { PlayersTable } from "./players-table";
 import { getFplData } from "@/lib/fpl-data";
+
+export const metadata: Metadata = {
+  title: "Players | FPL Auction Hub",
+  description:
+    "Browse, search, and compare FPL player stats. Sort by points, form, price, or any stat across the league.",
+};
 
 function PlayersTableSkeleton() {
   const rows = Array.from({ length: 20 });
