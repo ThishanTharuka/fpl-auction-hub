@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.1...v1.22.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* :art: add metadata for Index Builder page with title and description ([4bdb2ff](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4bdb2ff2c410492960f20c25979e58b63c9d07c5))
+
 ## [1.22.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.0...v1.22.1) (2026-07-30)
 
 
