@@ -57,18 +57,18 @@ jobs:
 
   notify:
     name: Notify Discord
-    needs: [verify, release]
+    needs: [verify]
     if: always() && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     steps:
       - name: Determine Status
         id: status
         run: |
-          if [ "${{ needs.verify.result }}" = "success" ] && [ "${{ needs.release.result }}" = "success" ]; then
+          if [ "${{ needs.verify.result }}" = "success" ]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "color=5814783" >> $GITHUB_OUTPUT
             echo "emoji=✅" >> $GITHUB_OUTPUT
-          elif [ "${{ needs.verify.result }}" = "failure" ] || [ "${{ needs.release.result }}" = "failure" ]; then
+          elif [ "${{ needs.verify.result }}" = "failure" ]; then
             echo "status=failure" >> $GITHUB_OUTPUT
             echo "color=15548997" >> $GITHUB_OUTPUT
             echo "emoji=❌" >> $GITHUB_OUTPUT
@@ -80,7 +80,8 @@ jobs:
 
       - name: Send Notification
         run: |
-          curl -s -H "Content-Type: application/json" \
+          curl -s --show-error --fail \
+          -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "embeds":[
@@ -107,11 +108,6 @@ jobs:
                     "inline":true
                   },
                   {
-                    "name":"Release",
-                    "value":"${{ needs.release.result }}",
-                    "inline":true
-                  },
-                  {
                     "name":"Workflow",
                     "value":"${{ github.workflow }}"
                   }
@@ -120,4 +116,4 @@ jobs:
               }
             ]
           }' \
-          ${{ secrets.DISCORD_WEBHOOK }}
+          ${{ secrets.DISCORD_WEBHOOK }} || echo "::warning::Discord webhook returned non-200"
