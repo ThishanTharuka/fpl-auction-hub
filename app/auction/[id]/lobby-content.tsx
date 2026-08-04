@@ -181,6 +181,16 @@ export function LobbyContent({
                   Settings
                 </Button>
               )}
+              {!isAuctioneer && league.status === "active" && (!myMembership || myMembership.status === "rejected") && (
+                <Link href={`/auction/${id}/spectate`}>
+                  <Button
+                    variant="outline"
+                    className="border-[#00e478]/40 text-[#00e478] hover:bg-[#132030] h-7 text-xs"
+                  >
+                    Spectate live
+                  </Button>
+                </Link>
+              )}
               <StatusBadge status={league.status ?? "setup"} />
             </div>
           </div>
