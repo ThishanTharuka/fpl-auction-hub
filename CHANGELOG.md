@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.0...v1.23.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* :sparkles: optimize data fetching by selecting specific fields in auction and bid components ([50d2abc](https://github.com/ThishanTharuka/fpl-auction-hub/commit/50d2abcbccdb01eb52cf1b824001fd9f4b0c922e))
+
 # [1.23.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.3...v1.23.0) (2026-08-04)
 
 
