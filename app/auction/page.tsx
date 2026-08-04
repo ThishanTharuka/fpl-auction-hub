@@ -32,8 +32,12 @@ export default function AuctionBrowsePage() {
   const { user } = useAuth();
   const [leagues, setLeagues] = useState<LeagueRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberLeagueIds, setMemberLeagueIds] = useState<Set<string>>(new Set());
 
   const [pendingLeague, setPendingLeague] = useState<LeagueRow | null>(null);
+  const [pendingAction, setPendingAction] = useState<"enter" | "spectate">(
+    "enter",
+  );
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -65,14 +69,25 @@ export default function AuctionBrowsePage() {
         participant_count: countMap[l.id] ?? 0,
       })),
     );
+
+    if (user) {
+      const { data: myMembers } = await supabase
+        .from("team_members")
+        .select("league_id")
+        .eq("user_id", user.id);
+      setMemberLeagueIds(
+        new Set((myMembers ?? []).map((m) => m.league_id).filter(Boolean)),
+      );
+    }
+
     setLoading(false);
   }
 
-  /* eslint-disable react-hooks/set-state-in-effect -- intentional: loadLeagues calls setState; this is a standard mount-and-fetch pattern */
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- intentional: loadLeagues calls setState; re-run when user changes */
   useEffect(() => {
     loadLeagues().catch(() => {});
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [user]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset password form when different league selected */
   useEffect(() => {
@@ -94,12 +109,26 @@ export default function AuctionBrowsePage() {
       return;
     }
     setPendingLeague(league);
+    setPendingAction("enter");
+  }
+
+  function handleSpectate(league: LeagueRow) {
+    if (!league.room_password) {
+      router.push(`/auction/${league.id}/spectate`);
+      return;
+    }
+    setPendingLeague(league);
+    setPendingAction("spectate");
   }
 
   function submitPassword() {
     if (!pendingLeague) return;
     if (passwordInput.trim() === pendingLeague.room_password) {
-      router.push(`/auction/${pendingLeague.id}`);
+      router.push(
+        pendingAction === "spectate"
+          ? `/auction/${pendingLeague.id}/spectate`
+          : `/auction/${pendingLeague.id}`,
+      );
       setPendingLeague(null);
     } else {
       setPasswordError("Incorrect password. Try again.");
@@ -184,13 +213,24 @@ export default function AuctionBrowsePage() {
                 </p>
               </div>
 
-              <Button
-                onClick={() => handleEnter(league)}
-                size="sm"
-                className="shrink-0 ml-4 bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
-              >
-                {isOwner ? "Manage" : "Enter"}
-              </Button>
+              <div className="flex items-center gap-2 shrink-0 ml-4">
+                {league.status === "active" && !isOwner && !memberLeagueIds.has(league.id) && (
+                  <Button
+                    onClick={() => handleSpectate(league)}
+                    size="sm"
+                    className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]"
+                  >
+                    Spectate
+                  </Button>
+                )}
+                <Button
+                  onClick={() => handleEnter(league)}
+                  size="sm"
+                  className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                >
+                  {isOwner ? "Manage" : "Enter"}
+                </Button>
+              </div>
             </div>
           );
         })}
@@ -201,7 +241,10 @@ export default function AuctionBrowsePage() {
           <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4">
             <h2 className="text-lg font-semibold text-[#d6e4f9]">Room Password</h2>
             <p className="text-sm text-[#849585]">
-              <span className="text-[#d6e4f9]">{pendingLeague.name}</span> requires a password to join.
+              <span className="text-[#d6e4f9]">{pendingLeague.name}</span>{" "}
+              {pendingAction === "spectate"
+                ? "requires a password to watch."
+                : "requires a password to join."}
             </p>
             <Input
               ref={inputRef}
@@ -231,7 +274,7 @@ export default function AuctionBrowsePage() {
                 disabled={!passwordInput.trim()}
                 className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
               >
-                Enter
+                {pendingAction === "spectate" ? "Watch" : "Enter"}
               </Button>
             </div>
           </div>

@@ -579,6 +579,30 @@ export function BidContent({
     });
   }, [allParticipants, allResults, league.budget_per_team]);
 
+  const derivedTeamMeta = useMemo<TeamMeta | null>(() => {
+    if (!myTeam) return teamMeta;
+    const playerMap = new Map(initialPlayers.map((p) => [p.id, p]));
+    const myResults = allResults.filter(
+      (r) => r.participant_id === myTeam.id,
+    );
+    const squad: SquadPlayer[] = myResults.map((r) => {
+      const fpl = playerMap.get(r.fpl_player_id);
+      return {
+        id: r.fpl_player_id,
+        name: r.player_name ?? fpl?.web_name ?? "Unknown",
+        position: r.position_slot ?? fpl?.position ?? "?",
+        price: r.price_paid,
+        team: r.player_team ?? fpl?.team_short ?? "",
+      };
+    });
+    const spent = myResults.reduce((s, r) => s + r.price_paid, 0);
+    return {
+      budget_per_team: league.budget_per_team,
+      spent,
+      squad,
+    };
+  }, [myTeam, allResults, initialPlayers, league.budget_per_team, teamMeta]);
+
   const soldPlayers = useMemo(() => {
     const participantMap = new Map(allParticipants.map((p) => [p.id, p]));
     const playerMap = new Map(initialPlayers.map((p) => [p.id, p]));
@@ -612,10 +636,10 @@ export function BidContent({
   }
 
   const pendingTeam = !myTeam;
-  const remaining = teamMeta
-    ? teamMeta.budget_per_team - teamMeta.spent
+  const remaining = derivedTeamMeta
+    ? derivedTeamMeta.budget_per_team - derivedTeamMeta.spent
     : league.budget_per_team;
-  const squadSize = teamMeta?.squad.length ?? 0;
+  const squadSize = derivedTeamMeta?.squad.length ?? 0;
   const maxSquad = league.squad_size ?? 15;
   const tiers = league.bid_increment_tiers as
     | BidIncrementTier[]
@@ -641,7 +665,7 @@ export function BidContent({
     fwd: league.max_fwd ?? 3,
   };
   const myPosCount = nomination
-    ? (teamMeta?.squad.filter((p) => p.position === nomination.position)
+    ? (derivedTeamMeta?.squad.filter((p) => p.position === nomination.position)
         .length ?? 0)
     : 0;
   const posLimit = posLimits[posKey] ?? 99;
@@ -655,7 +679,7 @@ export function BidContent({
 
   const posCounts: Record<string, number> = {};
   const posSpent: Record<string, number> = {};
-  for (const p of teamMeta?.squad ?? []) {
+  for (const p of derivedTeamMeta?.squad ?? []) {
     posCounts[p.position] = (posCounts[p.position] ?? 0) + 1;
     posSpent[p.position] = (posSpent[p.position] ?? 0) + p.price;
   }
@@ -701,8 +725,8 @@ export function BidContent({
 
   const nominatedClub = nomination?.player_team ?? "";
   const clubCount =
-    nominatedClub && teamMeta
-      ? teamMeta.squad.filter((p) => p.team === nominatedClub).length
+    nominatedClub && derivedTeamMeta
+      ? derivedTeamMeta.squad.filter((p) => p.team === nominatedClub).length
       : 0;
   const maxClub = league.max_per_club ?? 3;
 
@@ -732,7 +756,7 @@ export function BidContent({
     <BidUI
       league={league}
       myTeam={myTeam}
-      teamMeta={teamMeta}
+      teamMeta={derivedTeamMeta}
       nomination={nomination}
       fplPlayer={fplPlayer}
       secondsLeft={secondsLeft}
