@@ -245,7 +245,7 @@ export function AuctioneerContent({
       // Load any open nomination
       const { data: nom } = await supabase
         .from("auction_nominations")
-        .select("*")
+        .select("id,fpl_player_id,player_name,player_team,position,starting_price,current_bid,current_bidder_id,current_bidder_name,bid_end_time,is_paused,paused_seconds,status")
         .eq("league_id", id)
         .eq("status", "open")
         .order("created_at", { ascending: false })
@@ -262,7 +262,7 @@ export function AuctioneerContent({
   async function loadBids(nominationId: string) {
     const { data } = await supabase
       .from("auction_bids")
-      .select("*")
+      .select("id,nomination_id,participant_name,amount,created_at")
       .eq("nomination_id", nominationId)
       .order("created_at", { ascending: false })
       .limit(10);

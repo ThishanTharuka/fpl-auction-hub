@@ -53,7 +53,7 @@ export default function TeamEditPage() {
       supabase.from("participants").select("*").eq("id", participantId).single(),
       supabase
         .from("team_members")
-        .select("*")
+        .select("id")
         .eq("league_id", leagueId)
         .eq("participant_id", participantId)
         .eq("user_id", user.id)

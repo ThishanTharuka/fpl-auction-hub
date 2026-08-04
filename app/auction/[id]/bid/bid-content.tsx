@@ -240,7 +240,7 @@ export function BidContent({
   const loadBids = async (nominationId: string) => {
     const { data } = await supabase
       .from("auction_bids")
-      .select("*")
+      .select("id,nomination_id,participant_name,amount,created_at")
       .eq("nomination_id", nominationId)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -434,7 +434,7 @@ export function BidContent({
 
     supabase
       .from("auction_bids")
-      .select("*")
+      .select("id,nomination_id,participant_name,amount,created_at")
       .eq("nomination_id", nomination.id)
       .order("created_at", { ascending: false })
       .limit(10)
