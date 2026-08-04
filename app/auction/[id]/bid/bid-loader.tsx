@@ -84,7 +84,7 @@ export async function BidLoader({
     supabase.from("leagues").select("*").eq("id", id).single(),
     supabase
       .from("auction_nominations")
-      .select("*")
+      .select("id,fpl_player_id,player_name,player_team,position,starting_price,current_bid,current_bidder_id,current_bidder_name,bid_end_time,is_paused,paused_seconds,status")
       .eq("league_id", id)
       .eq("status", "open")
       .order("created_at", { ascending: false })
