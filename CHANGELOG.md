@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.23.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.3...v1.23.0) (2026-08-04)
+
+
+### Bug Fixes
+
+* remove unnecessary peer dependencies from package-lock.json ([bfde4e6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/bfde4e64a0027e8a37afeba0ae116fe4da0407ee))
+
+
+### Features
+
+* :sparkles: add spectator option to auctions ([153c538](https://github.com/ThishanTharuka/fpl-auction-hub/commit/153c538fced9ea4836330985002531717480f32c))
+
 ## [1.22.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.2...v1.22.3) (2026-07-30)
 
 
