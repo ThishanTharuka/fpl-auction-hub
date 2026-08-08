@@ -20,6 +20,7 @@ import { useAuth } from "@/components/auth-provider";
 import { resolveBidAmountWithTiers } from "@/lib/bid-increment";
 import type { BidIncrementTier } from "@/lib/bid-increment";
 import { useServerClock } from "@/lib/use-server-clock";
+import { toast } from "sonner";
 import { ChatDrawer } from "@/components/auction-chat/chat-drawer";
 import type { EnrichedPlayer } from "@/lib/fpl-types";
 import type {
@@ -127,6 +128,8 @@ function checkCanBid(a: CanBidArgs): boolean {
   if (a.nomination.is_paused) return false;
   if (a.secondsLeft <= 0) return false;
   if (a.nomination.current_bidder_id === a.myTeamId) return false;
+  if (a.nomination.current_bidder_id && a.myBid <= a.nomination.current_bid)
+    return false;
   if (a.myBid > a.maxBid || a.myPosCount >= a.posLimit) return false;
   if (a.squadSize >= a.maxSquad) return false;
   if (a.clubCount >= a.maxClub) return false;
@@ -526,12 +529,16 @@ export function BidContent({
       nomination.starting_price,
       tiers,
     );
+    if (nomination.current_bidder_id && bidAmount <= nomination.current_bid) {
+      setBidding(false);
+      return;
+    }
     const endTime = serverClock.toISO(
       serverClock.getServerNow() + (league.timer_seconds ?? 45) * 1000,
     );
 
     const nowIso = serverClock.toISO(serverClock.getServerNow());
-    const { data: updatedRow } = await supabase
+    const { data: updatedRow, error: updateError } = await supabase
       .from("auction_nominations")
       .update({
         current_bid: bidAmount,
@@ -544,14 +551,56 @@ export function BidContent({
       .eq("id", nomination.id)
       .eq("status", "open")
       .eq("is_paused", false)
+      .or(
+        `current_bidder_id.is.null,current_bidder_id.neq.${myTeam.id}`,
+      )
       .gt("bid_end_time", nowIso)
       .select("id")
       .maybeSingle();
 
     if (!updatedRow) {
       setBidding(false);
+      if (updateError) {
+        // Rejected by the DB monotonic guard — another bid arrived first.
+        // Resync so the UI shows the true current price.
+        const { data: fresh } = await supabase
+          .from("auction_nominations")
+          .select(
+            "id,fpl_player_id,player_name,player_team,position,starting_price,current_bid,current_bidder_id,current_bidder_name,bid_end_time,is_paused,paused_seconds,status",
+          )
+          .eq("id", nomination.id)
+          .single();
+        if (fresh) {
+          setNomination(
+            normalizeNomination(fresh as Record<string, unknown>),
+          );
+          setFplPlayer(
+            fplPlayersMapRef.current.get(
+              (fresh as Record<string, unknown>).fpl_player_id as number,
+            ) ?? null,
+          );
+          loadBids(nomination.id);
+        }
+        toast.warning("Bid rejected — the price moved. See the latest bid.");
+      }
       return;
     }
+
+    // Optimistically reflect the new bid so the button disables immediately
+    // instead of waiting for the realtime echo.
+    setNomination((prev) =>
+      prev
+        ? {
+            ...prev,
+            current_bid: bidAmount,
+            current_bidder_id: myTeam.id,
+            current_bidder_name: myTeam.name,
+            is_paused: false,
+            paused_seconds: null,
+            bid_end_time: endTime,
+          }
+        : prev,
+    );
 
     await supabase.from("auction_bids").insert({
       nomination_id: nomination.id,
