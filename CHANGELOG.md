@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.24.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.2...v1.24.0) (2026-08-08)
+
+
+### Features
+
+* :sparkles: refactor Home component and replace HeroCta with conditional links; add Aurora component for background effects ([107f1e4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/107f1e47fabe12b3f4ec5594688fbae246cc9313))
+
 ## [1.23.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.1...v1.23.2) (2026-08-08)
 
 
