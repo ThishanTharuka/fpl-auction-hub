@@ -10,6 +10,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useServerClock } from "@/lib/use-server-clock";
 import { ChatDrawer } from "@/components/auction-chat/chat-drawer";
 import { toast } from "sonner";
+import { GavelIcon } from "@/components/ui/gavel-icon";
 import { PlayerStatsBar } from "@/components/player-stats-bar";
 import Counter from "@/components/counter";
 import { TeamAvatar } from "@/components/team-avatar";
@@ -953,15 +954,17 @@ export function AuctioneerContent({
                     disabled={!nomination.current_bidder_id}
                     className="flex-1 min-w-[200px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
                   >
-                    <span className="hidden sm:inline">
-                      🔨 SOLD — £{nomination.current_bid}m
+                    <span className="hidden sm:inline-flex items-center gap-2">
+                      <GavelIcon className="h-5 w-5" />
+                      SOLD — £{nomination.current_bid}m
                     </span>
-                    <span className="sm:hidden">
-                      🔨 £{nomination.current_bid}m
+                    <span className="sm:hidden inline-flex items-center gap-2">
+                      <GavelIcon className="h-5 w-5" />
+                      £{nomination.current_bid}m
                     </span>
                   </Button>
-                  {/* Unsold: only shown when timer expired and nobody bid */}
-                  {secondsLeft === 0 && !nomination.current_bidder_id && (
+                  {/* Unsold: visible until someone bids */}
+                  {!nomination.current_bidder_id && (
                     <Button
                       onClick={markUnsold}
                       variant="outline"
@@ -1039,10 +1042,10 @@ export function AuctioneerContent({
             </>
           ) : (
             !stagedPlayer && (
-              <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
+              <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] px-4">
                 <div className="text-center">
-                  <div className="text-4xl mb-3">🔨</div>
-                  <p className="text-[#849585]">
+                  <GavelIcon className="mx-auto h-16 w-16 text-[#849585]" />
+                  <p className="text-base text-[#849585] mt-4">
                     Search and nominate a player to start
                   </p>
                 </div>
