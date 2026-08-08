@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.1...v1.24.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* :sparkles: add GavelIcon component and integrate it into AuctioneerContent; update AuctioneerSkeleton for improved layout ([5f8053d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/5f8053d868638280696706b21ff368b328ac943c))
+
 ## [1.24.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.0...v1.24.1) (2026-08-08)
 
 
