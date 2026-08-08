@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.1...v1.25.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* **supabase:** implement guard against stale-client bidding races ([0f717b4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0f717b4f3635ea91f0c2c09b33eadb5d6d288e4a))
+
 ## [1.25.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.0...v1.25.1) (2026-08-08)
 
 
