@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.25.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.3...v1.25.0) (2026-08-08)
+
+
+### Features
+
+* enhance chat functionality with unread message tracking and incoming message handling ([7575085](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7575085cf262e8d0bc3058b0b3a5cdb68264e64f))
+
 ## [1.24.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.2...v1.24.3) (2026-08-08)
 
 
