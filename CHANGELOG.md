@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.0...v1.25.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **chat:** enhance chat input and message list functionality ([0e377bd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0e377bdf11c843fdbdd6d335c0fa629a1323a653))
+
 # [1.25.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.3...v1.25.0) (2026-08-08)
 
 ### Features
