@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
-import { useChat } from "@/hooks/use-chat";
+import { useChat, type ChatMessage } from "@/hooks/use-chat";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatInput } from "./chat-input";
 
@@ -19,8 +19,40 @@ export function ChatDrawer({
   participantId: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const openRef = useRef(false);
+  const sentIdsRef = useRef<Set<number>>(new Set());
+  const pendingRef = useRef<Array<{ user_id: string; message: string }>>([]);
   const scrollPosRef = useRef<number | null>(null);
-  const { messages, loading, sendMessage } = useChat(leagueId);
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  // Count incoming messages that are new to this view while the drawer is
+  // closed. Messages sent from this drawer instance are excluded: realtime
+  // echoes carry a message id recorded after insert, and a pending-send match
+  // covers the window where the echo arrives before the insert resolves.
+  const handleIncoming = useCallback((message: ChatMessage) => {
+    const pendingIdx = pendingRef.current.findIndex(
+      (m) => m.user_id === message.user_id && m.message === message.message,
+    );
+    if (pendingIdx !== -1) {
+      pendingRef.current.splice(pendingIdx, 1);
+      return;
+    }
+    if (sentIdsRef.current.has(message.id)) return;
+    if (openRef.current) return;
+    setUnread((u) => u + 1);
+  }, []);
+
+  const { messages, loading, sendMessage } = useChat(leagueId, handleIncoming);
+
+  // Opening the drawer marks everything as read.
+  const toggleOpen = () => {
+    if (!open) setUnread(0);
+    setOpen(!open);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3">
@@ -63,7 +95,21 @@ export function ChatDrawer({
               />
                 <ChatInput
                   onSend={(msg) => {
-                    void sendMessage(msg, userId, userName, participantId);
+                    pendingRef.current.push({ user_id: userId, message: msg });
+                    void sendMessage(msg, userId, userName, participantId)
+                      .then((id) => {
+                        const idx = pendingRef.current.findIndex(
+                          (m) => m.message === msg,
+                        );
+                        if (idx !== -1) pendingRef.current.splice(idx, 1);
+                        if (id !== null) sentIdsRef.current.add(id);
+                      })
+                      .catch(() => {
+                        const idx = pendingRef.current.findIndex(
+                          (m) => m.message === msg,
+                        );
+                        if (idx !== -1) pendingRef.current.splice(idx, 1);
+                      });
                   }}
                   disabled={false}
                 />
@@ -73,14 +119,28 @@ export function ChatDrawer({
         )}
       </AnimatePresence>
       <button
-        onClick={() => setOpen(!open)}
-        className="rounded-full p-3.5 bg-[#00e478] text-[#003919] shadow-lg hover:bg-[#00b858] transition-colors"
+        onClick={toggleOpen}
+        className="relative rounded-full p-3.5 bg-[#00e478] text-[#003919] shadow-lg hover:bg-[#00b858] transition-colors"
       >
         {open ? (
           <X className="h-5 w-5" />
         ) : (
           <MessageSquare className="h-5 w-5" />
         )}
+        <AnimatePresence>
+          {!open && unread > 0 && (
+            <motion.span
+              key="unread-badge"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-[#061423]"
+            >
+              {unread > 99 ? "99+" : unread}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </button>
     </div>
   );

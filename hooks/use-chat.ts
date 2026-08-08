@@ -14,7 +14,10 @@ export interface ChatMessage {
   created_at: string;
 }
 
-export function useChat(leagueId: string) {
+export function useChat(
+  leagueId: string,
+  onIncoming?: (message: ChatMessage) => void,
+) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createSupabaseBrowserClient();
@@ -46,7 +49,9 @@ export function useChat(leagueId: string) {
           filter: `league_id=eq.${leagueId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as ChatMessage]);
+          const message = payload.new as ChatMessage;
+          setMessages((prev) => [...prev, message]);
+          onIncoming?.(message);
         },
       )
       .subscribe();
@@ -54,7 +59,7 @@ export function useChat(leagueId: string) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [leagueId, supabase]);
+  }, [leagueId, supabase, onIncoming]);
 
   const sendMessage = useCallback(
     async (
@@ -62,15 +67,20 @@ export function useChat(leagueId: string) {
       userId: string,
       userName: string,
       participantId: string | null,
-    ) => {
-      const { error } = await supabase.from("chat_messages").insert({
-        league_id: leagueId,
-        user_id: userId,
-        user_name: userName,
-        participant_id: participantId,
-        message,
-      });
+    ): Promise<number | null> => {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .insert({
+          league_id: leagueId,
+          user_id: userId,
+          user_name: userName,
+          participant_id: participantId,
+          message,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      return data?.id ?? null;
     },
     [leagueId, supabase],
   );
