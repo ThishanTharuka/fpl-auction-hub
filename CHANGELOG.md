@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.23.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.1...v1.23.2) (2026-08-08)
+
+
+### Bug Fixes
+
+* :bug: fix package lock ([9a1e073](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9a1e0731904f4dfecfcbdddd90c19570e8e34dc9))
+* :sparkles: implement HeroCta component for user authentication actions ([9e049e4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9e049e483bf742a0afc003391d0e8d4c97e462fa))
+
 ## [1.23.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.0...v1.23.1) (2026-08-04)
 
 
