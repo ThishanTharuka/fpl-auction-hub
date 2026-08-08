@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.2...v1.24.3) (2026-08-08)
+
+
+### Bug Fixes
+
+* :sparkles: implement bid monotonicity and duplicate bid guards in database triggers to prevent stale-client bidding issues ([ffba5b0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/ffba5b069d84fe2c48f2001cbd66944d39fe17fc))
+
 ## [1.24.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.1...v1.24.2) (2026-08-08)
 
 
