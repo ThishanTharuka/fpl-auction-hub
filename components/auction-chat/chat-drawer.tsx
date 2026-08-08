@@ -4,7 +4,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, X } from "lucide-react";
 import { useChat, type ChatMessage } from "@/hooks/use-chat";
-import { ChatMessageList } from "./chat-message-list";
+import {
+  ChatMessageList,
+  type ChatParticipant,
+} from "./chat-message-list";
 import { ChatInput } from "./chat-input";
 
 export function ChatDrawer({
@@ -12,11 +15,13 @@ export function ChatDrawer({
   userId,
   userName,
   participantId,
+  participants = [],
 }: {
   leagueId: string;
   userId: string;
   userName: string;
   participantId: string | null;
+  participants?: ChatParticipant[];
 }) {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -24,10 +29,30 @@ export function ChatDrawer({
   const sentIdsRef = useRef<Set<number>>(new Set());
   const pendingRef = useRef<Array<{ user_id: string; message: string }>>([]);
   const scrollPosRef = useRef<number | null>(null);
+  const baseTitleRef = useRef<string | null>(null);
 
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  // Capture the page's real title once so the unread count can be shown in the
+  // tab and restored afterwards.
+  useEffect(() => {
+    if (baseTitleRef.current === null) baseTitleRef.current = document.title;
+  }, []);
+
+  useEffect(() => {
+    const base = baseTitleRef.current;
+    if (base === null) return;
+    if (!open && unread > 0) {
+      document.title = `(${unread}) ${base}`;
+    } else {
+      document.title = base;
+    }
+    return () => {
+      document.title = base;
+    };
+  }, [open, unread]);
 
   // Count incoming messages that are new to this view while the drawer is
   // closed. Messages sent from this drawer instance are excluded: realtime
@@ -46,7 +71,8 @@ export function ChatDrawer({
     setUnread((u) => u + 1);
   }, []);
 
-  const { messages, loading, sendMessage } = useChat(leagueId, handleIncoming);
+  const { messages, loading, loadingOlder, hasMore, sendMessage, loadOlder } =
+    useChat(leagueId, handleIncoming, { enabled: open });
 
   // Opening the drawer marks everything as read.
   const toggleOpen = () => {
@@ -92,8 +118,13 @@ export function ChatDrawer({
                 messages={messages}
                 currentUserId={userId}
                 scrollPosRef={scrollPosRef}
+                hasMore={hasMore}
+                loadingOlder={loadingOlder}
+                onLoadOlder={loadOlder}
+                participants={participants}
               />
                 <ChatInput
+                  autoFocus
                   onSend={(msg) => {
                     pendingRef.current.push({ user_id: userId, message: msg });
                     void sendMessage(msg, userId, userName, participantId)

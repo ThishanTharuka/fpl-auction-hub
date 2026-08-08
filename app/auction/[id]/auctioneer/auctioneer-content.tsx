@@ -678,6 +678,7 @@ export function AuctioneerContent({
                     userId={user.id}
                     userName={`Auctioneer - ${user.user_metadata?.display_name ?? user.user_metadata?.["full_name"] ?? user.email ?? "Unknown"}`}
                     participantId={null}
+                    participants={teams}
                   />
                 ) : null}
               </div>
