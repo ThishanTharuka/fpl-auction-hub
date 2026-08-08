@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.0...v1.24.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* :sparkles: add BorderGlow component for enhanced visual effects in BentoGrid ([695ebf4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/695ebf4fea89545aa1a15ceb25593f1db2adf887))
+
 # [1.24.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.2...v1.24.0) (2026-08-08)
 
 
