@@ -838,6 +838,7 @@ export function BidContent({
           : "Unknown"
       }
       participantId={myTeam?.id ?? null}
+      allParticipants={allParticipants}
       onBid={() => placeBid().catch(() => {})}
       allTeams={allTeams}
       expandedTeamId={expandedTeamId}
@@ -919,6 +920,7 @@ type BidUIProps = Readonly<{
   userId: string;
   userName: string;
   participantId: string | null;
+  allParticipants: Participant[];
 }>;
 
 function BidUI({
@@ -959,6 +961,7 @@ function BidUI({
   userId,
   userName,
   participantId,
+  allParticipants,
 }: BidUIProps) {
   let timerDisplayValue: number | string = "\u2014";
   if (nomination) {
@@ -1002,6 +1005,7 @@ function BidUI({
                 userId={userId}
                 userName={userName}
                 participantId={participantId}
+                participants={allParticipants}
               />
               <div className="text-right">
                 <div className="text-2xl font-mono font-bold text-[#00e478]">

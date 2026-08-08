@@ -2,13 +2,11 @@
 
 # [1.25.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.3...v1.25.0) (2026-08-08)
 
-
 ### Features
 
 * enhance chat functionality with unread message tracking and incoming message handling ([7575085](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7575085cf262e8d0bc3058b0b3a5cdb68264e64f))
 
 ## [1.24.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.2...v1.24.3) (2026-08-08)
-
 
 ### Bug Fixes
 
@@ -16,13 +14,11 @@
 
 ## [1.24.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.1...v1.24.2) (2026-08-08)
 
-
 ### Bug Fixes
 
 * :sparkles: add GavelIcon component and integrate it into AuctioneerContent; update AuctioneerSkeleton for improved layout ([5f8053d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/5f8053d868638280696706b21ff368b328ac943c))
 
 ## [1.24.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.24.0...v1.24.1) (2026-08-08)
-
 
 ### Bug Fixes
 
@@ -30,13 +26,11 @@
 
 # [1.24.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.2...v1.24.0) (2026-08-08)
 
-
 ### Features
 
 * :sparkles: refactor Home component and replace HeroCta with conditional links; add Aurora component for background effects ([107f1e4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/107f1e47fabe12b3f4ec5594688fbae246cc9313))
 
 ## [1.23.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.1...v1.23.2) (2026-08-08)
-
 
 ### Bug Fixes
 
@@ -45,18 +39,15 @@
 
 ## [1.23.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.23.0...v1.23.1) (2026-08-04)
 
-
 ### Bug Fixes
 
 * :sparkles: optimize data fetching by selecting specific fields in auction and bid components ([50d2abc](https://github.com/ThishanTharuka/fpl-auction-hub/commit/50d2abcbccdb01eb52cf1b824001fd9f4b0c922e))
 
 # [1.23.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.3...v1.23.0) (2026-08-04)
 
-
 ### Bug Fixes
 
 * remove unnecessary peer dependencies from package-lock.json ([bfde4e6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/bfde4e64a0027e8a37afeba0ae116fe4da0407ee))
-
 
 ### Features
 
@@ -64,13 +55,11 @@
 
 ## [1.22.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.2...v1.22.3) (2026-07-30)
 
-
 ### Bug Fixes
 
 * add metadata for auction pages and layouts ([50da32b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/50da32bceefa77614465f4b938ade9ae44204cc4))
 
 ## [1.22.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.1...v1.22.2) (2026-07-30)
-
 
 ### Bug Fixes
 
@@ -78,19 +67,16 @@
 
 ## [1.22.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.22.0...v1.22.1) (2026-07-30)
 
-
 ### Bug Fixes
 
 * add metadata for Players page with title and description ([aef9499](https://github.com/ThishanTharuka/fpl-auction-hub/commit/aef9499bc3eb110518498555af4b7d0538512bae))
 
 # [1.22.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.2...v1.22.0) (2026-07-30)
 
-
 ### Bug Fixes
 
 * add missing ignore pattern for .agents directory in ESLint configuration ([089d99b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/089d99b8eac8e10bd755ca79243b120cb2ab0d8a))
 * remove unnecessary 'f' flag from curl commands in CI and Discord workflows ([0e070b4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0e070b4555640c6e67e51e270b589fc70d913f09))
-
 
 ### Features
 
@@ -98,13 +84,11 @@
 
 ## [1.21.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.1...v1.21.2) (2026-07-27)
 
-
 ### Bug Fixes
 
 * :bug: Change input type to "search" and update name and id attributes in ChatInput component for better accessibility ([7402b15](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7402b15a36a77ed1d2c6c92d7329d7c296031df9))
 
 ## [1.21.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.21.0...v1.21.1) (2026-07-27)
-
 
 ### Bug Fixes
 
@@ -112,18 +96,15 @@
 
 # [1.21.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.20.0...v1.21.0) (2026-07-27)
 
-
 ### Features
 
 * :sparkles: Implement chat functionality with ChatDrawer, ChatInput, and ChatMessageList components; add chat_messages table to database ([2473f07](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2473f07e8fc4e98f30650807eacf5cfafaf57f9c))
 
 # [1.20.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.1...v1.20.0) (2026-07-27)
 
-
 ### Bug Fixes
 
 * :bug: Update TooltipTrigger component to use render prop for improved functionality ([38b1ab6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/38b1ab63638d274c5ca6965182ad4598e10b6e32))
-
 
 ### Features
 
@@ -132,13 +113,11 @@
 
 ## [1.19.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.19.0...v1.19.1) (2026-07-27)
 
-
 ### Bug Fixes
 
 * :bug: Update motion library import from "motion/react" to "framer-motion" ([8a77be8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8a77be8adf84db8ba3536f81c8cd2a373ada559f))
 
 # [1.19.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.3...v1.19.0) (2026-07-26)
-
 
 ### Features
 
@@ -146,13 +125,11 @@
 
 ## [1.18.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.2...v1.18.3) (2026-07-26)
 
-
 ### Bug Fixes
 
 * :sparkles: Add bid history and sold players display in BidContent component ([dd4f58b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/dd4f58b0825f897287e44e25d8b902621c546944))
 
 ## [1.18.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.1...v1.18.2) (2026-07-25)
-
 
 ### Bug Fixes
 
@@ -160,13 +137,11 @@
 
 ## [1.18.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.18.0...v1.18.1) (2026-07-25)
 
-
 ### Bug Fixes
 
 * :bug: add row-level security policy for participants update and include auction results in realtime ([01bb54a](https://github.com/ThishanTharuka/fpl-auction-hub/commit/01bb54ac6f8836b6312e3d66e973b112fe841880))
 
 # [1.18.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.17.0...v1.18.0) (2026-07-25)
-
 
 ### Features
 
@@ -174,18 +149,15 @@
 
 # [1.17.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.16.0...v1.17.0) (2026-07-25)
 
-
 ### Features
 
 * :sparkles: update foreign key constraints for auction tables and add leagues to realtime ([dfc25d3](https://github.com/ThishanTharuka/fpl-auction-hub/commit/dfc25d39fef563b5522ad4b9e637cb4b88d3d3fb))
 
 # [1.16.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.15.1...v1.16.0) (2026-07-25)
 
-
 ### Bug Fixes
 
 * :sparkles: fix team claim deletion for rejected members and update UI layout ([cbacebc](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cbacebca62746e2c7c479a5a8662065eb85cc545))
-
 
 ### Features
 
@@ -194,13 +166,11 @@
 
 ## [1.15.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.15.0...v1.15.1) (2026-07-25)
 
-
 ### Bug Fixes
 
 * :bug: add cascading foreign key constraints ([8d6a974](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8d6a9749eb3eb83e0509539c92986d946f1be9f2))
 
 # [1.15.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.14.0...v1.15.0) (2026-07-25)
-
 
 ### Features
 
@@ -208,13 +178,11 @@
 
 # [1.14.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.2...v1.14.0) (2026-07-24)
 
-
 ### Bug Fixes
 
 * add tournament management features including tables, RLS policies, and RPCs ([9a74a65](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9a74a652673c382de98bc6746843acde6fecaa7b))
 * update auction start instructions to allow starting at any time ([84fbd2f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/84fbd2f1471a6fafb98f6054be1a58293b5c3387))
 * update Supabase configuration and add .gitignore for local development ([2a1ef3f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2a1ef3fab6a64a47593793f5887841a5952199f6))
-
 
 ### Features
 
@@ -224,7 +192,6 @@
 
 ## [1.13.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.1...v1.13.2) (2026-06-13)
 
-
 ### Bug Fixes
 
 * simplify auction start condition and update related message ([a980eab](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a980eab44622e1f83b49d403ed36c33b88361ac0))
@@ -232,20 +199,17 @@
 
 ## [1.13.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.13.0...v1.13.1) (2026-06-13)
 
-
 ### Bug Fixes
 
 * prevent rendering Nav component for unauthenticated users on home page ([6b334bd](https://github.com/ThishanTharuka/fpl-auction-hub/commit/6b334bdd67233aa65955a404238c6481634a812e))
 
 # [1.13.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.1...v1.13.0) (2026-06-13)
 
-
 ### Bug Fixes
 
 * add visual representation to BentoItem and render in BentoGrid ([c1e9ceb](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c1e9cebde2347e697975da2223783b33ccfc398b))
 * adjust layout styles for LoginForm component ([c80e817](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c80e8179fda0b9c2955f2378de263c97d3036fe5))
 * update initial mode handling in LoginForm and enhance Home component layout ([2c1399f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2c1399fd4edc7caa5c817fd06bfb3077af72bab9))
-
 
 ### Features
 
@@ -254,19 +218,16 @@
 
 ## [1.12.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.12.0...v1.12.1) (2026-06-12)
 
-
 ### Bug Fixes
 
 * add delete_user function to remove user from auth.users ([25a8f14](https://github.com/ThishanTharuka/fpl-auction-hub/commit/25a8f14035e77c03f0ec15815ab3ae0b24e7dbb6))
 
 # [1.12.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.11.0...v1.12.0) (2026-06-12)
 
-
 ### Bug Fixes
 
 * improve error handling for account deletion API and validate request origin ([cba128c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/cba128c53deddaa94f42d8edbfda0f047027f577))
 * update main layout class for LoginForm to ensure proper height and overflow handling ([7914596](https://github.com/ThishanTharuka/fpl-auction-hub/commit/79145968e6f58ec4b82bcd5c8a92739b473a1271))
-
 
 ### Features
 
@@ -274,11 +235,9 @@
 
 # [1.11.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.10...v1.11.0) (2026-06-12)
 
-
 ### Bug Fixes
 
 * remove unused POSITION_STAT object from players table ([bf4b31d](https://github.com/ThishanTharuka/fpl-auction-hub/commit/bf4b31d450f150d1eac722bd036b4315cc22e598))
-
 
 ### Features
 
@@ -292,13 +251,11 @@
 
 ## [1.10.10](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.9...v1.10.10) (2026-06-09)
 
-
 ### Bug Fixes
 
 * adjust layout and spacing in PlayersTable component ([4450584](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4450584f26c4400df87885e85e1bc43b892f7373))
 
 ## [1.10.9](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.8...v1.10.9) (2026-06-08)
-
 
 ### Bug Fixes
 
@@ -306,13 +263,11 @@
 
 ## [1.10.8](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.7...v1.10.8) (2026-06-08)
 
-
 ### Bug Fixes
 
 * update release message format to include [skip ci] tag ([7e82487](https://github.com/ThishanTharuka/fpl-auction-hub/commit/7e824873ab955c6de7da338e73bd5bbf94c9ec59))
 
 ## [1.10.7](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.6...v1.10.7) (2026-06-08)
-
 
 ### Bug Fixes
 
@@ -320,13 +275,11 @@
 
 ## [1.10.6](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.5...v1.10.6) (2026-06-08)
 
-
 ### Bug Fixes
 
 * simplify version retrieval in footer component ([602cfe0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/602cfe066c0fbefee33c40edfff62560d4a87df9))
 
 ## [1.10.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.4...v1.10.5) (2026-06-08)
-
 
 ### Bug Fixes
 
@@ -334,13 +287,11 @@
 
 ## [1.10.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.3...v1.10.4) (2026-06-08)
 
-
 ### Bug Fixes
 
 * add Vercel deployment trigger to release workflow ([9a7cb57](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9a7cb57169773112f6903eac9d2f595899791218))
 
 ## [1.10.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.2...v1.10.3) (2026-06-08)
-
 
 ### Bug Fixes
 
@@ -348,13 +299,11 @@
 
 ## [1.10.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.1...v1.10.2) (2026-06-08)
 
-
 ### Bug Fixes
 
 * enhance bid functionality with initial team data and improved loading states ([f5a73f8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f5a73f8cf3f0883de4ae7d2b5f4d8310d982bb8d))
 
 ## [1.10.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.10.0...v1.10.1) (2026-06-08)
-
 
 ### Bug Fixes
 
@@ -362,11 +311,9 @@
 
 # [1.10.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.9.0...v1.10.0) (2026-06-08)
 
-
 ### Bug Fixes
 
 * add opencode configuration for MCP servers ([3008282](https://github.com/ThishanTharuka/fpl-auction-hub/commit/30082826f9a8a92795608efbb83c0349254e0d3e))
-
 
 ### Features
 
@@ -375,20 +322,17 @@
 
 # [1.9.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.8.0...v1.9.0) (2026-06-07)
 
-
 ### Features
 
 * implement auction lobby with real-time updates and loading states ([b3b735c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b3b735c63d52e9b49a689855954e465ee81a4f60))
 
 # [1.8.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.6...v1.8.0) (2026-06-06)
 
-
 ### Bug Fixes
 
 * add buffer_per_player column to leagues and create revert migration ([c6082fb](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c6082fbbfaac9354417acfb16b7052088e235952))
 * enhance toast notifications for auction status updates and improve code formatting ([4503dae](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4503dae2be9617bc6f524b92595570056174bebb))
 * improve layout and accessibility of bid UI and player stats bar ([030c48f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/030c48fc1750078b2c0f194be165e6f3eca57938))
-
 
 ### Features
 
@@ -397,20 +341,17 @@
 
 ## [1.7.6](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.5...v1.7.6) (2026-06-05)
 
-
 ### Bug Fixes
 
 * add CI/CD pipeline and Vercel deployment checks to README ([e16dd98](https://github.com/ThishanTharuka/fpl-auction-hub/commit/e16dd9881a23e50055064308e397d3d3390a85a9))
 
 ## [1.7.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.4...v1.7.5) (2026-06-05)
 
-
 ### Bug Fixes
 
 * remove Vercel notifications from verification steps in release workflow ([327a600](https://github.com/ThishanTharuka/fpl-auction-hub/commit/327a6006ec134ac7d32f71d13c7cbc39772e134a))
 
 ## [1.7.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.3...v1.7.4) (2026-06-05)
-
 
 ### Bug Fixes
 
@@ -419,13 +360,11 @@
 
 ## [1.7.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.2...v1.7.3) (2026-06-05)
 
-
 ### Bug Fixes
 
 * reorder jobs in release workflow to ensure verification steps run before release ([b83ae5c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b83ae5ce2e7fde9668ead17c9d18999682a2cf93))
 
 ## [1.7.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.1...v1.7.2) (2026-06-05)
-
 
 ### Bug Fixes
 
@@ -435,18 +374,15 @@
 
 ## [1.7.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.7.0...v1.7.1) (2026-06-05)
 
-
 ### Bug Fixes
 
 * add database migrations for auction system including leagues, participants, auction results, and team formations ([203f371](https://github.com/ThishanTharuka/fpl-auction-hub/commit/203f371d369a7dbda8bc71da4c45bcfeaf906d97))
 
 # [1.7.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.1...v1.7.0) (2026-06-04)
 
-
 ### Bug Fixes
 
 * correctly manage loading state in AuthProvider ([840ba33](https://github.com/ThishanTharuka/fpl-auction-hub/commit/840ba33f4773106b692dcfa7ba5ca19c3c24d509))
-
 
 ### Features
 
@@ -454,20 +390,17 @@
 
 ## [1.6.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.6.0...v1.6.1) (2026-06-04)
 
-
 ### Bug Fixes
 
 * add skeleton loading states and suspense for players, teams, and index builder pages ([765daa6](https://github.com/ThishanTharuka/fpl-auction-hub/commit/765daa6949b43fc23a18b46a3c05c684fbd7755c))
 
 # [1.6.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.5.0...v1.6.0) (2026-06-04)
 
-
 ### Features
 
 * implement caching mechanism for FPL data using Supabase ([33d3f2b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/33d3f2bdf66edf33ef11d3cba7a56d48e59fe4ac))
 
 # [1.5.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.4.0...v1.5.0) (2026-06-04)
-
 
 ### Bug Fixes
 
@@ -476,7 +409,6 @@
 * sync package-lock.json ([0d1b9f2](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0d1b9f28b464f943af47be4edd9fe83a392a1125))
 * update image formats to WebP and adjust API fetch caching ([43d14c8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/43d14c886b6d98f470dafdbea8db408d636d5c69))
 * update main element styling for login form layout ([0ec0be3](https://github.com/ThishanTharuka/fpl-auction-hub/commit/0ec0be3d150c7de9c9d1575c7c3d8c63cb79e147))
-
 
 ### Features
 
@@ -489,18 +421,15 @@
 
 # [1.4.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.2...v1.4.0) (2026-06-03)
 
-
 ### Bug Fixes
 
 * adjust timer input range and improve player nomination UI ([aef5eb8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/aef5eb8d963ddc7a570acf3724b07ba06a0bb704))
-
 
 ### Features
 
 * update login page background and navigation logo ([f4e9d56](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f4e9d56d810819abf3c2aae5b100dca0f7bf3032))
 
 ## [1.3.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.3.1...v1.3.2) (2026-06-03)
-
 
 ### Bug Fixes
 
