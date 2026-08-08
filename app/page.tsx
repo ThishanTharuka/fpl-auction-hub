@@ -1,6 +1,9 @@
-import { BackgroundPaths } from "@/components/ui/background-paths";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import Aurora from "@/components/ui/aurora";
 import { BentoGrid, type BentoItem } from "@/components/ui/bento-grid";
-import { HeroCta } from "@/components/hero-cta";
+import { cn } from "@/lib/utils";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import {
   BarChart3,
   Gavel,
@@ -311,11 +314,24 @@ const bentoItems: BentoItem[] = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+
   return (
     <div className="flex flex-col items-center">
-      <section className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden px-4 text-center">
-        <BackgroundPaths />
+      <section className="relative isolate flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden px-4 text-center">
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <Aurora
+            colorStops={["#00e478", "#B497CF", "#5227FF"]}
+            blend={0.5}
+            amplitude={1.0}
+            speed={0.5}
+          />
+        </div>
         <div className="relative z-10 flex flex-col items-center">
           <p className="mb-6 text-xs font-semibold tracking-[0.2em] text-muted-foreground">
             AUCTION PLATFORM
@@ -327,7 +343,39 @@ export default function Home() {
             Create custom fantasy auction leagues with your own budget and
             rules. Host live drafts with your friends.
           </p>
-          <HeroCta />
+          <div className="flex gap-3">
+            {user ? (
+              <>
+                <Link
+                  href="/auction"
+                  className={cn(buttonVariants({ size: "lg" }))}
+                >
+                  Go to Auctions
+                </Link>
+                <Link
+                  href="/players"
+                  className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+                >
+                  Players
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login?mode=sign_up"
+                  className={cn(buttonVariants({ size: "lg" }))}
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/login"
+                  className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </section>
 
