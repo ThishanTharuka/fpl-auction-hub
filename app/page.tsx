@@ -1,8 +1,6 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { BentoGrid, type BentoItem } from "@/components/ui/bento-grid";
-import { cn } from "@/lib/utils";
+import { HeroCta } from "@/components/hero-cta";
 import {
   BarChart3,
   Gavel,
@@ -329,20 +327,7 @@ export default function Home() {
             Create custom fantasy auction leagues with your own budget and
             rules. Host live drafts with your friends.
           </p>
-          <div className="flex gap-3">
-            <Link
-              href="/login?mode=sign_up"
-              className={cn(buttonVariants({ size: "lg" }))}
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/login"
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-            >
-              Sign In
-            </Link>
-          </div>
+          <HeroCta />
         </div>
       </section>
 
