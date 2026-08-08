@@ -16,8 +16,8 @@ export function AuctioneerSkeleton() {
               ))}
             </div>
             <div className="h-8 w-full rounded bg-[#1e2b3b]" />
-            <div className="space-y-1 max-h-64">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between rounded bg-[#132030] px-3 py-1.5"
