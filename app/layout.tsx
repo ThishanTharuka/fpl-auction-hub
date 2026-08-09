@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
+import { PopoutHidden } from "@/components/popout-hidden";
 import { AuthProvider } from "@/components/auth-provider";
 import { NProgressProvider } from "@/components/nprogress-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,11 +30,19 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#061423] text-[#d6e4f9] font-sans">
         <AuthProvider>
           <NProgressProvider>
-            <TooltipProvider>
-              <Nav />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </TooltipProvider>
+          <TooltipProvider>
+            <Suspense>
+              <PopoutHidden>
+                <Nav />
+              </PopoutHidden>
+            </Suspense>
+            <main className="flex-1">{children}</main>
+            <Suspense>
+              <PopoutHidden>
+                <Footer />
+              </PopoutHidden>
+            </Suspense>
+          </TooltipProvider>
           </NProgressProvider>
         </AuthProvider>
         <Toaster position="top-right" />

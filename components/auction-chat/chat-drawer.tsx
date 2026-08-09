@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare, X, Maximize2 } from "lucide-react";
 import { useChat, type ChatMessage } from "@/hooks/use-chat";
+import { useChatReadListener } from "@/hooks/use-chat-read-sync";
 import {
   ChatMessageList,
   type ChatParticipant,
@@ -32,6 +33,7 @@ export function ChatDrawer({
   const pendingRef = useRef<Array<{ user_id: string; message: string }>>([]);
   const scrollPosRef = useRef<number | null>(null);
   const baseTitleRef = useRef<string | null>(null);
+  const latestReadIdRef = useRef(0);
 
   useEffect(() => {
     openRef.current = open;
@@ -56,6 +58,13 @@ export function ChatDrawer({
     };
   }, [open, unread]);
 
+  // Reading messages in a popout window broadcasts "read" so this drawer's
+  // unread badge and tab count clear across windows.
+  useChatReadListener(leagueId, (messageId) => {
+    setUnread(0);
+    latestReadIdRef.current = Math.max(latestReadIdRef.current, messageId);
+  });
+
   // Count incoming messages that are new to this view while the drawer is
   // closed. Messages sent from this drawer instance are excluded: realtime
   // echoes carry a message id recorded after insert, and a pending-send match
@@ -69,6 +78,7 @@ export function ChatDrawer({
       return;
     }
     if (sentIdsRef.current.has(message.id)) return;
+    if (message.id <= latestReadIdRef.current) return;
     if (openRef.current) return;
     setUnread((u) => u + 1);
   }, []);
@@ -152,30 +162,51 @@ export function ChatDrawer({
           </motion.div>
         )}
       </AnimatePresence>
-      <button
-        onClick={toggleOpen}
-        className="relative rounded-full p-3.5 bg-[#00e478] text-[#003919] shadow-lg hover:bg-[#00b858] transition-colors"
-      >
-        {open ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <MessageSquare className="h-5 w-5" />
-        )}
+      <div className="flex items-center gap-3">
         <AnimatePresence>
-          {!open && unread > 0 && (
-            <motion.span
-              key="unread-badge"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-[#061423]"
+          {open && (
+            <motion.button
+              key="popout-btn"
+              initial={{ opacity: 0, scale: 0.6, x: 56 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.6, x: 56 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              onClick={() =>
+                window.open(`/auction/${leagueId}/chat?popout=1`, "_blank")
+              }
+              className="rounded-full p-3 bg-[#132030] text-[#b9cbb9] border border-[#3b4b3d] shadow-lg hover:text-[#00e478] hover:bg-[#1e2b3b] transition-colors"
+              aria-label="Open chat in a new window"
+              title="Open chat in a new window"
             >
-              {unread > 99 ? "99+" : unread}
-            </motion.span>
+              <Maximize2 className="h-5 w-5" />
+            </motion.button>
           )}
         </AnimatePresence>
-      </button>
+        <button
+          onClick={toggleOpen}
+          className="relative rounded-full p-3.5 bg-[#00e478] text-[#003919] shadow-lg hover:bg-[#00b858] transition-colors"
+        >
+          {open ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <MessageSquare className="h-5 w-5" />
+          )}
+          <AnimatePresence>
+            {!open && unread > 0 && (
+              <motion.span
+                key="unread-badge"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-[#061423]"
+              >
+                {unread > 99 ? "99+" : unread}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
     </div>
   );
 }
