@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.26.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.2...v1.26.0) (2026-08-09)
+
+
+### Bug Fixes
+
+* **chat:** implement chat functionality with loading states and popout support ([9e37318](https://github.com/ThishanTharuka/fpl-auction-hub/commit/9e373183f6a3854cc24112922dbf4c1c8720d2d8))
+* **supabase:** update Supabase project reference URL in configuration ([32ba76e](https://github.com/ThishanTharuka/fpl-auction-hub/commit/32ba76e02754e5f7bb612875e13650162d19b51a))
+
+
+### Features
+
+* **chat:** add spectator chat functionality and related settings ([47b2f57](https://github.com/ThishanTharuka/fpl-auction-hub/commit/47b2f575874f2f30bf1b2923a55d557bdd42e150))
+
 ## [1.25.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.1...v1.25.2) (2026-08-08)
 
 
