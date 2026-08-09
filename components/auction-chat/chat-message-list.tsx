@@ -137,6 +137,7 @@ export function ChatMessageList({
   loadingOlder,
   onLoadOlder,
   participants = [],
+  auctioneerId = null,
 }: {
   messages: ChatMessage[];
   currentUserId: string;
@@ -145,6 +146,7 @@ export function ChatMessageList({
   loadingOlder: boolean;
   onLoadOlder: () => void;
   participants?: ChatParticipant[];
+  auctioneerId?: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevLenRef = useRef(messages.length);
@@ -325,9 +327,10 @@ export function ChatMessageList({
                       className="text-[12px] font-semibold flex items-center gap-1"
                       style={{ color: group.color }}
                     >
-                      {group.participantId === null && (
-                        <Crown className="h-3 w-3 text-yellow-400" />
-                      )}
+                      {group.participantId === null &&
+                        group.userId === auctioneerId && (
+                          <Crown className="h-3 w-3 text-yellow-400" />
+                        )}
                       {group.userName}
                     </span>
                     {group.items.map((msg) => (

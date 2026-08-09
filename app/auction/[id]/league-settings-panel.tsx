@@ -17,6 +17,7 @@ const POSITION_COLORS: Record<string, string> = {
 
 interface LeagueSettings {
   name: string;
+  allow_spectator_chat: boolean;
   room_password: string | null;
   budget_per_team: number;
   timer_seconds: number;
@@ -55,6 +56,7 @@ export function LeagueSettingsPanel({
   const prevSettings = useRef(settings);
 
   const [name, setName] = useState(settings.name);
+  const [allowSpectatorChat, setAllowSpectatorChat] = useState(settings.allow_spectator_chat);
   const [roomPassword, setRoomPassword] = useState(settings.room_password ?? "");
 
   const [budget, setBudget] = useState(settings.budget_per_team);
@@ -79,6 +81,7 @@ export function LeagueSettingsPanel({
 
   const resetForm = useCallback(function resetForm() {
     setName(settings.name);
+    setAllowSpectatorChat(settings.allow_spectator_chat);
     setRoomPassword(settings.room_password ?? "");
     setBudget(settings.budget_per_team);
     setTimerSeconds(settings.timer_seconds);
@@ -122,6 +125,7 @@ export function LeagueSettingsPanel({
       .from("leagues")
       .update({
         name: name.trim(),
+        allow_spectator_chat: allowSpectatorChat,
         room_password: roomPassword.trim() || null,
         budget_per_team: budget,
         timer_seconds: timerSeconds,
@@ -148,6 +152,7 @@ export function LeagueSettingsPanel({
 
     onSaved({
       name: name.trim(),
+      allow_spectator_chat: allowSpectatorChat,
       room_password: roomPassword.trim() || null,
       budget_per_team: budget,
       timer_seconds: timerSeconds,
@@ -190,6 +195,17 @@ export function LeagueSettingsPanel({
               className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
             />
           </Field>
+          <label className="flex items-start gap-3 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={allowSpectatorChat}
+              onChange={(e) => setAllowSpectatorChat(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-[#3b4b3d] bg-[#132030] accent-[#00e478]"
+            />
+            <span className="text-xs text-[#d6e4f9] leading-snug">
+              Allow spectators to chat
+            </span>
+          </label>
         </div>
       </div>
 

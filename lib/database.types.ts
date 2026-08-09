@@ -257,6 +257,7 @@ export type Database = {
       }
       leagues: {
         Row: {
+          allow_spectator_chat: boolean
           base_price_def: number | null
           base_price_fwd: number | null
           base_price_gkp: number | null
@@ -279,6 +280,7 @@ export type Database = {
           timer_seconds: number | null
         }
         Insert: {
+          allow_spectator_chat?: boolean
           base_price_def?: number | null
           base_price_fwd?: number | null
           base_price_gkp?: number | null
@@ -301,6 +303,7 @@ export type Database = {
           timer_seconds?: number | null
         }
         Update: {
+          allow_spectator_chat?: boolean
           base_price_def?: number | null
           base_price_fwd?: number | null
           base_price_gkp?: number | null

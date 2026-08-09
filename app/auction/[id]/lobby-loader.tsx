@@ -36,6 +36,7 @@ export async function LobbyLoader({
 export type LobbyLeague = {
   id: string;
   name: string;
+  allow_spectator_chat: boolean;
   budget_per_team: number;
   timer_seconds: number;
   bid_increment: number;

@@ -1006,6 +1006,7 @@ function BidUI({
                 userName={userName}
                 participantId={participantId}
                 participants={allParticipants}
+                auctioneerId={league.created_by}
               />
               <div className="text-right">
                 <div className="text-2xl font-mono font-bold text-[#00e478]">
