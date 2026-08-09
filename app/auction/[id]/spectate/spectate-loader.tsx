@@ -9,6 +9,7 @@ export type SpectateLeague = {
   status: string | null;
   budget_per_team: number;
   created_by: string | null;
+  allow_spectator_chat: boolean;
 };
 
 export type SpectateParticipant = {
@@ -79,7 +80,7 @@ export async function SpectateLoader({
     await Promise.all([
       supabase
         .from("leagues")
-        .select("id,name,status,budget_per_team,created_by")
+        .select("id,name,status,budget_per_team,created_by,allow_spectator_chat")
         .eq("id", id)
         .single(),
       supabase

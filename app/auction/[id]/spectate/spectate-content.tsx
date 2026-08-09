@@ -11,6 +11,7 @@ import gavelHitAnimation from "@/public/animations/gavel-hit.json";
 import { Badge } from "@/components/ui/badge";
 import Counter from "@/components/counter";
 import { TeamAvatar } from "@/components/team-avatar";
+import { ChatDrawer } from "@/components/auction-chat/chat-drawer";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useServerClock } from "@/lib/use-server-clock";
 import { buildStats, metricTone } from "@/components/player-stats-bar";
@@ -118,8 +119,27 @@ export function SpectateContent({
   const [results, setResults] = useState<SpectateResult[]>(initialResults);
   const [recentBids, setRecentBids] = useState<SpectateBid[]>([]);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+  const [spectator, setSpectator] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Identify the logged-in spectator so the chat can show their messages under
+  // a "Viewer" label and let them post (RLS gated by allow_spectator_chat).
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta = u.user_metadata as Record<string, unknown> | undefined;
+      setSpectator({
+        id: u.id,
+        name:
+          `Viewer - ${meta?.display_name ?? meta?.["full_name"] ?? u.email ?? "Unknown"}`,
+      });
+    });
+  }, [supabase]);
 
   const fplMap = useMemo(
     () => new Map(initialPlayers.map((p) => [p.id, p])),
@@ -680,6 +700,16 @@ export function SpectateContent({
           </aside>
         </div>
       </div>
+      {league.allow_spectator_chat && spectator && (
+        <ChatDrawer
+          leagueId={id}
+          userId={spectator.id}
+          userName={spectator.name}
+          participantId={null}
+          participants={initialParticipants}
+          auctioneerId={league.created_by}
+        />
+      )}
     </div>
   );
 }

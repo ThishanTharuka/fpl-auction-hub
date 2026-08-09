@@ -16,12 +16,14 @@ export function ChatDrawer({
   userName,
   participantId,
   participants = [],
+  auctioneerId = null,
 }: {
   leagueId: string;
   userId: string;
   userName: string;
   participantId: string | null;
   participants?: ChatParticipant[];
+  auctioneerId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -122,6 +124,7 @@ export function ChatDrawer({
                 loadingOlder={loadingOlder}
                 onLoadOlder={loadOlder}
                 participants={participants}
+                auctioneerId={auctioneerId}
               />
                 <ChatInput
                   autoFocus
