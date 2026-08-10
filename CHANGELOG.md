@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.0...v1.26.1) (2026-08-10)
+
+
+### Bug Fixes
+
+* **auction:** add is_bench field to auction results and update related logic ([98938f5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/98938f55abda7174a17cfac1b5618238361c9c2c))
+
 # [1.26.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.25.2...v1.26.0) (2026-08-09)
 
 
