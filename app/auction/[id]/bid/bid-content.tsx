@@ -262,7 +262,8 @@ export function BidContent({
         .select(
           "fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team",
         )
-        .eq("league_id", id),
+        .eq("league_id", id)
+        .order("created_at", { ascending: true }),
     ]);
     if (psRes.data) setAllParticipants(psRes.data as Participant[]);
     if (rsRes.data) setAllResults(rsRes.data);

@@ -114,7 +114,7 @@ export async function BidLoader({
   // Fetch all participants + results for the team budget tracker
   const [participantsRes, allResultsRes] = await Promise.all([
     supabase.from("participants").select("id,name,color,avatar_url").eq("league_id", id).order("name"),
-    supabase.from("auction_results").select("fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team").eq("league_id", id),
+    supabase.from("auction_results").select("fpl_player_id,participant_id,price_paid,position_slot,player_name,player_team").eq("league_id", id).order("created_at", { ascending: true }),
   ]);
 
   const allParticipants = (participantsRes.data ?? []) as BidParticipant[];
