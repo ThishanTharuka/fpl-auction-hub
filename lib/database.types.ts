@@ -143,6 +143,7 @@ export type Database = {
           created_at: string | null
           fpl_player_id: number
           id: string
+          is_bench: boolean
           league_id: string | null
           participant_id: string | null
           player_name: string | null
@@ -154,6 +155,7 @@ export type Database = {
           created_at?: string | null
           fpl_player_id: number
           id?: string
+          is_bench?: boolean
           league_id?: string | null
           participant_id?: string | null
           player_name?: string | null
@@ -165,6 +167,7 @@ export type Database = {
           created_at?: string | null
           fpl_player_id?: number
           id?: string
+          is_bench?: boolean
           league_id?: string | null
           participant_id?: string | null
           player_name?: string | null
