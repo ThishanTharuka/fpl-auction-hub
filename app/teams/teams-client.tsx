@@ -67,12 +67,14 @@ interface AuctionResultRow {
   fpl_player_id: number;
   price_paid: number;
   position_slot: string | null;
+  is_bench: boolean;
   league_id: string | null;
 }
 
 interface SquadPlayer extends EnrichedPlayer {
   price_paid: number;
   position_slot: string;
+  is_bench: boolean;
   auction_result_id: string;
 }
 
@@ -196,7 +198,7 @@ export function TeamsClient({
           ids.length > 0
             ? supabase.from("team_formations").select("participant_id,formation").in("participant_id", ids)
             : { data: [] as TeamFormation[] },
-          supabase.from("auction_results").select("id,participant_id,fpl_player_id,price_paid,position_slot,league_id").eq("league_id", selectedLeague),
+          supabase.from("auction_results").select("id,participant_id,fpl_player_id,price_paid,position_slot,is_bench,league_id").eq("league_id", selectedLeague),
         ]);
         setParticipants(ps ?? []);
         setResults(rs.data ?? []);
@@ -231,7 +233,8 @@ export function TeamsClient({
         return [{
           ...p,
           price_paid: r.price_paid,
-          position_slot: r.position_slot ?? "BENCH",
+          position_slot: r.position_slot ?? p.position ?? "?",
+          is_bench: r.is_bench ?? false,
           auction_result_id: r.id,
         }];
       });
@@ -239,18 +242,20 @@ export function TeamsClient({
 
   const sortedSquad = useMemo(() => {
     const order = ["GKP", "DEF", "MID", "FWD", "BENCH"];
-    return [...squad].sort(
-      (a, b) => order.indexOf(a.position_slot) - order.indexOf(b.position_slot),
-    );
+    return [...squad].sort((a, b) => {
+      const ak = a.is_bench ? "BENCH" : a.position_slot;
+      const bk = b.is_bench ? "BENCH" : b.position_slot;
+      return order.indexOf(ak) - order.indexOf(bk);
+    });
   }, [squad]);
 
   const { starters, bench } = useMemo(() => {
     const slots = getFormationSlots(currentFormation);
-    const gkp = squad.filter((p) => p.position_slot === "GKP");
-    const def = squad.filter((p) => p.position_slot === "DEF");
-    const mid = squad.filter((p) => p.position_slot === "MID");
-    const fwd = squad.filter((p) => p.position_slot === "FWD");
-    const explicitBench = squad.filter((p) => p.position_slot === "BENCH");
+    const gkp = squad.filter((p) => p.position_slot === "GKP" && !p.is_bench);
+    const def = squad.filter((p) => p.position_slot === "DEF" && !p.is_bench);
+    const mid = squad.filter((p) => p.position_slot === "MID" && !p.is_bench);
+    const fwd = squad.filter((p) => p.position_slot === "FWD" && !p.is_bench);
+    const explicitBench = squad.filter((p) => p.is_bench);
     return {
       starters: {
         gkp: { players: gkp.slice(0, 1), max: 1 },
@@ -319,12 +324,12 @@ export function TeamsClient({
     setSaving(true);
     const { error } = await supabase
       .from("auction_results")
-      .update({ position_slot: "BENCH" })
+      .update({ is_bench: true })
       .eq("id", player.auction_result_id);
     if (!error) {
       setResults((prev) =>
         prev.map((r) =>
-          r.id === player.auction_result_id ? { ...r, position_slot: "BENCH" } : r,
+          r.id === player.auction_result_id ? { ...r, is_bench: true } : r,
         ),
       );
       setSelectedPlayer(null);
@@ -340,17 +345,19 @@ export function TeamsClient({
     const slots = getFormationSlots(currentFormation);
     const maxSlots = position === "GKP" ? 1 : slots[position.toLowerCase() as keyof typeof slots] ?? 0;
     const positionStarters = squad.filter(
-      (p) => p.position_slot === position && p.auction_result_id !== player.auction_result_id,
+      (p) => p.position_slot === position && !p.is_bench && p.auction_result_id !== player.auction_result_id,
     );
     if (positionStarters.length < maxSlots) {
       const { error } = await supabase
         .from("auction_results")
-        .update({ position_slot: position })
+        .update({ position_slot: position, is_bench: false })
         .eq("id", player.auction_result_id);
       if (!error) {
         setResults((prev) =>
           prev.map((r) =>
-            r.id === player.auction_result_id ? { ...r, position_slot: position } : r,
+            r.id === player.auction_result_id
+              ? { ...r, position_slot: position, is_bench: false }
+              : r,
           ),
         );
         setSelectedPlayer(null);
@@ -360,14 +367,14 @@ export function TeamsClient({
       const toBench = sorted[0];
       if (!toBench) return;
       const [r1, r2] = await Promise.all([
-        supabase.from("auction_results").update({ position_slot: "BENCH" }).eq("id", toBench.auction_result_id),
-        supabase.from("auction_results").update({ position_slot: position }).eq("id", player.auction_result_id),
+        supabase.from("auction_results").update({ is_bench: true }).eq("id", toBench.auction_result_id),
+        supabase.from("auction_results").update({ position_slot: position, is_bench: false }).eq("id", player.auction_result_id),
       ]);
       if (!r1.error && !r2.error) {
         setResults((prev) =>
           prev.map((r) => {
-            if (r.id === toBench.auction_result_id) return { ...r, position_slot: "BENCH" };
-            if (r.id === player.auction_result_id) return { ...r, position_slot: position };
+            if (r.id === toBench.auction_result_id) return { ...r, is_bench: true };
+            if (r.id === player.auction_result_id) return { ...r, position_slot: position, is_bench: false };
             return r;
           }),
         );
@@ -532,7 +539,7 @@ export function TeamsClient({
   }
 
   const isStarting = selectedPlayer
-    ? selectedPlayer.position_slot !== "BENCH"
+    ? !selectedPlayer.is_bench
     : false;
 
   return (
@@ -816,8 +823,8 @@ export function TeamsClient({
 
           <div className="flex-1 overflow-y-auto">
             {(["GKP", "DEF", "MID", "FWD", "BENCH"] as const).map((pos) => {
-              const posPlayers = sortedSquad.filter(
-                (p) => p.position_slot === pos,
+              const posPlayers = sortedSquad.filter((p) =>
+                (p.is_bench ? "BENCH" : p.position_slot) === pos,
               );
               if (posPlayers.length === 0) return null;
               return (
@@ -832,7 +839,7 @@ export function TeamsClient({
                       onClick={() => setSelectedPlayer(p)}
                     >
                       <span
-                        className={`w-2 h-2 rounded-full shrink-0 ${POSITION_DOT[p.position_slot] ?? POSITION_DOT.BENCH}`}
+                        className={`w-2 h-2 rounded-full shrink-0 ${POSITION_DOT[p.is_bench ? "BENCH" : p.position_slot] ?? POSITION_DOT.BENCH}`}
                       />
                       <span className="text-[12px] text-[#d6e4f9] flex-1 truncate">
                         {p.web_name}
