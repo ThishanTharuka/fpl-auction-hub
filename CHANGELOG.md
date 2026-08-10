@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.1...v1.26.2) (2026-08-10)
+
+
+### Bug Fixes
+
+* **auction:** order auction results by creation date in queries ([d88f452](https://github.com/ThishanTharuka/fpl-auction-hub/commit/d88f4525ddaab5cff61a4f9a534f31fef7377525))
+
 ## [1.26.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.0...v1.26.1) (2026-08-10)
 
 
