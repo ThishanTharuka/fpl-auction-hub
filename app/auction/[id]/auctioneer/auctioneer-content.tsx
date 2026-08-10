@@ -184,7 +184,8 @@ export function AuctioneerContent({
             .select(
               "fpl_player_id, price_paid, participant_id, position_slot, player_name, player_team",
             )
-            .eq("league_id", id),
+            .eq("league_id", id)
+            .order("created_at", { ascending: true }),
         ],
       );
 
