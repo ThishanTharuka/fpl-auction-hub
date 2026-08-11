@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.27.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.2...v1.27.0) (2026-08-11)
+
+
+### Features
+
+* **connection-status:** add connection status indicator and related logic ([696fefe](https://github.com/ThishanTharuka/fpl-auction-hub/commit/696fefe3585416b4c1f31d00d72e0c4ced989937))
+
 ## [1.26.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.1...v1.26.2) (2026-08-10)
 
 
