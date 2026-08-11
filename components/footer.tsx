@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { ConnectionStatusIndicator } from "@/components/connection-status";
 
 const REPO = "https://github.com/ThishanTharuka/fpl-auction-hub";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#3b4b3d]/50">
+    <footer className="relative border-t border-[#3b4b3d]/50">
       <nav className="mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-xs text-[#849585]">
         <span>FPL Auction Hub</span>
         <span aria-hidden="true">&middot;</span>
@@ -49,6 +50,9 @@ export function Footer() {
           GitHub
         </Link>
       </nav>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        <ConnectionStatusIndicator />
+      </div>
     </footer>
   );
 }

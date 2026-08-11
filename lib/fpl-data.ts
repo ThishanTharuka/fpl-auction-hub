@@ -16,7 +16,7 @@ const FPL_BOOTSTRAP_URL =
   "https://fantasy.premierleague.com/api/bootstrap-static/";
 const FPL_FIXTURES_URL = "https://fantasy.premierleague.com/api/fixtures/";
 const FPL_PHOTO_BASE_URL =
-  "https://resources.premierleague.com/premierleague/photos/players/110x140/p";
+  "https://resources.premierleague.com/premierleague25/photos/players/110x140/";
 const FPL_CREST_BASE_URL =
   "https://resources.premierleague.com/premierleague/badges/70/t";
 
