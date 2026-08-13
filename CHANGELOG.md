@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.0...v1.27.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* **bid-content:** add resolveSquadPosition function for position handling ([298c599](https://github.com/ThishanTharuka/fpl-auction-hub/commit/298c59972119057e6c2afb5481574139c782cc83))
+
 # [1.27.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.26.2...v1.27.0) (2026-08-11)
 
 
