@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.1...v1.27.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **migrations:** implement trigger to reject 'BENCH' in position_slot and backfill residual rows ([a0a6be5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a0a6be5589d784bc928e728d0998a14fe7a84694))
+
 ## [1.27.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.0...v1.27.1) (2026-08-13)
 
 
