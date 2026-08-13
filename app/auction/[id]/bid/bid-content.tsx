@@ -76,6 +76,14 @@ export interface TeamMeta {
   squad: SquadPlayer[];
 }
 
+function resolveSquadPosition(
+  slot: string | null | undefined,
+  fallback?: string | null,
+): string {
+  if (slot && slot !== "BENCH") return slot;
+  return fallback ?? slot ?? "?";
+}
+
 interface AuctionEvent {
   type: "sold" | "unsold" | "cancelled";
   playerName: string;
@@ -225,7 +233,7 @@ export function BidContent({
         return {
           id: r.fpl_player_id,
           name: r.player_name ?? fpl?.web_name ?? "Unknown",
-          position: r.position_slot ?? fpl?.position ?? "?",
+          position: resolveSquadPosition(r.position_slot, fpl?.position),
           price: r.price_paid,
           team: r.player_team ?? fpl?.team_short ?? "",
         };
@@ -615,19 +623,23 @@ export function BidContent({
   // ── Derived values (use fallbacks for pending team) ──────────────────────
   const allTeams = useMemo(() => {
     const budget = league.budget_per_team;
+    const playerMap = new Map(initialPlayers.map((p) => [p.id, p]));
     return allParticipants.map((p) => {
       const teamResults = allResults.filter((r) => r.participant_id === p.id);
       const squad: SquadPlayer[] = teamResults.map((r) => ({
         id: r.fpl_player_id,
         name: r.player_name ?? "Unknown",
-        position: r.position_slot ?? "?",
+        position: resolveSquadPosition(
+          r.position_slot,
+          playerMap.get(r.fpl_player_id)?.position,
+        ),
         price: r.price_paid,
         team: r.player_team ?? "",
       }));
       const spent = teamResults.reduce((s, r) => s + r.price_paid, 0);
       return { ...p, spent, remaining: budget - spent, squad };
     });
-  }, [allParticipants, allResults, league.budget_per_team]);
+  }, [allParticipants, allResults, initialPlayers, league.budget_per_team]);
 
   const derivedTeamMeta = useMemo<TeamMeta | null>(() => {
     if (!myTeam) return teamMeta;
@@ -640,7 +652,7 @@ export function BidContent({
       return {
         id: r.fpl_player_id,
         name: r.player_name ?? fpl?.web_name ?? "Unknown",
-        position: r.position_slot ?? fpl?.position ?? "?",
+        position: resolveSquadPosition(r.position_slot, fpl?.position),
         price: r.price_paid,
         team: r.player_team ?? fpl?.team_short ?? "",
       };
@@ -666,7 +678,7 @@ export function BidContent({
         return {
           playerName: r.player_name ?? fpl?.web_name ?? "Unknown",
           playerTeam: r.player_team ?? fpl?.team_short ?? "",
-          position: r.position_slot ?? fpl?.position ?? "?",
+          position: resolveSquadPosition(r.position_slot, fpl?.position),
           price: r.price_paid,
           buyerName: buyer?.name ?? "Unknown",
           buyerColor: buyer?.color ?? null,
