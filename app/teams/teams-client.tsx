@@ -101,13 +101,15 @@ const POSITION_LABELS: Record<string, string> = {
   FWD: "Forward",
 };
 
-const FORMATIONS = ["4-3-3", "4-4-2", "3-5-2", "5-3-2", "5-4-1"];
+const FORMATIONS = ["4-3-3", "3-4-3", "4-4-2", "3-5-2", "4-5-1", "5-3-2", "5-4-1"];
 
 function getFormationSlots(formation: string) {
   const map: Record<string, { def: number; mid: number; fwd: number }> = {
     "4-3-3": { def: 4, mid: 3, fwd: 3 },
+    "3-4-3": { def: 3, mid: 4, fwd: 3 },
     "4-4-2": { def: 4, mid: 4, fwd: 2 },
     "3-5-2": { def: 3, mid: 5, fwd: 2 },
+    "4-5-1": { def: 4, mid: 5, fwd: 1 },
     "5-3-2": { def: 5, mid: 3, fwd: 2 },
     "5-4-1": { def: 5, mid: 4, fwd: 1 },
   };
