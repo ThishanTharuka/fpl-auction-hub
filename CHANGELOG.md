@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.28.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.2...v1.28.0) (2026-08-19)
+
+
+### Bug Fixes
+
+* **config:** update Supabase project reference URL in opencode.json ([d6b6ca5](https://github.com/ThishanTharuka/fpl-auction-hub/commit/d6b6ca5a33ded3669db059960256fbaa9dbe3469))
+* **config:** update Supabase project reference URL in opencode.json ([acf5e5f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/acf5e5fef75a5e4f13f42133210e1837795ae740))
+
+
+### Features
+
+* **web:** add unsold and available players modal with copy functionality ([86c4493](https://github.com/ThishanTharuka/fpl-auction-hub/commit/86c4493e0bc792d0fc45ef6bce9127a3ed3a3cc9))
+
 ## [1.27.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.1...v1.27.2) (2026-08-13)
 
 
