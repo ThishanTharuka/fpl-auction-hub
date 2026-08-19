@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.28.0...v1.28.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* **web:** add missing formations and update formation slot mappings ([13142c0](https://github.com/ThishanTharuka/fpl-auction-hub/commit/13142c066a7fa86affbf100785c87b521a304a30))
+
 # [1.28.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.27.2...v1.28.0) (2026-08-19)
 
 
