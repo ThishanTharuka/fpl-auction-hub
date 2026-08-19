@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,8 @@ const POSITION_COLORS: Record<string, string> = {
   MID: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   FWD: "bg-red-500/20 text-red-400 border-red-500/30",
 };
+
+const POSITION_ORDER = ["GKP", "DEF", "MID", "FWD"] as const;
 
 interface League {
   id: string;
@@ -134,6 +136,10 @@ export function AuctioneerContent({
   const [players] = useState<EnrichedPlayer[]>(initialPlayers);
   const [search, setSearch] = useState("");
   const [posFilter, setPosFilter] = useState("ALL");
+  const [hasNominatedIds, setHasNominatedIds] = useState<Set<number>>(new Set());
+  const [unsoldIds, setUnsoldIds] = useState<Set<number>>(new Set());
+  const [availableOpen, setAvailableOpen] = useState(false);
+  const [availablePosFilter, setAvailablePosFilter] = useState("ALL");
 
   // Staged = player selected but bidding not yet started
   const [stagedPlayer, setStagedPlayer] = useState<EnrichedPlayer | null>(null);
@@ -171,8 +177,8 @@ export function AuctioneerContent({
   useEffect(() => {
     if (authLoading) return;
     async function load() {
-      const [{ data: lg }, { data: ps }, { data: results }] = await Promise.all(
-        [
+      const [{ data: lg }, { data: ps }, { data: results }, { data: noms }] =
+        await Promise.all([
           supabase.from("leagues").select("*").eq("id", id).single(),
           supabase
             .from("participants")
@@ -186,8 +192,11 @@ export function AuctioneerContent({
             )
             .eq("league_id", id)
             .order("created_at", { ascending: true }),
-        ],
-      );
+          supabase
+            .from("auction_nominations")
+            .select("fpl_player_id, status")
+            .eq("league_id", id),
+        ]);
 
       if (lg) {
         if (user?.id !== (lg as League).created_by) {
@@ -244,6 +253,19 @@ export function AuctioneerContent({
         );
       }
 
+      if (noms) {
+        const nominated = new Set<number>();
+        const unsold = new Set<number>();
+        for (const n of noms) {
+          nominated.add(n.fpl_player_id);
+          if (n.status === "unsold" || n.status === "cancelled") {
+            unsold.add(n.fpl_player_id);
+          }
+        }
+        setHasNominatedIds(nominated);
+        setUnsoldIds(unsold);
+      }
+
       // Load any open nomination
       const { data: nom } = await supabase
         .from("auction_nominations")
@@ -287,6 +309,16 @@ export function AuctioneerContent({
           const row = normalizeNomination(
             payload.new as Record<string, unknown>,
           );
+          setHasNominatedIds((prev) => new Set([...prev, row.fpl_player_id]));
+          if (row.status === "unsold" || row.status === "cancelled") {
+            setUnsoldIds((prev) => new Set([...prev, row.fpl_player_id]));
+          } else if (row.status === "sold") {
+            setUnsoldIds((prev) => {
+              const next = new Set(prev);
+              next.delete(row.fpl_player_id);
+              return next;
+            });
+          }
           if (row.status === "open") {
             setNomination(row);
             loadBids(row.id);
@@ -462,6 +494,11 @@ export function AuctioneerContent({
     ]);
 
     setSoldIds((prev) => new Set([...prev, nomination.fpl_player_id]));
+    setUnsoldIds((prev) => {
+      const next = new Set(prev);
+      next.delete(nomination.fpl_player_id);
+      return next;
+    });
     setTeams((prev) =>
       prev.map((t) =>
         t.id === nomination.current_bidder_id
@@ -533,6 +570,7 @@ export function AuctioneerContent({
         border: "1px solid #ea580c",
       },
     });
+    setUnsoldIds((prev) => new Set([...prev, nomination.fpl_player_id]));
     setNomination(null);
     setRecentBids([]);
     setSecondsLeft(0);
@@ -632,6 +670,7 @@ export function AuctioneerContent({
         border: "1px solid #dc2626",
       },
     });
+    setUnsoldIds((prev) => new Set([...prev, nomination.fpl_player_id]));
     setNomination(null);
     setRecentBids([]);
     setSecondsLeft(0);
@@ -647,6 +686,74 @@ export function AuctioneerContent({
       p.team_short.toLowerCase().includes(q)
     );
   });
+
+  const availablePlayers = useMemo(() => {
+    const unsold: EnrichedPlayer[] = [];
+    const notNominated: EnrichedPlayer[] = [];
+    for (const p of players) {
+      if (soldIds.has(p.id)) continue;
+      if (p.id === nomination?.fpl_player_id) continue;
+      if (unsoldIds.has(p.id)) {
+        unsold.push(p);
+      } else if (!hasNominatedIds.has(p.id)) {
+        notNominated.push(p);
+      }
+    }
+    return { unsold, notNominated };
+  }, [players, soldIds, unsoldIds, hasNominatedIds, nomination?.fpl_player_id]);
+
+  function formatPositionList(pos: (typeof POSITION_ORDER)[number]): string {
+    const posUnsold = availablePlayers.unsold.filter(
+      (p) => p.position === pos,
+    );
+    const posNotNominated = availablePlayers.notNominated.filter(
+      (p) => p.position === pos,
+    );
+    const lines: string[] = [];
+    if (posUnsold.length > 0) {
+      lines.push(`${pos} — Unsold / Cancelled`);
+      for (const p of posUnsold) {
+        lines.push(`• ${p.web_name} (${p.team_short})`);
+      }
+      lines.push("");
+    }
+    if (posNotNominated.length > 0) {
+      lines.push(`${pos} — Not Nominated`);
+      for (const p of posNotNominated) {
+        lines.push(`• ${p.web_name} (${p.team_short})`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n").trim();
+  }
+
+  function formatAvailableList(): string {
+    return POSITION_ORDER.map(formatPositionList)
+      .filter((s) => s.length > 0)
+      .join("\n\n");
+  }
+
+  async function copyPositionList(pos: (typeof POSITION_ORDER)[number]) {
+    const text = formatPositionList(pos);
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${pos} list copied to clipboard`);
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
+
+  async function copyAvailableList() {
+    const text = formatAvailableList();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Available players copied to clipboard");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
 
   let timerColor = "text-red-400";
   let timerHexColor = "#f87171";
@@ -758,6 +865,22 @@ export function AuctioneerContent({
               ))}
             </div>
           </div>
+
+          {/* Unsold & available players */}
+          <button
+            onClick={() => setAvailableOpen(true)}
+            className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3 flex items-center justify-between hover:bg-[#1e2b3b] transition-colors"
+          >
+            <span className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+              Unsold & Available
+            </span>
+            <Badge
+              variant="outline"
+              className="text-[10px] text-[#00e478] border-[#3b4b3d]"
+            >
+              {availablePlayers.unsold.length}
+            </Badge>
+          </button>
 
           {/* Sold log (desktop only) */}
           <div className="hidden lg:flex rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex-col">
@@ -1112,6 +1235,149 @@ export function AuctioneerContent({
                 >
                   Yes, Rebid
                 </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Unsold & available players modal ─────────────────────────────── */}
+        {availableOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setAvailableOpen(false)}
+            />
+            <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+              <div className="flex items-center justify-between gap-2 p-4 border-b border-[#3b4b3d] shrink-0">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#d6e4f9]">
+                    Unsold & Available Players
+                  </h3>
+                  <p className="text-xs text-[#849585] mt-0.5">
+                    {availablePlayers.unsold.length} unsold ·{" "}
+                    {availablePlayers.notNominated.length} not nominated
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={copyAvailableList}
+                    variant="outline"
+                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] h-8 px-3 text-xs"
+                    disabled={
+                      availablePlayers.unsold.length +
+                        availablePlayers.notNominated.length ===
+                      0
+                    }
+                  >
+                    Copy
+                  </Button>
+                  <button
+                    onClick={() => setAvailableOpen(false)}
+                    className="text-xs text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-1 flex-wrap px-4 pt-3 shrink-0">
+                {["ALL", ...POSITION_ORDER].map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => setAvailablePosFilter(pos)}
+                    className={`flex-1 text-[10px] font-bold rounded py-1 border ${
+                      availablePosFilter === pos
+                        ? "bg-[#00e478] text-[#003919] border-[#00e478]"
+                        : "border-[#3b4b3d] text-[#849585] hover:text-[#d6e4f9]"
+                    }`}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+              <div className="overflow-y-auto p-4 space-y-4">
+                {availablePlayers.unsold.length === 0 &&
+                  availablePlayers.notNominated.length === 0 && (
+                    <p className="text-sm text-[#849585] italic text-center py-8">
+                      All players have been sold or are currently being
+                      nominated.
+                    </p>
+                  )}
+                {POSITION_ORDER.filter(
+                  (pos) =>
+                    availablePosFilter === "ALL" ||
+                    pos === availablePosFilter,
+                ).map((pos) => {
+                  const posUnsold = availablePlayers.unsold.filter(
+                    (p) => p.position === pos,
+                  );
+                  const posNotNominated =
+                    availablePlayers.notNominated.filter(
+                      (p) => p.position === pos,
+                    );
+                  if (posUnsold.length === 0 && posNotNominated.length === 0) {
+                    return null;
+                  }
+                  return (
+                    <section key={pos}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-bold text-[#00e478] uppercase tracking-wider">
+                          {pos}
+                        </h4>
+                        <button
+                          onClick={() => copyPositionList(pos)}
+                          className="text-[10px] text-[#849585] hover:text-[#b9cbb9] border border-[#3b4b3d] rounded px-1.5 py-0.5"
+                          title={`Copy ${pos} list`}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      {posUnsold.length > 0 && (
+                        <div className="mb-2">
+                          <div className="text-[10px] text-yellow-400 uppercase tracking-wider mb-1">
+                            Unsold / Cancelled
+                          </div>
+                          <div className="space-y-0.5">
+                            {posUnsold.map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1"
+                              >
+                                <span className="text-[#d6e4f9]">
+                                  {p.web_name}
+                                </span>
+                                <span className="text-[#849585]">
+                                  {p.team_short}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {posNotNominated.length > 0 && (
+                        <div>
+                          <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1">
+                            Not Nominated
+                          </div>
+                          <div className="space-y-0.5">
+                            {posNotNominated.map((p) => (
+                              <div
+                                key={p.id}
+                                className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1"
+                              >
+                                <span className="text-[#d6e4f9]">
+                                  {p.web_name}
+                                </span>
+                                <span className="text-[#849585]">
+                                  {p.team_short}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
             </div>
           </div>
