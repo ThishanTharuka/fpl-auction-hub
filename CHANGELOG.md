@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.29.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.28.1...v1.29.0) (2026-09-03)
+
+
+### Features
+
+* **api:** add revalidation for player and team data on refresh request ([1f92805](https://github.com/ThishanTharuka/fpl-auction-hub/commit/1f928057ab6ac2f8efeb7724ad68d1fb3624aaa2))
+* **tournament:** implement tournament structure with group and knockout phases ([678dda4](https://github.com/ThishanTharuka/fpl-auction-hub/commit/678dda450e89a719f159491d6e42b1ea5863ef28))
+
 ## [1.28.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.28.0...v1.28.1) (2026-08-19)
 
 
