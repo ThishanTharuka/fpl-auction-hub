@@ -235,7 +235,7 @@ export function BidContent({
           name: r.player_name ?? fpl?.web_name ?? "Unknown",
           position: resolveSquadPosition(r.position_slot, fpl?.position),
           price: r.price_paid,
-          team: r.player_team ?? fpl?.team_short ?? "",
+          team: fpl?.team_short ?? r.player_team ?? "",
         };
       });
       const spent = results.reduce((s, r) => s + r.price_paid, 0);
@@ -626,16 +626,19 @@ export function BidContent({
     const playerMap = new Map(initialPlayers.map((p) => [p.id, p]));
     return allParticipants.map((p) => {
       const teamResults = allResults.filter((r) => r.participant_id === p.id);
-      const squad: SquadPlayer[] = teamResults.map((r) => ({
-        id: r.fpl_player_id,
-        name: r.player_name ?? "Unknown",
-        position: resolveSquadPosition(
-          r.position_slot,
-          playerMap.get(r.fpl_player_id)?.position,
-        ),
-        price: r.price_paid,
-        team: r.player_team ?? "",
-      }));
+      const squad: SquadPlayer[] = teamResults.map((r) => {
+        const fpl = playerMap.get(r.fpl_player_id);
+        return {
+          id: r.fpl_player_id,
+          name: r.player_name ?? fpl?.web_name ?? "Unknown",
+          position: resolveSquadPosition(
+            r.position_slot,
+            fpl?.position,
+          ),
+          price: r.price_paid,
+          team: fpl?.team_short ?? r.player_team ?? "",
+        };
+      });
       const spent = teamResults.reduce((s, r) => s + r.price_paid, 0);
       return { ...p, spent, remaining: budget - spent, squad };
     });
@@ -654,7 +657,7 @@ export function BidContent({
         name: r.player_name ?? fpl?.web_name ?? "Unknown",
         position: resolveSquadPosition(r.position_slot, fpl?.position),
         price: r.price_paid,
-        team: r.player_team ?? fpl?.team_short ?? "",
+        team: fpl?.team_short ?? r.player_team ?? "",
       };
     });
     const spent = myResults.reduce((s, r) => s + r.price_paid, 0);
@@ -677,7 +680,7 @@ export function BidContent({
           : undefined;
         return {
           playerName: r.player_name ?? fpl?.web_name ?? "Unknown",
-          playerTeam: r.player_team ?? fpl?.team_short ?? "",
+          playerTeam: fpl?.team_short ?? r.player_team ?? "",
           position: resolveSquadPosition(r.position_slot, fpl?.position),
           price: r.price_paid,
           buyerName: buyer?.name ?? "Unknown",
@@ -785,7 +788,7 @@ export function BidContent({
     : totalRemainingSlots;
   const maxBid = Math.max(0, surplus + nomStartPrice);
 
-  const nominatedClub = nomination?.player_team ?? "";
+  const nominatedClub = fplPlayer?.team_short ?? nomination?.player_team ?? "";
   const clubCount =
     nominatedClub && derivedTeamMeta
       ? derivedTeamMeta.squad.filter((p) => p.team === nominatedClub).length
@@ -841,6 +844,7 @@ export function BidContent({
       totalRemainingSlotsAfterBid={totalRemainingSlotsAfterBid}
       clubCount={clubCount}
       maxClub={maxClub}
+      nominatedClub={nominatedClub}
       auctionEvent={auctionEvent}
       pendingTeam={pendingTeam}
       leagueId={id}
@@ -914,6 +918,7 @@ type BidUIProps = Readonly<{
   posLimit: number;
   clubCount: number;
   maxClub: number;
+  nominatedClub: string;
   timerColor: string;
   timerHexColor: string;
   posRequirements: PositionRequirement[];
@@ -955,6 +960,7 @@ function BidUI({
   posLimit,
   clubCount,
   maxClub,
+  nominatedClub,
   timerColor,
   timerHexColor,
   posRequirements,
@@ -1221,7 +1227,7 @@ function BidUI({
               )}
               {nomination && clubCount >= maxClub && (
                 <p className="text-xs text-red-400 text-center mt-2">
-                  Club limit reached ({maxClub} {nomination.player_team})
+                  Club limit reached ({maxClub} {nominatedClub})
                 </p>
               )}
               {myBid > remaining && (

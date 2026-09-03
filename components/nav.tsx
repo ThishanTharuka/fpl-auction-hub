@@ -15,6 +15,7 @@ const links = [
   { href: "/auction", label: "Auctions" },
   { href: "/auction/setup", label: "New Auction" },
   { href: "/teams", label: "Teams" },
+  { href: "/tournaments", label: "Tournaments" },
 ];
 
 export function Nav() {

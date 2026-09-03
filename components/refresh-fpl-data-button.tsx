@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export function RefreshFplDataButton() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleRefresh() {
     setLoading(true);
@@ -14,6 +16,7 @@ export function RefreshFplDataButton() {
       const res = await fetch("/api/fpl/bootstrap?refresh=true");
       if (!res.ok) throw new Error("Refresh failed");
       toast.success("FPL data refreshed");
+      router.refresh();
       window.location.reload();
     } catch {
       toast.error("Failed to refresh FPL data");
