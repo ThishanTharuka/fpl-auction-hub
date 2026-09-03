@@ -146,7 +146,7 @@ export default function TournamentAdminPage() {
     () => fixtures.filter((f) => f.gw === scoreGw),
     [fixtures, scoreGw],
   );
-  const gwPending = useMemo(
+  const _gwPending = useMemo(
     () => gwFixtures.filter((f) => f.status !== "scored"),
     [gwFixtures],
   );

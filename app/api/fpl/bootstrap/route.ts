@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getFplData, fetchAndCacheFplData } from "@/lib/fpl-data";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,14 @@ export async function GET(request: NextRequest) {
   try {
     const refresh = request.nextUrl.searchParams.get("refresh") === "true";
     const data = refresh ? await fetchAndCacheFplData() : await getFplData();
+    if (refresh) {
+      revalidatePath("/players");
+      revalidatePath("/teams");
+      revalidatePath("/index-builder");
+      revalidatePath("/auction/[id]/bid", "page");
+      revalidatePath("/auction/[id]/auctioneer", "page");
+      revalidatePath("/auction/[id]/spectate", "page");
+    }
     const response = NextResponse.json(data);
     if (refresh) {
       response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");

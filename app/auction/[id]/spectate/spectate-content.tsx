@@ -398,7 +398,7 @@ export function SpectateContent({
           return {
             id: r.fpl_player_id,
             name: r.player_name ?? fpl?.web_name ?? "Unknown",
-            team: r.player_team ?? fpl?.team_short ?? "",
+            team: fpl?.team_short ?? r.player_team ?? "",
             position: r.position_slot ?? fpl?.position ?? "?",
             price: r.price_paid,
           };

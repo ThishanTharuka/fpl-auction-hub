@@ -161,13 +161,17 @@ export async function BidLoader({
             .eq("participant_id", membership.participant_id);
 
           if (results) {
-            const squad: BidSquadPlayer[] = results.map((r) => ({
-              id: r.fpl_player_id,
-              name: r.player_name ?? "Unknown",
-              position: r.position_slot ?? "?",
-              price: r.price_paid,
-              team: r.player_team ?? "",
-            }));
+            const fplPlayerMap = new Map(initialPlayers.map((p) => [p.id, p]));
+            const squad: BidSquadPlayer[] = results.map((r) => {
+              const fpl = fplPlayerMap.get(r.fpl_player_id);
+              return {
+                id: r.fpl_player_id,
+                name: r.player_name ?? fpl?.web_name ?? "Unknown",
+                position: r.position_slot ?? fpl?.position ?? "?",
+                price: r.price_paid,
+                team: fpl?.team_short ?? r.player_team ?? "",
+              };
+            });
             const spent = results.reduce((s, r) => s + r.price_paid, 0);
             initialTeamMeta = {
               budget_per_team: league.budget_per_team,
