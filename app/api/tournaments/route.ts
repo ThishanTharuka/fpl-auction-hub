@@ -31,11 +31,30 @@ export async function GET(request: Request) {
   if (!authed.ok) return authed.response;
   const { supabase, userId } = authed;
 
-  const { data, error } = await supabase
+  const [{ data: memberRows }, { data: participantRows }] = await Promise.all([
+    supabase.from("team_members").select("league_id").eq("user_id", userId),
+    supabase.from("participants").select("league_id").eq("user_id", userId),
+  ]);
+  const leagueIds = [
+    ...new Set<string>([
+      ...((memberRows ?? []).map((m) => m.league_id).filter(Boolean) as string[]),
+      ...((participantRows ?? []).map((p) => p.league_id).filter(Boolean) as string[]),
+    ]),
+  ];
+
+  let query = supabase
     .from("competitions")
-    .select("id,name,status,start_gw,created_at,league_a_id,league_b_id,format_config")
-    .eq("created_by", userId)
+    .select("id,name,status,start_gw,created_at,league_a_id,league_b_id,format_config,created_by")
     .order("created_at", { ascending: false });
+
+  if (leagueIds.length > 0) {
+    const inList = `(${leagueIds.join(",")})`;
+    query = query.or(`created_by.eq.${userId},league_a_id.in.${inList},league_b_id.in.${inList}`);
+  } else {
+    query = query.eq("created_by", userId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[tournaments list]", error);

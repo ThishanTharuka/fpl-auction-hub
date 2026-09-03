@@ -18,6 +18,7 @@ interface CompetitionRow {
   created_at: string;
   league_a_id: string;
   league_b_id: string;
+  created_by: string;
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
@@ -35,16 +36,43 @@ export default function TournamentsPage() {
 
   async function load() {
     if (!user) return;
-    const { data, error } = await supabase
-      .from("competitions")
-      .select("id,name,status,start_gw,created_at,league_a_id,league_b_id")
-      .eq("created_by", user.id)
-      .order("created_at", { ascending: false });
-    if (error) {
-      setLoading(false);
-      return;
+    // Leagues the user participates in (via team_members) or owns
+    const [{ data: memberRows }, { data: participantRows }] = await Promise.all([
+      supabase.from("team_members").select("league_id").eq("user_id", user.id),
+      supabase.from("participants").select("league_id").eq("user_id", user.id),
+    ]);
+    const memberLeagueIds = new Set<string>([
+      ...((memberRows ?? []).map((m) => m.league_id).filter(Boolean) as string[]),
+      ...((participantRows ?? []).map((p) => p.league_id).filter(Boolean) as string[]),
+    ]);
+
+    let rows: CompetitionRow[] = [];
+    if (memberLeagueIds.size > 0) {
+      const leagueIds = [...memberLeagueIds];
+      const inList = `(${leagueIds.join(",")})`;
+      const orFilter = `created_by.eq.${user.id},league_a_id.in.${inList},league_b_id.in.${inList}`;
+      const { data, error } = await supabase
+        .from("competitions")
+        .select("id,name,status,start_gw,created_at,league_a_id,league_b_id,created_by")
+        .or(orFilter)
+        .order("created_at", { ascending: false });
+      if (error) {
+        setLoading(false);
+        return;
+      }
+      rows = (data ?? []) as CompetitionRow[];
+    } else {
+      const { data, error } = await supabase
+        .from("competitions")
+        .select("id,name,status,start_gw,created_at,league_a_id,league_b_id,created_by")
+        .eq("created_by", user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        setLoading(false);
+        return;
+      }
+      rows = (data ?? []) as CompetitionRow[];
     }
-    const rows = data ?? [];
     const ids = new Set<string>();
     for (const c of rows) {
       ids.add(c.league_a_id);
@@ -135,16 +163,18 @@ export default function TournamentsPage() {
               <div className="flex items-center gap-2 shrink-0 ml-4">
                 <Link href={`/tournaments/${c.id}/public`}>
                   <Button size="sm" className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]">
-                    Public
+                    {c.created_by === user?.id ? "Public" : "View"}
                   </Button>
                 </Link>
-                <Button
-                  size="sm"
-                  className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
-                  onClick={() => router.push(`/tournaments/${c.id}`)}
-                >
-                  Manage
-                </Button>
+                {c.created_by === user?.id && (
+                  <Button
+                    size="sm"
+                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                    onClick={() => router.push(`/tournaments/${c.id}`)}
+                  >
+                    Manage
+                  </Button>
+                )}
               </div>
             </div>
           );
