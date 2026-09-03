@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.1...v1.29.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **tournaments:** fix competition retrieval with league participation and ownership checks ([70f809f](https://github.com/ThishanTharuka/fpl-auction-hub/commit/70f809fde0c989c680298ec515e3ec78e8f4a463))
+
 ## [1.29.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.0...v1.29.1) (2026-09-03)
 
 
