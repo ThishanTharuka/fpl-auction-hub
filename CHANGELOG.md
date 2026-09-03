@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.0...v1.29.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **migrations:** align tournament migration timestamp with deployed 20260903142507 ([2360d3b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/2360d3ba04c87d484a0616bb74f1274183774652))
+
 # [1.29.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.28.1...v1.29.0) (2026-09-03)
 
 
