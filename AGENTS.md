@@ -14,10 +14,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 | `npm run type-check` | `tsc --noEmit` |
 | `npm run lint` | ESLint flat config (`eslint.config.mjs`) |
 | `npm run lint:fix` | Auto-fix lint |
-| `npm test` | Vitest (node env, `globals: true`, `@/*` alias) | `*_test` / `*_spec` auto-detected |
+| `npm test` | Vitest (node env, `globals: true`, `@/*` alias); default include — `*.test.ts` / `*.spec.ts` |
 | `npm run test:watch` | Vitest watch mode |
 
 Pre-commit order: `npm run type-check && npm run lint`. CI: `npm ci --include=optional && npm run type-check && npm run lint && npm test` (verify job), then `npx semantic-release` on push to `master`. Conventional commits required.
+
+CI quirk: `ci.yml` AND `release.yml` both trigger on push to `master` and both run verify + `npx semantic-release`; `discord.yml` only posts webhooks. Duplicate verify/release runs are expected — don't "fix" them.
 
 Node 24 (`.nvmrc`). Install with `npm ci --include=optional` (`@emnapi/runtime` + `@emnapi/core` are optional deps required at runtime).
 
@@ -37,7 +39,7 @@ Free plan: 2 GB egress, 500 MB DB, 50k users, 200 realtime connections. Every qu
 
 ## Auth middleware — `proxy.ts` (root, not `middleware.ts`)
 
-Next.js 16 convention: the root `proxy.ts` IS the middleware (no `middleware.ts` file exists). Uses `getSession()` (cookie-only, no network). Public paths (no redirect): `/`, `/login`, `/auth/*`, `/privacy`, `/terms`, `/api/*`, `/_next/*`, `/favicon.ico`. Nav is hidden on `/` for unauthenticated visitors.
+Next.js 16 convention: the root `proxy.ts` IS the middleware (no `middleware.ts` file exists). Uses `getSession()` (cookie-only, no network). Public paths (no redirect): `/`, `/login`, `/auth/callback`, `/auth/forgot-password`, `/auth/update-password`, `/privacy`, `/terms`, `/api/*`, `/_next/*`, `/favicon.ico`. Nav is hidden on `/` for unauthenticated visitors.
 
 ## Streaming SSR
 
@@ -84,5 +86,5 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 - **`react-hooks/exhaustive-deps` is warn**, not error. Suppress with eslint-disable + comment when intentional.
 - **Vercel limits**: 10s function timeout, 100k invocations/month. `next.config.ts` has image remotePatterns for `resources.premierleague.com` + security headers.
 - **Lobby constraint**: Auctioneer can start before all teams are claimed. `canStart` only requires `teams.length > 0`.
-- **Tests**: Vitest (node env). `*_test` and `*_spec` patterns auto-detected. Tests in `lib/__tests__/` and `components/__tests__/`. No Playwright/e2e.
+- **Tests**: Vitest (node env), default `*.test.ts`/`*.spec.ts` include (NOT `*_test`/`*_spec`). Tests live in `lib/__tests__/` and `components/__tests__/`. No Playwright/e2e.
 - **`.gitignore` excludes `opencode.json`** (contains MCP API keys) and `.vscode/` — do not commit these.

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -233,6 +233,191 @@ export type Database = {
             columns: ["participant_id"]
             isOneToOne: false
             referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_fixtures: {
+        Row: {
+          away_points: number | null
+          away_team_id: string | null
+          competition_id: string
+          created_at: string
+          gw: number
+          home_points: number | null
+          home_team_id: string | null
+          id: string
+          leg: number
+          phase: string
+          stage: string
+          status: string
+          tie_index: number
+        }
+        Insert: {
+          away_points?: number | null
+          away_team_id?: string | null
+          competition_id: string
+          created_at?: string
+          gw: number
+          home_points?: number | null
+          home_team_id?: string | null
+          id?: string
+          leg?: number
+          phase: string
+          stage: string
+          status?: string
+          tie_index: number
+        }
+        Update: {
+          away_points?: number | null
+          away_team_id?: string | null
+          competition_id?: string
+          created_at?: string
+          gw?: number
+          home_points?: number | null
+          home_team_id?: string | null
+          id?: string
+          leg?: number
+          phase?: string
+          stage?: string
+          status?: string
+          tie_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_fixtures_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_fixtures_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_fixtures_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "competition_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_teams: {
+        Row: {
+          avatar_url: string | null
+          color: string | null
+          competition_id: string
+          created_at: string
+          fpl_manager_id: number | null
+          group_label: string
+          id: string
+          league_id: string
+          name: string
+          participant_id: string
+          team_number: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          color?: string | null
+          competition_id: string
+          created_at?: string
+          fpl_manager_id?: number | null
+          group_label: string
+          id?: string
+          league_id: string
+          name: string
+          participant_id: string
+          team_number: number
+        }
+        Update: {
+          avatar_url?: string | null
+          color?: string | null
+          competition_id?: string
+          created_at?: string
+          fpl_manager_id?: number | null
+          group_label?: string
+          id?: string
+          league_id?: string
+          name?: string
+          participant_id?: string
+          team_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_teams_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_teams_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_teams_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          created_at: string
+          created_by: string
+          format_config: Json
+          id: string
+          league_a_id: string
+          league_b_id: string
+          name: string
+          start_gw: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          format_config: Json
+          id?: string
+          league_a_id: string
+          league_b_id: string
+          name: string
+          start_gw: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          format_config?: Json
+          id?: string
+          league_a_id?: string
+          league_b_id?: string
+          name?: string
+          start_gw?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_league_a_id_fkey"
+            columns: ["league_a_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_league_b_id_fkey"
+            columns: ["league_b_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
             referencedColumns: ["id"]
           },
         ]
