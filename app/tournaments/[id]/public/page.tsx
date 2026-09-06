@@ -6,6 +6,7 @@ import { computeTieOutcomes, resolveKnockoutPlacement } from "@/lib/tournament/k
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
 import { TournamentBracket } from "@/components/tournament-bracket";
+import { TournamentFixtures } from "@/components/tournament-fixtures";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -53,24 +54,9 @@ export default async function TournamentPublicPage({
   const fixtures = (fixRes.data ?? []) as CompetitionFixtureRow[];
   const config = competition.format_config as unknown as CompetitionConfig;
 
-  const teamById = new Map(teams.map((t) => [t.id, t]));
 
-  const teamName = (teamId: string | null) =>
-    (teamId ? teamById.get(teamId)?.name ?? "TBD" : "TBD");
 
-  const fixtureGroupLabel = (f: CompetitionFixtureRow) => {
-    if (f.stage === "group") {
-      const hGroup = f.home_team_id ? teamById.get(f.home_team_id)?.group_label : null;
-      const aGroup = f.away_team_id ? teamById.get(f.away_team_id)?.group_label : null;
-      if (hGroup && aGroup) {
-        return hGroup === aGroup ? `Group ${hGroup}` : "Group A vs B";
-      }
-      if (hGroup) return `Group ${hGroup}`;
-      if (aGroup) return `Group ${aGroup}`;
-      return "Group";
-    }
-    return f.phase;
-  };
+
 
   const standings = computeGroupStandings(teams, fixtures, config);
 
@@ -93,13 +79,7 @@ export default async function TournamentPublicPage({
         })()
       : [];
 
-  const fixturesByGw = new Map<number, CompetitionFixtureRow[]>();
-  for (const f of fixtures) {
-    const arr = fixturesByGw.get(f.gw) ?? [];
-    arr.push(f);
-    fixturesByGw.set(f.gw, arr);
-  }
-  const gwList = [...fixturesByGw.entries()].sort((a, b) => a[0] - b[0]);
+
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10 space-y-10">
@@ -211,40 +191,11 @@ export default async function TournamentPublicPage({
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-[#d6e4f9]">Fixtures & Results</h2>
-        <div className="space-y-3">
-          {gwList.map(([gw, rows]) => (
-            <div key={gw} className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-[#849585]">Gameweek {gw}</p>
-                {gw === liveGameweek && (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
-                    Live
-                  </span>
-                )}
-              </div>
-              <div className="space-y-1">
-                {rows.map((f) => (
-                  <div key={f.id} className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                    <span className="truncate flex items-center gap-2">
-                      <span className="text-xs text-[#849585] shrink-0">
-                        {fixtureGroupLabel(f)}
-                      </span>
-                      <span>
-                        {teamName(f.home_team_id)}
-                        <span className="text-[#849585]"> vs </span>
-                        {teamName(f.away_team_id)}
-                      </span>
-                    </span>
-                    <span className="text-xs text-[#849585]">
-                      {f.status === "scored" ? `${f.home_points}–${f.away_points}` : fixtureGroupLabel(f)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        <TournamentFixtures
+          fixtures={fixtures}
+          teams={teams}
+          liveGameweek={liveGameweek}
+        />
       </section>
     </div>
   );

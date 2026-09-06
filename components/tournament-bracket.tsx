@@ -1296,8 +1296,8 @@ export function TournamentBracket({
             <h3 className="text-sm font-bold text-[#d6e4f9]">Upper Bracket Qualifiers Path</h3>
           </div>
 
-          <div className="overflow-x-auto overflow-y-hidden pb-4 -mx-2 px-2">
-            <div className="min-w-[1100px] space-y-4">
+          <div className="overflow-x-auto overflow-y-hidden pb-6 -mx-2 px-2">
+            <div className="min-w-[1100px] space-y-4 pb-8">
               {/* TOP HEADER ROW */}
               <div className="flex items-center gap-0">
                 <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-3 py-2 rounded-lg text-center">
@@ -1389,6 +1389,7 @@ export function TournamentBracket({
                   })()}
                 </div>
               </div>
+              <div className="h-6 shrink-0" />
             </div>
           </div>
         </div>
@@ -1401,8 +1402,8 @@ export function TournamentBracket({
             <h3 className="text-sm font-bold text-[#d6e4f9]">Lower Bracket Elimination Path</h3>
           </div>
 
-          <div className="overflow-x-auto overflow-y-hidden pb-4 -mx-2 px-2">
-            <div className="min-w-[1856px] space-y-4">
+          <div className="overflow-x-auto overflow-y-hidden pb-6 -mx-2 px-2">
+            <div className="min-w-[1856px] space-y-4 pb-8">
               {/* TOP HEADER ROW FOR ELIMINATORS */}
               <div className="flex items-center gap-0">
                 <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
@@ -1534,6 +1535,7 @@ export function TournamentBracket({
                   })()}
                 </div>
               </div>
+              <div className="h-6 shrink-0" />
             </div>
           </div>
         </div>
@@ -1542,8 +1544,8 @@ export function TournamentBracket({
       {/* ── Tab View 3: Unified Full Bracket (Double Elimination Tree) ────── */}
       {activeTab === "all" && (
         <div className="space-y-4">
-          <div className="overflow-x-auto overflow-y-hidden pb-4 -mx-2 px-2">
-            <div className="min-w-[1856px] space-y-4">
+          <div className="overflow-x-auto overflow-y-hidden pb-6 -mx-2 px-2">
+            <div className="min-w-[1856px] space-y-4 pb-8">
               {/* TOP HEADER ROW - 6 GW COLUMNS */}
               <div className="flex items-center gap-0">
                 <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
@@ -1816,6 +1818,7 @@ export function TournamentBracket({
                   })()}
                 </div>
               </div>
+              <div className="h-6 shrink-0" />
             </div>
           </div>
         </div>

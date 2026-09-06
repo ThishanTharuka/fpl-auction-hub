@@ -19,6 +19,7 @@ import { computeTieOutcomes, resolveKnockoutPlacement } from "@/lib/tournament/k
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
 import { TournamentBracket } from "@/components/tournament-bracket";
+import { TournamentFixtures } from "@/components/tournament-fixtures";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -401,53 +402,78 @@ export default function TournamentAdminPage() {
               )}
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-2.5">
               {gwFixtures.map((f) => {
                 const label = statusInfo(f.status);
                 const manual = manualScores[f.id];
+                const hTeam = f.home_team_id ? teamById.get(f.home_team_id) : null;
+                const aTeam = f.away_team_id ? teamById.get(f.away_team_id) : null;
+                const hName = teamName(f.home_team_id);
+                const aName = teamName(f.away_team_id);
+
                 return (
                   <div
                     key={f.id}
-                    className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center gap-3"
+                    className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center justify-between gap-3"
                   >
-                    <span className="text-xs font-medium text-[#849585] w-28 shrink-0">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]/60 shrink-0">
                       {fixtureGroupLabel(f)}
                     </span>
-                    <span className="flex-1 min-w-[180px] text-sm text-[#d6e4f9] truncate">
-                      {teamName(f.home_team_id)}
-                      <span className="text-[#849585]"> vs </span>
-                      {teamName(f.away_team_id)}
-                    </span>
-                    {f.status === "scored" && (
-                      <span className="text-sm text-[#d6e4f9]">
-                        <b className="text-[#00e478]">{f.home_points}</b>
-                        <span className="text-[#849585]"> – </span>
-                        <b className="text-[#00e478]">{f.away_points}</b>
+
+                    <div className="flex-1 min-w-[240px] flex items-center gap-2.5 text-sm text-[#d6e4f9]">
+                      <span className="inline-flex items-center gap-2 min-w-0">
+                        <TeamAvatar
+                          name={hName}
+                          src={hTeam?.avatar_url ?? null}
+                          color={hTeam?.color ?? null}
+                          size="sm"
+                        />
+                        <span className="truncate">{hName}</span>
                       </span>
-                    )}
-                    <Badge className={`text-[10px] border ${label.cls}`}>{label.label}</Badge>
-                    {f.status !== "scored" && (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          placeholder="Home"
-                          value={manual?.home ?? ""}
-                          onChange={(e) =>
-                            setManualScores((m) => ({ ...m, [f.id]: { home: e.target.value, away: m[f.id]?.away ?? "" } }))
-                          }
-                          className="w-20 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs"
+                      <span className="text-xs text-[#849585] shrink-0 font-medium">vs</span>
+                      <span className="inline-flex items-center gap-2 min-w-0">
+                        <TeamAvatar
+                          name={aName}
+                          src={aTeam?.avatar_url ?? null}
+                          color={aTeam?.color ?? null}
+                          size="sm"
                         />
-                        <Input
-                          type="number"
-                          placeholder="Away"
-                          value={manual?.away ?? ""}
-                          onChange={(e) =>
-                            setManualScores((m) => ({ ...m, [f.id]: { home: m[f.id]?.home ?? "", away: e.target.value } }))
-                          }
-                          className="w-20 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs"
-                        />
-                      </div>
-                    )}
+                        <span className="truncate">{aName}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      {f.status === "scored" && (
+                        <span className="text-sm text-[#d6e4f9] tabular-nums font-semibold px-2 py-0.5 rounded bg-[#0f1c2c] border border-[#3b4b3d]">
+                          <b className="text-[#00e478]">{f.home_points}</b>
+                          <span className="text-[#849585] mx-1">–</span>
+                          <b className="text-[#00e478]">{f.away_points}</b>
+                        </span>
+                      )}
+                      <Badge className={`text-[10px] border ${label.cls}`}>{label.label}</Badge>
+                      {f.status !== "scored" && (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Home"
+                            value={manual?.home ?? ""}
+                            onChange={(e) =>
+                              setManualScores((m) => ({ ...m, [f.id]: { home: e.target.value, away: m[f.id]?.away ?? "" } }))
+                            }
+                            className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Away"
+                            value={manual?.away ?? ""}
+                            onChange={(e) =>
+                              setManualScores((m) => ({ ...m, [f.id]: { home: m[f.id]?.home ?? "", away: e.target.value } }))
+                            }
+                            className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -469,46 +495,16 @@ export default function TournamentAdminPage() {
           </div>
 
           <div className="space-y-3">
-            {fixturesByGw.map(([gw, rows]) => (
-              <div key={gw} className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3">
-                <button
-                  className="w-full text-sm font-semibold text-[#d6e4f9] mb-2 flex items-center justify-between"
-                  onClick={() => setScoreGw(gw)}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>Gameweek {gw}</span>
-                    <span className="text-xs text-[#849585] font-normal">
-                      ({rows.filter((f) => f.status === "scored").length}/{rows.length} scored)
-                    </span>
-                  </div>
-                  {gw === liveGameweek && (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
-                      Live
-                    </span>
-                  )}
-                </button>
-                <div className="space-y-1">
-                  {rows.map((f) => (
-                    <div key={f.id} className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                      <span className="truncate flex items-center gap-2">
-                        <span className="text-xs text-[#849585] shrink-0">
-                          {fixtureGroupLabel(f)}
-                        </span>
-                        <span>
-                          {teamName(f.home_team_id)}
-                          <span className="text-[#849585]"> vs </span>
-                          {teamName(f.away_team_id)}
-                        </span>
-                      </span>
-                      <span className="text-xs text-[#849585]">
-                        {f.status === "scored" ? `${f.home_points}–${f.away_points}` : fixtureGroupLabel(f)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#849585]">
+              All Matchdays
+            </h3>
+            <TournamentFixtures
+              fixtures={fixtures}
+              teams={teams}
+              liveGameweek={liveGameweek}
+              onSelectGw={(gw) => setScoreGw(gw)}
+              activeAdminGw={scoreGw}
+            />
           </div>
         </div>
       )}

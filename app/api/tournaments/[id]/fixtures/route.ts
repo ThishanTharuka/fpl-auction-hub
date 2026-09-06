@@ -32,7 +32,7 @@ export async function GET(
       .order("leg"),
     supabase
       .from("competition_teams")
-      .select("id,name,group_label,team_number")
+      .select("id,name,group_label,team_number,avatar_url,color")
       .eq("competition_id", id),
   ]);
 
@@ -55,8 +55,24 @@ export async function GET(
       ...f,
       group,
       group_label: group ? `Group ${group}` : f.stage === "group" ? "Group" : f.phase,
-      home_team: hTeam ? { id: hTeam.id, name: hTeam.name, group_label: hTeam.group_label } : null,
-      away_team: aTeam ? { id: aTeam.id, name: aTeam.name, group_label: aTeam.group_label } : null,
+      home_team: hTeam
+        ? {
+            id: hTeam.id,
+            name: hTeam.name,
+            group_label: hTeam.group_label,
+            avatar_url: hTeam.avatar_url,
+            color: hTeam.color,
+          }
+        : null,
+      away_team: aTeam
+        ? {
+            id: aTeam.id,
+            name: aTeam.name,
+            group_label: aTeam.group_label,
+            avatar_url: aTeam.avatar_url,
+            color: aTeam.color,
+          }
+        : null,
     };
   });
 
