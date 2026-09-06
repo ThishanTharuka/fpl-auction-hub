@@ -9,6 +9,7 @@ interface TournamentFixturesProps {
   fixtures: CompetitionFixtureRow[];
   teams: CompetitionTeamRow[];
   liveGameweek?: number | null;
+  currentGameweek?: number | null;
   onSelectGw?: (gw: number) => void;
   activeAdminGw?: number;
 }
@@ -17,13 +18,33 @@ export function TournamentFixtures({
   fixtures,
   teams,
   liveGameweek = null,
+  currentGameweek = null,
   onSelectGw,
   activeAdminGw,
 }: TournamentFixturesProps) {
-  const [groupFilter, setGroupFilter] = useState<"all" | "A" | "B">("all");
-  const [selectedGwFilter, setSelectedGwFilter] = useState<number | "all">("all");
-
   const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+
+  const availableGws = useMemo(() => {
+    return [...new Set(fixtures.map((f) => f.gw as number))].sort((a, b) => a - b);
+  }, [fixtures]);
+
+  const defaultGw = useMemo(() => {
+    const target = liveGameweek ?? currentGameweek ?? activeAdminGw;
+    if (typeof target === "number" && availableGws.length > 0) {
+      if (availableGws.includes(target)) {
+        return target;
+      }
+      if (target < availableGws[0]!) {
+        return availableGws[0]!;
+      }
+      return availableGws[availableGws.length - 1]!;
+    }
+    return availableGws[0] ?? "all";
+  }, [liveGameweek, currentGameweek, activeAdminGw, availableGws]);
+
+  const [groupFilter, setGroupFilter] = useState<"all" | "A" | "B">("all");
+  const [userSelectedGwFilter, setUserSelectedGwFilter] = useState<number | "all" | null>(null);
+  const selectedGwFilter = userSelectedGwFilter ?? defaultGw;
 
   const fixtureGroupLabel = useCallback(
     (f: CompetitionFixtureRow) => {
@@ -44,10 +65,6 @@ export function TournamentFixtures({
     },
     [teamById],
   );
-
-  const availableGws = useMemo(() => {
-    return [...new Set(fixtures.map((f) => f.gw as number))].sort((a, b) => a - b);
-  }, [fixtures]);
 
   // Initial expanded state: expand live GW or the latest played GW, collapse older ones if > 3 GWs
   const [expandedGws, setExpandedGws] = useState<Record<number, boolean>>(() => {
@@ -180,7 +197,7 @@ export function TournamentFixtures({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar">
             <button
               type="button"
-              onClick={() => setSelectedGwFilter("all")}
+              onClick={() => setUserSelectedGwFilter("all")}
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                 selectedGwFilter === "all"
                   ? "bg-[#00e478] text-[#003919] font-semibold shadow-[0_0_10px_rgba(0,228,120,0.2)]"
@@ -197,7 +214,7 @@ export function TournamentFixtures({
                   key={gw}
                   type="button"
                   onClick={() => {
-                    setSelectedGwFilter(gw);
+                    setUserSelectedGwFilter(gw);
                     if (onSelectGw) onSelectGw(gw);
                   }}
                   className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${

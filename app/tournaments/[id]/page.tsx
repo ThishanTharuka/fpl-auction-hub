@@ -525,6 +525,7 @@ export default function TournamentAdminPage() {
               fixtures={fixtures}
               teams={teams}
               liveGameweek={liveGameweek}
+              currentGameweek={scoreGw || liveGameweek}
               onSelectGw={(gw) => setScoreGw(gw)}
               activeAdminGw={scoreGw}
             />

@@ -38,6 +38,7 @@ export default async function TournamentPublicPage({
   ]);
 
   const liveGameweek = fplData?.liveGameweek ?? fplData?.currentGameweek ?? null;
+  const currentGameweek = fplData?.currentGameweek ?? liveGameweek ?? null;
 
   const competition = compRes.data as CompetitionRow | null;
   if (!competition) {
@@ -217,6 +218,7 @@ export default async function TournamentPublicPage({
           fixtures={fixtures}
           teams={teams}
           liveGameweek={liveGameweek}
+          currentGameweek={currentGameweek}
         />
       </section>
     </div>
