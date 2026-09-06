@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.2...v1.29.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* enhance knockout tournament structure and scheduling ([3e8edc7](https://github.com/ThishanTharuka/fpl-auction-hub/commit/3e8edc73df7c6f276b347aad12dca34dc19563fa))
+
 ## [1.29.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.1...v1.29.2) (2026-09-03)
 
 
