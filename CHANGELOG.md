@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.0...v1.31.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* improve validation for entry ID and event parameters in API routes ([e7173bf](https://github.com/ThishanTharuka/fpl-auction-hub/commit/e7173bf93fc9ef5bc70ad542eed9e13216d658c1))
+
 # [1.31.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.2...v1.31.0) (2026-09-06)
 
 
