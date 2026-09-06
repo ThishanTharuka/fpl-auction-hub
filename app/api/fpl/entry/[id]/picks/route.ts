@@ -7,21 +7,29 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const entryId = parseInt(id, 10);
+  if (!/^\d+$/.test(id)) {
+    return NextResponse.json({ error: "Invalid entry id" }, { status: 400 });
+  }
+  const entryId = Number(id);
 
-  if (isNaN(entryId) || entryId <= 0) {
+  if (entryId <= 0 || !Number.isSafeInteger(entryId)) {
     return NextResponse.json({ error: "Invalid entry id" }, { status: 400 });
   }
 
   const { searchParams } = new URL(_req.url);
   const event = searchParams.get("event");
 
-  if (!event || isNaN(parseInt(event, 10))) {
+  if (!event || !/^\d+$/.test(event)) {
     return NextResponse.json({ error: "Missing or invalid event query param" }, { status: 400 });
   }
 
+  const eventId = Number(event);
+  if (eventId < 1 || eventId > 38) {
+    return NextResponse.json({ error: "Event must be between 1 and 38" }, { status: 400 });
+  }
+
   try {
-    const res = await fetch(`${FPL_PICKS_URL}/${entryId}/event/${event}/picks/`, {
+    const res = await fetch(`${FPL_PICKS_URL}/${entryId}/event/${eventId}/picks/`, {
       next: { revalidate: 300 },
     });
 

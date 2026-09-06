@@ -10,6 +10,9 @@ on:
       - master
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify
@@ -79,41 +82,51 @@ jobs:
           fi
 
       - name: Send Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          STATUS: ${{ steps.status.outputs.status }}
+          COLOR: ${{ steps.status.outputs.color }}
+          EMOJI: ${{ steps.status.outputs.emoji }}
+          REPOSITORY: ${{ github.repository }}
+          SERVER_URL: ${{ github.server_url }}
+          RUN_ID: ${{ github.run_id }}
+          REF_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+          WORKFLOW_NAME: ${{ github.workflow }}
         run: |
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          PAYLOAD=$(jq -n \
+            --arg title "$EMOJI CI $STATUS — $REPOSITORY" \
+            --argjson color "$COLOR" \
+            --arg run_url "$SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID" \
+            --arg branch "$REF_NAME" \
+            --arg commit "[$COMMIT_SHA]($SERVER_URL/$REPOSITORY/commit/$COMMIT_SHA)" \
+            --arg actor "$ACTOR" \
+            --arg verify "$VERIFY_RESULT" \
+            --arg workflow "$WORKFLOW_NAME" \
+            --arg ts "$TS" \
+            '{
+              embeds: [
+                {
+                  title: $title,
+                  color: $color,
+                  url: $run_url,
+                  fields: [
+                    { name: "Branch", value: $branch },
+                    { name: "Commit", value: $commit },
+                    { name: "Author", value: $actor },
+                    { name: "Verify", value: $verify, inline: true },
+                    { name: "Workflow", value: $workflow }
+                  ],
+                  timestamp: $ts
+                }
+              ]
+            }')
+
           curl -s --show-error --fail \
-          -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "embeds":[
-              {
-                "title":"${{ steps.status.outputs.emoji }} CI ${{ steps.status.outputs.status }} — ${{ github.repository }}",
-                "color":${{ steps.status.outputs.color }},
-                "url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                "fields":[
-                  {
-                    "name":"Branch",
-                    "value":"${{ github.ref_name }}"
-                  },
-                  {
-                    "name":"Commit",
-                    "value":"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
-                  },
-                  {
-                    "name":"Author",
-                    "value":"${{ github.actor }}"
-                  },
-                  {
-                    "name":"Verify",
-                    "value":"${{ needs.verify.result }}",
-                    "inline":true
-                  },
-                  {
-                    "name":"Workflow",
-                    "value":"${{ github.workflow }}"
-                  }
-                ],
-                "timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-              }
-            ]
-          }' \
-          ${{ secrets.DISCORD_WEBHOOK }} || echo "::warning::Discord webhook returned non-200"
+            -H "Content-Type: application/json" \
+            -X POST \
+            -d "$PAYLOAD" \
+            "$DISCORD_WEBHOOK" || echo "::warning::Discord webhook returned non-200"

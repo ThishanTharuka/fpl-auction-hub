@@ -10,6 +10,8 @@ on:
   release:
     types: [published]
 
+permissions: {}
+
 jobs:
   notify-push:
     name: Notify Push
@@ -17,34 +19,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Push Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REF_NAME: ${{ github.ref_name }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
         run: |
+          PAYLOAD=$(jq -n \
+            --arg ref "$REF_NAME" \
+            --arg repo_url "$SERVER_URL/$REPOSITORY" \
+            --arg actor "$ACTOR" \
+            --arg commit_url "$SERVER_URL/$REPOSITORY/commit/$COMMIT_SHA" \
+            --arg sha "$COMMIT_SHA" \
+            --arg msg "$COMMIT_MSG" \
+            --arg ts "$COMMIT_TIMESTAMP" \
+            '{
+              embeds: [
+                {
+                  title: ("🚀 Push to " + $ref),
+                  color: 5814783,
+                  url: $repo_url,
+                  fields: [
+                    { name: "Author", value: $actor },
+                    { name: "Commit", value: ("[" + $sha + "](" + $commit_url + ")") },
+                    { name: "Message", value: $msg }
+                  ],
+                  timestamp: $ts
+                }
+              ]
+            }')
+
           curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "embeds":[
-              {
-                "title":"🚀 Push to ${{ github.ref_name }}",
-                "color":5814783,
-                "url":"${{ github.server_url }}/${{ github.repository }}",
-                "fields":[
-                  {
-                    "name":"Author",
-                    "value":"${{ github.actor }}"
-                  },
-                  {
-                    "name":"Commit",
-                    "value":"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
-                  },
-                  {
-                    "name":"Message",
-                    "value":"${{ github.event.head_commit.message }}"
-                  }
-                ],
-                "timestamp":"${{ github.event.head_commit.timestamp }}"
-              }
-            ]
-          }' \
-          ${{ secrets.DISCORD_WEBHOOK }}
+            -X POST \
+            -d "$PAYLOAD" \
+            "$DISCORD_WEBHOOK"
 
   notify-tag:
     name: Notify Release
@@ -52,31 +64,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Release Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REF_NAME: ${{ github.ref_name }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
         run: |
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          PAYLOAD=$(jq -n \
+            --arg ref "$REF_NAME" \
+            --arg repo "$REPOSITORY" \
+            --arg repo_url "$SERVER_URL/$REPOSITORY/releases/tag/$REF_NAME" \
+            --arg actor "$ACTOR" \
+            --arg ts "$TS" \
+            '{
+              embeds: [
+                {
+                  title: ("🏷 Release " + $ref),
+                  color: 15258703,
+                  url: $repo_url,
+                  fields: [
+                    { name: "Repository", value: $repo },
+                    { name: "Tag", value: $ref },
+                    { name: "Published by", value: $actor }
+                  ],
+                  timestamp: $ts
+                }
+              ]
+            }')
+
           curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "embeds":[
-              {
-                "title":"🏷 Release ${{ github.ref_name }}",
-                "color":15258703,
-                "url":"${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}",
-                "fields":[
-                  {
-                    "name":"Repository",
-                    "value":"${{ github.repository }}"
-                  },
-                  {
-                    "name":"Tag",
-                    "value":"${{ github.ref_name }}"
-                  },
-                  {
-                    "name":"Published by",
-                    "value":"${{ github.actor }}"
-                  }
-                ],
-                "timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-              }
-            ]
-          }' \
-          ${{ secrets.DISCORD_WEBHOOK }}
+            -X POST \
+            -d "$PAYLOAD" \
+            "$DISCORD_WEBHOOK"
