@@ -54,11 +54,26 @@ describe("buildSchedule", () => {
     expect(leg1?.home_team_id).toBe(leg2?.away_team_id);
   });
 
-  it("second round knockout lands on GW32-33", () => {
-    const q5 = fixtures.find((f) => f.phase === "q5");
-    expect(q5?.gw).toBe(32);
-    const e7 = fixtures.find((f) => f.phase === "e7");
-    expect(e7?.gw).toBe(33);
+  it("second round knockout is two-legged on GW32-33", () => {
+    const q5 = fixtures.filter((f) => f.phase === "q5");
+    expect(q5).toHaveLength(2);
+    expect(q5[0]?.gw).toBe(32);
+    expect(q5[1]?.gw).toBe(33);
+    const e7 = fixtures.filter((f) => f.phase === "e7");
+    expect(e7).toHaveLength(2);
+    expect(e7[0]?.gw).toBe(32);
+    expect(e7[1]?.gw).toBe(33);
+  });
+
+  it("third round knockout is two-legged on GW34-35", () => {
+    const e9 = fixtures.filter((f) => f.phase === "e9");
+    expect(e9).toHaveLength(2);
+    expect(e9[0]?.gw).toBe(34);
+    expect(e9[1]?.gw).toBe(35);
+    const e11 = fixtures.filter((f) => f.phase === "e11");
+    expect(e11).toHaveLength(2);
+    expect(e11[0]?.gw).toBe(34);
+    expect(e11[1]?.gw).toBe(35);
   });
 
   it("plays Q7 and the triangular decider on the same GW36", () => {

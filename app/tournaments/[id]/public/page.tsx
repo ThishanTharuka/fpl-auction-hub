@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { getFplData } from "@/lib/fpl-data";
 import { computeGroupStandings } from "@/lib/tournament/standings";
 import { computeTieOutcomes, resolveKnockoutPlacement } from "@/lib/tournament/knockout";
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
+import { TournamentBracket } from "@/components/tournament-bracket";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -26,11 +28,14 @@ export default async function TournamentPublicPage({
 }) {
   const { id } = await params;
 
-  const [compRes, teamsRes, fixRes] = await Promise.all([
+  const [compRes, teamsRes, fixRes, fplData] = await Promise.all([
     supabase.from("competitions").select("*").eq("id", id).single(),
     supabase.from("competition_teams").select("*").eq("competition_id", id).order("team_number"),
     supabase.from("competition_fixtures").select("*").eq("competition_id", id).order("gw"),
+    getFplData().catch(() => null),
   ]);
+
+  const liveGameweek = fplData?.liveGameweek ?? fplData?.currentGameweek ?? null;
 
   const competition = compRes.data as CompetitionRow | null;
   if (!competition) {
@@ -48,12 +53,28 @@ export default async function TournamentPublicPage({
   const fixtures = (fixRes.data ?? []) as CompetitionFixtureRow[];
   const config = competition.format_config as unknown as CompetitionConfig;
 
+  const teamById = new Map(teams.map((t) => [t.id, t]));
+
   const teamName = (teamId: string | null) =>
-    teams.find((t) => t.id === teamId)?.name ?? "TBD";
+    (teamId ? teamById.get(teamId)?.name ?? "TBD" : "TBD");
+
+  const fixtureGroupLabel = (f: CompetitionFixtureRow) => {
+    if (f.stage === "group") {
+      const hGroup = f.home_team_id ? teamById.get(f.home_team_id)?.group_label : null;
+      const aGroup = f.away_team_id ? teamById.get(f.away_team_id)?.group_label : null;
+      if (hGroup && aGroup) {
+        return hGroup === aGroup ? `Group ${hGroup}` : "Group A vs B";
+      }
+      if (hGroup) return `Group ${hGroup}`;
+      if (aGroup) return `Group ${aGroup}`;
+      return "Group";
+    }
+    return f.phase;
+  };
 
   const standings = computeGroupStandings(teams, fixtures, config);
 
-  const bracketSlots =
+  const _bracketSlots =
     config.knockout.template === "two_path_v1"
       ? (() => {
           const outcomes = computeTieOutcomes(fixtures);
@@ -183,20 +204,8 @@ export default async function TournamentPublicPage({
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-[#d6e4f9]">Bracket</h2>
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 space-y-2">
-          {bracketSlots.map((slot, i) => (
-            <div
-              key={`${slot.phase}-${i}`}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#132030] px-4 py-2"
-            >
-              <span className="text-xs text-[#849585] w-24 uppercase">{slot.phase}</span>
-              <span className="flex-1 text-sm text-[#d6e4f9] truncate">
-                {teamName(slot.homeTeamId)}
-                <span className="text-[#849585]"> vs </span>
-                {teamName(slot.awayTeamId)}
-              </span>
-            </div>
-          ))}
+        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
+          <TournamentBracket teams={teams} fixtures={fixtures} />
         </div>
       </section>
 
@@ -205,17 +214,30 @@ export default async function TournamentPublicPage({
         <div className="space-y-3">
           {gwList.map(([gw, rows]) => (
             <div key={gw} className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3">
-              <p className="text-xs text-[#849585] mb-2">Gameweek {gw}</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-[#849585]">Gameweek {gw}</p>
+                {gw === liveGameweek && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
+                    Live
+                  </span>
+                )}
+              </div>
               <div className="space-y-1">
                 {rows.map((f) => (
                   <div key={f.id} className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                    <span className="truncate">
-                      {teamName(f.home_team_id)}
-                      <span className="text-[#849585]"> vs </span>
-                      {teamName(f.away_team_id)}
+                    <span className="truncate flex items-center gap-2">
+                      <span className="text-xs text-[#849585] shrink-0">
+                        {fixtureGroupLabel(f)}
+                      </span>
+                      <span>
+                        {teamName(f.home_team_id)}
+                        <span className="text-[#849585]"> vs </span>
+                        {teamName(f.away_team_id)}
+                      </span>
                     </span>
                     <span className="text-xs text-[#849585]">
-                      {f.status === "scored" ? `${f.home_points}–${f.away_points}` : f.phase}
+                      {f.status === "scored" ? `${f.home_points}–${f.away_points}` : fixtureGroupLabel(f)}
                     </span>
                   </div>
                 ))}

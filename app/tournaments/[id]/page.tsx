@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { computeGroupStandings } from "@/lib/tournament/standings";
 import { computeTieOutcomes, resolveKnockoutPlacement } from "@/lib/tournament/knockout";
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
+import { TournamentBracket } from "@/components/tournament-bracket";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -53,6 +54,7 @@ export default function TournamentAdminPage() {
 
   const [tab, setTab] = useState<"fixtures" | "standings" | "bracket" | "settings">("fixtures");
   const [scoreGw, setScoreGw] = useState(0);
+  const [liveGameweek, setLiveGameweek] = useState<number | null>(null);
   const [scoring, setScoring] = useState(false);
   const [scoreMsg, setScoreMsg] = useState("");
   const [manualScores, setManualScores] = useState<Record<string, { home: string; away: string }>>({});
@@ -93,11 +95,15 @@ export default function TournamentAdminPage() {
         const gwRes = await fetch("/api/fpl/bootstrap")
           .then((r) => (r.ok ? r.json() : null))
           .catch(() => null);
-        const cg = (gwRes as { currentGameweek?: number } | null)?.currentGameweek;
-        if (typeof cg === "number" && availableGws.length) {
-          if (availableGws.includes(cg)) gwToSelect = cg;
-          else {
-            const next = availableGws.find((g) => g >= cg);
+        const cg = (gwRes as { currentGameweek?: number; liveGameweek?: number | null } | null)?.currentGameweek;
+        const lg = (gwRes as { currentGameweek?: number; liveGameweek?: number | null } | null)?.liveGameweek ?? cg ?? null;
+        if (typeof lg === "number") setLiveGameweek(lg);
+        const targetGw = lg ?? cg;
+        if (typeof targetGw === "number" && availableGws.length) {
+          if (availableGws.includes(targetGw)) {
+            gwToSelect = targetGw;
+          } else {
+            const next = availableGws.find((g) => g >= targetGw);
             gwToSelect = next ?? availableGws[availableGws.length - 1] ?? maxGw;
           }
         }
@@ -107,15 +113,36 @@ export default function TournamentAdminPage() {
     })().catch(() => setLoading(false));
   }, [user, id]);
 
-  const teamName = (teamId: string | null) =>
-    teams.find((t) => t.id === teamId)?.name ?? "TBD";
+  const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+
+  const teamName = useCallback(
+    (teamId: string | null) => (teamId ? teamById.get(teamId)?.name ?? "TBD" : "TBD"),
+    [teamById],
+  );
+
+  const fixtureGroupLabel = useCallback(
+    (f: CompetitionFixtureRow) => {
+      if (f.stage === "group") {
+        const hGroup = f.home_team_id ? teamById.get(f.home_team_id)?.group_label : null;
+        const aGroup = f.away_team_id ? teamById.get(f.away_team_id)?.group_label : null;
+        if (hGroup && aGroup) {
+          return hGroup === aGroup ? `Group ${hGroup}` : "Group A vs B";
+        }
+        if (hGroup) return `Group ${hGroup}`;
+        if (aGroup) return `Group ${aGroup}`;
+        return "Group";
+      }
+      return f.phase;
+    },
+    [teamById],
+  );
 
   const standings = useMemo(() => {
     if (!config) return [];
     return computeGroupStandings(teams, fixtures, config);
   }, [config, teams, fixtures]);
 
-  const bracketSlots = useMemo(() => {
+  const _bracketSlots = useMemo(() => {
     if (!config || config.knockout.template !== "two_path_v1") return [];
     const outcomes = computeTieOutcomes(fixtures);
     const qualifiers = config.qualification.qualifiers_per_group;
@@ -331,30 +358,47 @@ export default function TournamentAdminPage() {
       {tab === "fixtures" && (
         <div className="space-y-6">
           <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-4">
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="space-y-1">
-                <label className="text-xs text-[#849585]">Gameweek</label>
-                <Select value={String(scoreGw)} onValueChange={(v) => v && setScoreGw(parseInt(v, 10))}>
-                  <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
-                    {fixturesByGw.map(([gw]) => (
-                      <SelectItem key={gw} value={String(gw)} className="text-xs">
-                        GW{gw}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-[#849585]">Gameweek</label>
+                  <Select value={String(scoreGw)} onValueChange={(v) => v && setScoreGw(parseInt(v, 10))}>
+                    <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-9 min-w-[90px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+                      {fixturesByGw.map(([gw]) => (
+                        <SelectItem key={gw} value={String(gw)} className="text-xs">
+                          <span className="flex items-center gap-2">
+                            <span>GW{gw}</span>
+                            {gw === liveGameweek && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30">
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
+                                Live
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={autoScore}
+                  disabled={scoring || gwFixtures.length === 0}
+                  className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
+                >
+                  {scoring ? "Scoring..." : `Auto-score GW${scoreGw}`}
+                </Button>
+                {scoreMsg && <p className="text-sm text-[#849585]">{scoreMsg}</p>}
               </div>
-              <Button
-                onClick={autoScore}
-                disabled={scoring || gwFixtures.length === 0}
-                className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-              >
-                {scoring ? "Scoring..." : `Auto-score GW${scoreGw}`}
-              </Button>
-              {scoreMsg && <p className="text-sm text-[#849585] flex-1">{scoreMsg}</p>}
+
+              {scoreGw === liveGameweek && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_12px_rgba(0,228,120,0.15)] self-start sm:self-center ml-auto">
+                  <span className="h-2 w-2 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_8px_rgba(0,228,120,0.8)]" />
+                  Live
+                </span>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -366,8 +410,8 @@ export default function TournamentAdminPage() {
                     key={f.id}
                     className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center gap-3"
                   >
-                    <span className="text-xs text-[#849585] w-24">
-                      {f.stage === "group" ? "Group" : f.phase}
+                    <span className="text-xs font-medium text-[#849585] w-28 shrink-0">
+                      {fixtureGroupLabel(f)}
                     </span>
                     <span className="flex-1 min-w-[180px] text-sm text-[#d6e4f9] truncate">
                       {teamName(f.home_team_id)}
@@ -428,24 +472,37 @@ export default function TournamentAdminPage() {
             {fixturesByGw.map(([gw, rows]) => (
               <div key={gw} className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3">
                 <button
-                  className="text-sm font-semibold text-[#d6e4f9] mb-2 flex items-center gap-2"
+                  className="w-full text-sm font-semibold text-[#d6e4f9] mb-2 flex items-center justify-between"
                   onClick={() => setScoreGw(gw)}
                 >
-                  Gameweek {gw}
-                  <span className="text-xs text-[#849585] font-normal">
-                    {rows.filter((f) => f.status === "scored").length}/{rows.length} scored
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span>Gameweek {gw}</span>
+                    <span className="text-xs text-[#849585] font-normal">
+                      ({rows.filter((f) => f.status === "scored").length}/{rows.length} scored)
+                    </span>
+                  </div>
+                  {gw === liveGameweek && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
+                      Live
+                    </span>
+                  )}
                 </button>
                 <div className="space-y-1">
                   {rows.map((f) => (
                     <div key={f.id} className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                      <span className="truncate">
-                        {teamName(f.home_team_id)}
-                        <span className="text-[#849585]"> vs </span>
-                        {teamName(f.away_team_id)}
+                      <span className="truncate flex items-center gap-2">
+                        <span className="text-xs text-[#849585] shrink-0">
+                          {fixtureGroupLabel(f)}
+                        </span>
+                        <span>
+                          {teamName(f.home_team_id)}
+                          <span className="text-[#849585]"> vs </span>
+                          {teamName(f.away_team_id)}
+                        </span>
                       </span>
                       <span className="text-xs text-[#849585]">
-                        {f.status === "scored" ? `${f.home_points}–${f.away_points}` : f.phase}
+                        {f.status === "scored" ? `${f.home_points}–${f.away_points}` : fixtureGroupLabel(f)}
                       </span>
                     </div>
                   ))}
@@ -542,24 +599,8 @@ export default function TournamentAdminPage() {
       )}
 
       {tab === "bracket" && (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-2">
-          <p className="text-sm text-[#849585] mb-2">
-            Two-path knockout. Group positions seed the Quarter-finals; bracket updates as
-            gameweeks are scored.
-          </p>
-          {bracketSlots.map((slot, i) => (
-            <div
-              key={`${slot.phase}-${i}`}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#132030] px-4 py-2"
-            >
-              <span className="text-xs text-[#849585] w-24 uppercase">{slot.phase}</span>
-              <span className="flex-1 text-sm text-[#d6e4f9] truncate">
-                {teamName(slot.homeTeamId)}
-                <span className="text-[#849585]"> vs </span>
-                {teamName(slot.awayTeamId)}
-              </span>
-            </div>
-          ))}
+        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+          <TournamentBracket teams={teams} fixtures={fixtures} />
         </div>
       )}
 

@@ -113,7 +113,7 @@ export function computeTieOutcomes(
   return outcomes;
 }
 
-function resolveEntrant(
+export function resolveEntrant(
   ent: KnockoutEntrant,
   outcomes: Map<string, TieOutcome>,
   seeds: { group: GroupLabel; teamIds: string[] }[],
