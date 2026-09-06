@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.3...v1.29.4) (2026-09-06)
+
+
+### Bug Fixes
+
+* **web:** enhance tournament fixtures display and structure ([ff854bf](https://github.com/ThishanTharuka/fpl-auction-hub/commit/ff854bfd8467a55a6f5994ddff9fe5771b07b2d5))
+
 ## [1.29.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.2...v1.29.3) (2026-09-06)
 
 
