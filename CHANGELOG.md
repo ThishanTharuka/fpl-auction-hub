@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.0...v1.30.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* add currentGameweek prop to TournamentFixtures and update TournamentAdminPage ([f612837](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f6128376fe8acb0237ca618d878d10fbaeceb661))
+
 # [1.30.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.4...v1.30.0) (2026-09-06)
 
 
