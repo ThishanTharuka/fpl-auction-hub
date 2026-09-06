@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.31.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.2...v1.31.0) (2026-09-06)
+
+
+### Features
+
+* add fixture breakdown modal and player stats comparison ([357ba41](https://github.com/ThishanTharuka/fpl-auction-hub/commit/357ba413a23518e43097e82f9935c4d9d582c06f))
+
 ## [1.30.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.1...v1.30.2) (2026-09-06)
 
 
