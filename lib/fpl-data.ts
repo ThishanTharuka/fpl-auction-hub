@@ -94,6 +94,7 @@ type FplDataResult = {
   players: EnrichedPlayer[];
   teams: FPLTeam[];
   currentGameweek: number;
+  liveGameweek?: number | null;
 };
 
 async function fetchFromUpstream(): Promise<{
@@ -118,7 +119,8 @@ async function fetchFromUpstream(): Promise<{
 
   const currentEvent = bootstrap.events.find((e) => e.is_current);
   const nextEvent = bootstrap.events.find((e) => e.is_next);
-  const currentGw = nextEvent?.id ?? currentEvent?.id ?? 1;
+  const currentGw = currentEvent?.id ?? nextEvent?.id ?? 1;
+  const liveGw = currentEvent && !currentEvent.finished ? currentEvent.id : (currentEvent?.id ?? null);
 
   const teamFdrMap = new Map<number, number>();
   for (const team of bootstrap.teams) {
@@ -145,7 +147,12 @@ async function fetchFromUpstream(): Promise<{
   });
 
   return {
-    data: { players, teams: bootstrap.teams, currentGameweek: currentGw },
+    data: {
+      players,
+      teams: bootstrap.teams,
+      currentGameweek: currentGw,
+      liveGameweek: liveGw,
+    },
     ttl,
   };
 }

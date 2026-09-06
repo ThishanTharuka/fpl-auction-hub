@@ -12,6 +12,57 @@ export type ImportResolution = {
   awayMatch: TeamMatch;
 };
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const authed = await getAuthedSupabase(request);
+  if (!authed.ok) return authed.response;
+  const { supabase } = authed;
+
+  const { id } = await params;
+
+  const [fixRes, teamsRes] = await Promise.all([
+    supabase
+      .from("competition_fixtures")
+      .select("*")
+      .eq("competition_id", id)
+      .order("gw")
+      .order("tie_index")
+      .order("leg"),
+    supabase
+      .from("competition_teams")
+      .select("id,name,group_label,team_number")
+      .eq("competition_id", id),
+  ]);
+
+  if (fixRes.error) {
+    return NextResponse.json({ error: "Failed to load fixtures." }, { status: 500 });
+  }
+
+  const teamById = new Map((teamsRes.data ?? []).map((t) => [t.id, t]));
+  const fixtures = (fixRes.data ?? []).map((f) => {
+    const hTeam = f.home_team_id ? teamById.get(f.home_team_id) : null;
+    const aTeam = f.away_team_id ? teamById.get(f.away_team_id) : null;
+    const group =
+      f.stage === "group"
+        ? hTeam?.group_label && aTeam?.group_label && hTeam.group_label === aTeam.group_label
+          ? hTeam.group_label
+          : hTeam?.group_label || aTeam?.group_label || null
+        : null;
+
+    return {
+      ...f,
+      group,
+      group_label: group ? `Group ${group}` : f.stage === "group" ? "Group" : f.phase,
+      home_team: hTeam ? { id: hTeam.id, name: hTeam.name, group_label: hTeam.group_label } : null,
+      away_team: aTeam ? { id: aTeam.id, name: aTeam.name, group_label: aTeam.group_label } : null,
+    };
+  });
+
+  return NextResponse.json({ fixtures });
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

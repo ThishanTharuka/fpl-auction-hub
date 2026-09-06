@@ -119,6 +119,32 @@ describe("resolveKnockoutPlacement", () => {
     expect(byPhase.get("e8")).toEqual({ phase: "e8", homeTeamId: "a6", awayTeamId: "b7" });
   });
 
+  it("maps second round winners/losers into the third and fourth rounds", () => {
+    const secondRoundScored = [
+      ...firstRoundScored,
+      ...twoLeg("q5", 9, "a1", "a4", 140, 100), // a1 wins, a4 loses
+      ...twoLeg("q6", 10, "a2", "b3", 130, 90), // a2 wins, b3 loses
+      ...twoLeg("e5", 11, "b1", "b4", 120, 80), // b1 wins
+      ...twoLeg("e6", 12, "b2", "a3", 110, 70), // b2 wins
+      ...twoLeg("e7", 13, "a5", "a8", 100, 60), // a5 wins
+      ...twoLeg("e8", 14, "a6", "b7", 115, 75), // a6 wins
+    ];
+    const outcomes = computeTieOutcomes(secondRoundScored);
+    const placements = resolveKnockoutPlacement(bracket, outcomes, [
+      { group: "A", teamIds: seeds.A },
+      { group: "B", teamIds: seeds.B },
+    ]);
+    const byPhase = new Map(placements.map((p) => [p.phase, p]));
+
+    // Round 3
+    expect(byPhase.get("e9")).toEqual({ phase: "e9", homeTeamId: "a4", awayTeamId: "b3" });
+    expect(byPhase.get("e10")).toEqual({ phase: "e10", homeTeamId: "b1", awayTeamId: "a6" });
+    expect(byPhase.get("e11")).toEqual({ phase: "e11", homeTeamId: "b2", awayTeamId: "a5" });
+
+    // Round 4 (Q7)
+    expect(byPhase.get("q7")).toEqual({ phase: "q7", homeTeamId: "a1", awayTeamId: "a2" });
+  });
+
   it("leaves dependent slots unresolved until their feeders are scored", () => {
     const outcomes = computeTieOutcomes([]);
     const placements = resolveKnockoutPlacement(bracket, outcomes, [
