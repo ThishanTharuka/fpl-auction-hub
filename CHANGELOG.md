@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.1...v1.30.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* add FPL gameweek API endpoint and integrate into tournament pages ([933b483](https://github.com/ThishanTharuka/fpl-auction-hub/commit/933b4830623001ec18513d78cd7e44511662067b))
+
 ## [1.30.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.30.0...v1.30.1) (2026-09-06)
 
 
