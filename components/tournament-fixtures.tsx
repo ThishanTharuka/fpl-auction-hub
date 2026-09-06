@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { TeamAvatar } from "@/components/team-avatar";
-import { ChevronDown, ChevronUp, Layers } from "lucide-react";
+import { ChevronDown, ChevronUp, Layers, Users } from "lucide-react";
+import { FixtureBreakdownModal } from "@/components/fixture-breakdown-modal";
 import type { CompetitionFixtureRow, CompetitionTeamRow } from "@/lib/tournament/types";
 
 interface TournamentFixturesProps {
@@ -45,6 +46,7 @@ export function TournamentFixtures({
   const [groupFilter, setGroupFilter] = useState<"all" | "A" | "B">("all");
   const [userSelectedGwFilter, setUserSelectedGwFilter] = useState<number | "all" | null>(null);
   const selectedGwFilter = userSelectedGwFilter ?? defaultGw;
+  const [selectedModalFixture, setSelectedModalFixture] = useState<CompetitionFixtureRow | null>(null);
 
   const fixtureGroupLabel = useCallback(
     (f: CompetitionFixtureRow) => {
@@ -346,6 +348,9 @@ export function TournamentFixtures({
                       const isHomeWinner = isScored && hPts > aPts;
                       const isAwayWinner = isScored && aPts > hPts;
                       const isDraw = isScored && hPts === aPts;
+                      const isFutureGw =
+                        typeof (liveGameweek ?? currentGameweek) === "number" &&
+                        (f.gw as number) > (liveGameweek ?? currentGameweek)!;
 
                       return (
                         <div
@@ -463,6 +468,29 @@ export function TournamentFixtures({
                                 </span>
                               )}
                             </div>
+
+                            {/* Fixture Card Footer: Subtle Breakdown Trigger */}
+                            <div className="pt-2 flex items-center justify-between border-t border-[#3b4b3d]/30 text-[11px]">
+                              {isFutureGw && !isScored ? (
+                                <span className="text-[10px] text-[#849585]/70 italic">
+                                  Lineups revealed at deadline
+                                </span>
+                              ) : (
+                                <>
+                                  <span className="text-[10px] text-[#849585]/70">
+                                    {isScored ? "Final match points" : "Live match details"}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedModalFixture(f)}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-[#d6e4f9] bg-[#1a2838] border border-[#3b4b3d] hover:border-[#00e478]/50 hover:bg-[#00e478]/15 hover:text-[#00e478] transition-all duration-150 active:scale-[0.98] shadow-xs cursor-pointer"
+                                  >
+                                    <Users className="h-3 w-3 text-[#00e478]" />
+                                    <span>Breakdown</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -539,6 +567,29 @@ export function TournamentFixtures({
           </div>
         )}
       </div>
+
+      {/* Match Breakdown Modal with Player Breakdown and Stats Comparison */}
+      <FixtureBreakdownModal
+        open={Boolean(selectedModalFixture)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedModalFixture(null);
+        }}
+        fixtureId={selectedModalFixture?.id ?? null}
+        gw={(selectedModalFixture?.gw as number) ?? 1}
+        homeTeamName={
+          selectedModalFixture?.home_team_id
+            ? teamById.get(selectedModalFixture.home_team_id)?.name
+            : "Home"
+        }
+        awayTeamName={
+          selectedModalFixture?.away_team_id
+            ? teamById.get(selectedModalFixture.away_team_id)?.name
+            : "Away"
+        }
+        homeScore={selectedModalFixture?.home_points}
+        awayScore={selectedModalFixture?.away_points}
+        isScored={selectedModalFixture?.status === "scored"}
+      />
     </div>
   );
 }
