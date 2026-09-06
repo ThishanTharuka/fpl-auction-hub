@@ -14,6 +14,17 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const COLOR_PRESETS = ["#4ade80", "#3b82f6", "#ef4444", "#a78bfa", "#fb923c", "#facc15", "#2dd4bf", "#f472b6"];
 
+function isSafeImageUrl(url: string | null): boolean {
+  if (!url) return false;
+  if (url.startsWith("blob:")) return true;
+  try {
+    const parsed = new URL(url, "https://placeholder.invalid");
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export default function TeamEditPage() {
   const { id: leagueId, participantId } = useParams<{ id: string; participantId: string }>();
   const router = useRouter();
@@ -32,6 +43,10 @@ export default function TeamEditPage() {
   const [hexInput, setHexInput] = useState("#888888");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const safeAvatarPreview = useMemo(
+    () => (isSafeImageUrl(avatarPreview) ? avatarPreview : null),
+    [avatarPreview],
+  );
   const [fplManagerId, setFplManagerId] = useState("");
   const [fplVerifiedName, setFplVerifiedName] = useState<string | null>(null);
   const [fplVerifying, setFplVerifying] = useState(false);
@@ -66,7 +81,7 @@ export default function TeamEditPage() {
       setName(pt.name);
       handleSetColor(pt.color ?? "#888888");
       setFplManagerId(pt.fpl_manager_id?.toString() ?? "");
-      setAvatarPreview(pt.avatar_url);
+      setAvatarPreview(isSafeImageUrl(pt.avatar_url) ? pt.avatar_url : null);
 
       if (pt.fpl_manager_id) {
         fetch(`/api/fpl/entry/${pt.fpl_manager_id}`)
@@ -295,9 +310,9 @@ export default function TeamEditPage() {
                     if (file) handleAvatarFile(file);
                   }}
                 >
-                  {avatarPreview ? (
+                  {safeAvatarPreview ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                    <img src={safeAvatarPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-[#586278] text-[10.5px] font-medium text-center tracking-[0.02em]">
                       No<br />image
@@ -405,12 +420,12 @@ export default function TeamEditPage() {
               <div
                 className="crest-clip flex items-center justify-center mb-4 overflow-hidden relative transition-colors duration-200"
                 style={{
-                  background: avatarPreview ? "transparent" : color,
+                  background: safeAvatarPreview ? "transparent" : color,
                 }}
               >
-                {avatarPreview ? (
+                {safeAvatarPreview ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                  <img src={safeAvatarPreview} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <span className="font-bold text-[30px] text-[#06281a]" style={{ fontFamily: "Inter, sans-serif" }}>
                     {crestInitial}
