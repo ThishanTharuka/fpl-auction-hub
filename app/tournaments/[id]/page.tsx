@@ -111,6 +111,29 @@ export default function TournamentAdminPage() {
       } catch {}
       setScoreGw(gwToSelect);
       setLoading(false);
+
+      // Automatic background sync check if gameweek scores are due
+      if (typeof gwToSelect === "number" && id) {
+        fetch(`/api/tournaments/${id}/score`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gw: gwToSelect, checkOnly: true }),
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data?.scored > 0) {
+              supabase
+                .from("competition_fixtures")
+                .select("*")
+                .eq("competition_id", id)
+                .order("gw")
+                .then((r) => {
+                  if (r.data) setFixtures(r.data as CompetitionFixtureRow[]);
+                });
+            }
+          })
+          .catch(() => null);
+      }
     })().catch(() => setLoading(false));
   }, [user, id]);
 

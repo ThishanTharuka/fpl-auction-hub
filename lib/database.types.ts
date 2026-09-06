@@ -635,6 +635,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_fixture_scores: {
+        Args: {
+          p_fixtures: Json
+          p_deciders?: Json | null
+          p_knockout_placements?: Json | null
+          p_competition_id?: string | null
+          p_competition_status?: string | null
+        }
+        Returns: undefined
+      }
       delete_user: { Args: never; Returns: undefined }
       get_server_time: { Args: never; Returns: string }
     }

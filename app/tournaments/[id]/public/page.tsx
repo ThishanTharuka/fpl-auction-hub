@@ -7,6 +7,7 @@ import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
 import { TournamentBracket } from "@/components/tournament-bracket";
 import { TournamentFixtures } from "@/components/tournament-fixtures";
+import { autoScoreCompetition } from "@/lib/tournament/auto-score";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -51,7 +52,28 @@ export default async function TournamentPublicPage({
   }
 
   const teams = (teamsRes.data ?? []) as CompetitionTeamRow[];
-  const fixtures = (fixRes.data ?? []) as CompetitionFixtureRow[];
+  let fixtures = (fixRes.data ?? []) as CompetitionFixtureRow[];
+
+  // Auto-score when a gameweek is ongoing or newly finished and cooldown is expired
+  if (liveGameweek && (competition.status === "active" || competition.status === "setup")) {
+    const autoScoreRes = await autoScoreCompetition({
+      competitionId: id,
+      gw: liveGameweek,
+      force: false,
+    }).catch(() => null);
+
+    if (autoScoreRes?.attempted && autoScoreRes.scored > 0) {
+      const refreshedFix = await supabase
+        .from("competition_fixtures")
+        .select("*")
+        .eq("competition_id", id)
+        .order("gw");
+      if (refreshedFix.data) {
+        fixtures = refreshedFix.data as CompetitionFixtureRow[];
+      }
+    }
+  }
+
   const config = competition.format_config as unknown as CompetitionConfig;
 
 
