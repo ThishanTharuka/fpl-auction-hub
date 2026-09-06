@@ -3,7 +3,10 @@ import type {
   FPLTeam,
   EnrichedPlayer,
   FPLFixture,
+  FplDataResult,
 } from "./fpl-types";
+
+export type { FplDataResult };
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
@@ -90,13 +93,6 @@ export function getCurrentTtl(fixtures: FPLFixture[]): number {
   return TTL.DEFAULT;
 }
 
-type FplDataResult = {
-  players: EnrichedPlayer[];
-  teams: FPLTeam[];
-  currentGameweek: number;
-  liveGameweek?: number | null;
-};
-
 async function fetchFromUpstream(): Promise<{
   data: FplDataResult;
   ttl: number;
@@ -150,6 +146,8 @@ async function fetchFromUpstream(): Promise<{
     data: {
       players,
       teams: bootstrap.teams,
+      events: bootstrap.events,
+      fixtures,
       currentGameweek: currentGw,
       liveGameweek: liveGw,
     },
@@ -183,8 +181,9 @@ export async function getFplData(): Promise<FplDataResult> {
   if (data) {
     const age = Date.now() - new Date(data.updated_at).getTime();
     const ttl = data.ttl_ms ?? TTL.DEFAULT;
-    if (age < ttl) {
-      return data.value as unknown as FplDataResult;
+    const cached = data.value as unknown as FplDataResult;
+    if (age < ttl && cached && cached.players && cached.events && cached.fixtures) {
+      return cached;
     }
   }
 

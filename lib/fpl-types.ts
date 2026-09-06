@@ -25,6 +25,10 @@ export interface FPLPlayer {
   team_code: number;
   element_type: 1 | 2 | 3 | 4; // 1=GKP 2=DEF 3=MID 4=FWD
   now_cost: number; // in tenths (e.g. 65 = £6.5m)
+  cost_change_event?: number;
+  cost_change_event_fall?: number;
+  cost_change_start?: number;
+  cost_change_start_fall?: number;
   total_points: number;
   points_per_game: string;
   selected_by_percent: string;
@@ -49,7 +53,15 @@ export interface FPLPlayer {
   expected_assists: string;
   expected_goal_involvements: string;
   expected_goals_conceded: string;
+  expected_goals_per_90?: number;
+  expected_assists_per_90?: number;
+  expected_goal_involvements_per_90?: number;
+  expected_goals_conceded_per_90?: number;
+  clean_sheets_per_90?: number;
+  saves_per_90?: number;
   starts: number;
+  transfers_in?: number;
+  transfers_out?: number;
   transfers_in_event: number;
   transfers_out_event: number;
   status: "a" | "d" | "i" | "n" | "s" | "u"; // available/doubtful/injured/not eligible/suspended/unavailable
@@ -57,6 +69,40 @@ export interface FPLPlayer {
   news_added: string | null;
   chance_of_playing_next_round: number | null;
   chance_of_playing_this_round: number | null;
+}
+
+export interface FPLEventChipPlay {
+  chip_name: string;
+  num_played: number;
+}
+
+export interface FPLEventTopElementInfo {
+  id: number;
+  points: number;
+}
+
+export interface FPLEvent {
+  id: number;
+  name: string;
+  deadline_time: string;
+  average_entry_score?: number;
+  finished: boolean;
+  data_checked?: boolean;
+  highest_scoring_entry?: number | null;
+  deadline_time_epoch?: number;
+  deadline_time_game_offset?: number;
+  highest_score?: number | null;
+  is_previous: boolean;
+  is_current: boolean;
+  is_next: boolean;
+  chip_plays?: FPLEventChipPlay[];
+  most_selected?: number | null;
+  most_transferred_in?: number | null;
+  top_element?: number | null;
+  top_element_info?: FPLEventTopElementInfo | null;
+  transfers_made?: number;
+  most_captained?: number | null;
+  most_vice_captained?: number | null;
 }
 
 export interface FPLFixture {
@@ -68,6 +114,8 @@ export interface FPLFixture {
   team_a_difficulty: number;
   finished: boolean;
   kickoff_time: string | null;
+  team_h_score?: number | null;
+  team_a_score?: number | null;
 }
 
 export interface FPLBootstrapResponse {
@@ -80,14 +128,7 @@ export interface FPLBootstrapResponse {
     plural_name: string;
     plural_name_short: string;
   }>;
-  events: Array<{
-    id: number;
-    name: string;
-    deadline_time: string;
-    finished: boolean;
-    is_current: boolean;
-    is_next: boolean;
-  }>;
+  events: FPLEvent[];
 }
 
 export interface FPLElementSummary {
@@ -134,6 +175,15 @@ export interface EnrichedPlayer extends FPLPlayer {
   position: "GKP" | "DEF" | "MID" | "FWD";
   price: number; // now_cost / 10
   avg_fdr_next5: number; // average fixture difficulty rating, next 5 GWs
+}
+
+export interface FplDataResult {
+  players: EnrichedPlayer[];
+  teams: FPLTeam[];
+  events?: FPLEvent[];
+  fixtures?: FPLFixture[];
+  currentGameweek: number;
+  liveGameweek?: number | null;
 }
 
 // ─── Index Builder Types ──────────────────────────────────────────────────────

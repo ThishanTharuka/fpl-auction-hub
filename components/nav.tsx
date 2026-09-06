@@ -11,6 +11,7 @@ import { Menu, X } from "lucide-react";
 
 const links = [
   { href: "/players", label: "Players" },
+  { href: "/insights", label: "Insights" },
   { href: "/index-builder", label: "Index Builder" },
   { href: "/auction", label: "Auctions" },
   { href: "/auction/setup", label: "New Auction" },
