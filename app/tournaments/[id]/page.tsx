@@ -93,7 +93,7 @@ export default function TournamentAdminPage() {
       const maxGw = availableGws.length ? availableGws[availableGws.length - 1]! : 0;
       let gwToSelect = maxGw || (compRes.data.start_gw ?? 1);
       try {
-        const gwRes = await fetch("/api/fpl/bootstrap")
+        const gwRes = await fetch("/api/fpl/gameweek")
           .then((r) => (r.ok ? r.json() : null))
           .catch(() => null);
         const cg = (gwRes as { currentGameweek?: number; liveGameweek?: number | null } | null)?.currentGameweek;

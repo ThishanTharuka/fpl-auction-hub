@@ -189,3 +189,43 @@ export async function getFplData(): Promise<FplDataResult> {
 
   return fetchAndCacheFplData();
 }
+
+export interface FplGameweekInfo {
+  currentGameweek: number | null;
+  liveGameweek: number | null;
+}
+
+export async function getFplGameweekInfo(): Promise<FplGameweekInfo> {
+  try {
+    const { data } = await supabase
+      .from("fpl_cache")
+      .select("value->currentGameweek, value->liveGameweek, updated_at, ttl_ms")
+      .eq("key", CACHE_KEY)
+      .single();
+
+    if (data) {
+      const currentGw =
+        typeof data.currentGameweek === "number"
+          ? data.currentGameweek
+          : Number(data.currentGameweek) || null;
+      const liveGw =
+        typeof data.liveGameweek === "number"
+          ? data.liveGameweek
+          : Number(data.liveGameweek) || null;
+      if (currentGw !== null) {
+        return {
+          currentGameweek: currentGw,
+          liveGameweek: liveGw,
+        };
+      }
+    }
+  } catch {
+    // fallback to full getFplData if extraction fails
+  }
+
+  const full = await getFplData().catch(() => null);
+  return {
+    currentGameweek: full?.currentGameweek ?? null,
+    liveGameweek: full?.liveGameweek ?? null,
+  };
+}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 import { getAuthedSupabase } from "@/lib/tournament/api";
 import { autoScoreCompetition } from "@/lib/tournament/auto-score";
 
@@ -6,10 +7,6 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authed = await getAuthedSupabase(request);
-  if (!authed.ok) return authed.response;
-  const { supabase, userId } = authed;
-
   const { id } = await params;
 
   const body = (await request.json().catch(() => null)) as {
@@ -24,6 +21,14 @@ export async function POST(
 
   const manualScores = Array.isArray(body?.manualScores) ? body.manualScores : [];
   const checkOnly = body?.checkOnly === true;
+
+  if (manualScores.length > 0 && checkOnly) {
+    return NextResponse.json(
+      { error: "Cannot submit manual scores in checkOnly mode." },
+      { status: 400 },
+    );
+  }
+
   for (const m of manualScores) {
     if (
       typeof m.fixtureId !== "string" ||
@@ -37,17 +42,23 @@ export async function POST(
     }
   }
 
-  const { data: competition } = await supabase
-    .from("competitions")
-    .select("created_by")
-    .eq("id", id)
-    .single();
-
-  if (!competition) {
-    return NextResponse.json({ error: "Tournament not found." }, { status: 404 });
-  }
-  if (competition.created_by !== userId) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  // If executing manual scores or forced score bypass, require creator authentication
+  let authedSupabase = null;
+  if (!checkOnly || manualScores.length > 0) {
+    const authed = await getAuthedSupabase(request);
+    if (!authed.ok) return authed.response;
+    const { data: comp } = await authed.supabase
+      .from("competitions")
+      .select("created_by")
+      .eq("id", id)
+      .single();
+    if (!comp) {
+      return NextResponse.json({ error: "Tournament not found." }, { status: 404 });
+    }
+    if (comp.created_by !== authed.userId) {
+      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+    }
+    authedSupabase = authed.supabase;
   }
 
   const res = await autoScoreCompetition({
@@ -55,7 +66,7 @@ export async function POST(
     gw,
     force: !checkOnly,
     manualScores,
-    supabaseClient: supabase,
+    supabaseClient: authedSupabase ?? supabase,
   });
 
   if (!res.attempted && !checkOnly) {
