@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.30.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.4...v1.30.0) (2026-09-06)
+
+
+### Features
+
+* add insights client and page for FPL data analysis ([191d832](https://github.com/ThishanTharuka/fpl-auction-hub/commit/191d832427387056e2a7734252a4d2ced1dd8e2e))
+* implement auto-scoring functionality for tournaments ([b6efb5b](https://github.com/ThishanTharuka/fpl-auction-hub/commit/b6efb5b03b55b084a9886ed6678fdb44848ccb10))
+
 ## [1.29.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.29.3...v1.29.4) (2026-09-06)
 
 
