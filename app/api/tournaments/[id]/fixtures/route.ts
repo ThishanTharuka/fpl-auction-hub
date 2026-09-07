@@ -192,6 +192,12 @@ export async function PUT(
     ) {
       return NextResponse.json({ error: "Malformed fixture draft." }, { status: 400 });
     }
+    if (d.gw < 1 || d.gw > 38) {
+      return NextResponse.json(
+        { error: `Gameweek ${d.gw} is invalid. FPL tournament fixtures must be between Gameweek 1 and 38.` },
+        { status: 400 },
+      );
+    }
   }
 
   const { error: delErr } = await supabase

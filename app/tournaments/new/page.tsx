@@ -11,7 +11,7 @@ import { useAuth } from "@/components/auth-provider";
 import { DEFAULT_FORMAT_CONFIG } from "@/lib/tournament/types";
 import type { FixtureDraft } from "@/lib/tournament/types";
 import type { TeamMatch } from "@/lib/tournament/parser";
-import { buildKnockoutFixtures } from "@/lib/tournament/schedule";
+import { buildKnockoutFixtures, countGroupMatchdays } from "@/lib/tournament/schedule";
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 
 const supabase = createSupabaseBrowserClient();
@@ -60,13 +60,12 @@ export default function NewTournamentPage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [leagueRes, bootstrapRes] = await Promise.all([
-        supabase.from("leagues").select("id,name,status").eq("created_by", user.id).order("name"),
-        fetch("/api/fpl/bootstrap").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-      ]);
-      setLeagues((leagueRes.data ?? []) as LeagueOption[]);
-      const gw = (bootstrapRes as { currentGameweek?: number } | null)?.currentGameweek;
-      if (typeof gw === "number" && gw > 0) setStartGw(gw);
+      const { data } = await supabase
+        .from("leagues")
+        .select("id,name,status")
+        .eq("created_by", user.id)
+        .order("name");
+      setLeagues((data ?? []) as LeagueOption[]);
     })().catch(() => {});
   }, [user]);
 
@@ -111,6 +110,18 @@ export default function NewTournamentPage() {
     if (!name.trim()) return setError("Give the tournament a name.");
     if (!leagueA || !leagueB || leagueA === leagueB) return setError("Pick two different leagues.");
     if (!Number.isInteger(startGw) || startGw < 1) return setError("Enter a starting gameweek.");
+
+    const qualifiers = DEFAULT_FORMAT_CONFIG.qualification.qualifiers_per_group;
+    const sizeA = Math.max(rosterA.length, qualifiers);
+    const sizeB = Math.max(rosterB.length, qualifiers);
+    const totalGroupMds = countGroupMatchdays(DEFAULT_FORMAT_CONFIG, sizeA, sizeB);
+    const totalWeeks = totalGroupMds + 1 + 9; // group stage + 1 bye + 9 knockout
+    if (startGw + totalWeeks - 1 > 38) {
+      return setError(
+        `This tournament requires ${totalWeeks} gameweeks (${totalGroupMds} group matchdays, 1 bye week, 9 knockout weeks). Starting at GW ${startGw} would end at GW ${startGw + totalWeeks - 1}, exceeding the 38-gameweek FPL season.`,
+      );
+    }
+
     setCreating(true);
     try {
       const res = await fetch("/api/tournaments", {
@@ -189,6 +200,7 @@ export default function NewTournamentPage() {
       return;
     }
     if (mode === "import" && resolution) {
+      const offset = (startGw > 0 ? startGw : 1) - 1;
       const drafts = resolution.map((line, i) => {
         const pick = picks[i];
         const homeId = matchId(line.homeMatch, pick?.home);
@@ -199,7 +211,7 @@ export default function NewTournamentPage() {
           phase: "import",
           tie_index: i + 1,
           leg: 1,
-          gw: line.matchday,
+          gw: line.matchday + offset,
           home_team_id: homeId,
           away_team_id: awayId,
         };
@@ -207,11 +219,19 @@ export default function NewTournamentPage() {
       if (drafts.some((d) => d.home_team_id === null || d.away_team_id === null)) {
         return setSaveError("Resolve every team before saving (pick from the dropdowns).");
       }
-      // Append KO fixtures (bye GW after group stage, then GW30-38 bracket).
+      // Append KO fixtures (1 bye GW after group stage, then 9-week bracket).
       const bracket = buildTwoPathBracket();
-      const koStartGw = startGw + 29; // 28 group GWs + 1 bye
+      const maxGroupGw = drafts.reduce((max, d) => Math.max(max, d.gw), 0);
+      const koStartGw = maxGroupGw + 2; // 1 bye GW after group stage
       const koDrafts = buildKnockoutFixtures(competitionId, bracket, koStartGw, drafts.length + 1);
       const allDrafts = [...drafts, ...koDrafts];
+
+      const maxGw = Math.max(...allDrafts.map((d) => d.gw));
+      if (maxGw > 38) {
+        return setSaveError(
+          `Schedule exceeds the 38-week FPL season (final is scheduled for GW ${maxGw}). Please adjust your matchdays or starting gameweek.`,
+        );
+      }
       setBusy(true);
       try {
         const res = await fetch(`/api/tournaments/${competitionId}/fixtures`, {

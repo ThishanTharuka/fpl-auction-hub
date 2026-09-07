@@ -131,4 +131,16 @@ describe("countGroupMatchdays", () => {
   it("counts matchdays for unequal groups using the larger size", () => {
     expect(countGroupMatchdays(DEFAULT_FORMAT_CONFIG, 9, 10)).toBe(28);
   });
+
+  it("verifies total tournament duration fits within 38 gameweeks when starting at GW1", () => {
+    const groupMds = countGroupMatchdays(DEFAULT_FORMAT_CONFIG, 10, 10);
+    const byeWeeks = 1;
+    const koWeeks = 9;
+    const totalWeeks = groupMds + byeWeeks + koWeeks;
+    expect(totalWeeks).toBe(38);
+
+    const startGw = 1;
+    const finalGw = startGw + totalWeeks - 1;
+    expect(finalGw).toBe(38);
+  });
 });

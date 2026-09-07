@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthedSupabase } from "@/lib/tournament/api";
 import type { CompetitionConfig } from "@/lib/tournament/types";
 import { DEFAULT_FORMAT_CONFIG } from "@/lib/tournament/types";
+import { countGroupMatchdays } from "@/lib/tournament/schedule";
 
 function isSupportedConfig(value: unknown): value is CompetitionConfig {
   if (!value || typeof value !== "object") return false;
@@ -140,6 +141,17 @@ export async function POST(request: Request) {
   if (teamsA.length < qualifiers || teamsB.length < qualifiers) {
     return NextResponse.json(
       { error: `Each league needs at least ${qualifiers} teams to fill the bracket.` },
+      { status: 400 },
+    );
+  }
+
+  const totalGroupMds = countGroupMatchdays(config, teamsA.length, teamsB.length);
+  const totalWeeks = totalGroupMds + 1 + 9;
+  if (startGw + totalWeeks - 1 > 38) {
+    return NextResponse.json(
+      {
+        error: `This tournament requires ${totalWeeks} gameweeks (${totalGroupMds} group matchdays, 1 bye week, 9 knockout weeks). Starting at GW ${startGw} would end at GW ${startGw + totalWeeks - 1}, exceeding the 38-gameweek FPL season.`,
+      },
       { status: 400 },
     );
   }
