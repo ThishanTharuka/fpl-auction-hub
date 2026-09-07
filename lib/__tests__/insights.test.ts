@@ -94,6 +94,35 @@ describe("insights-utils", () => {
       expect(result.topNetTransfersIn[0]?.netTransfersEvent).toBe(8000);
       expect(result.topNetTransfersOut[0]?.netTransfersEvent).toBe(-14000);
     });
+
+    it("correctly identifies daily price changes and target predictions", () => {
+      const p1 = createMockPlayer({
+        id: 1,
+        web_name: "DailyRiser",
+        cost_change_day: 1,
+        price_change_percent: "95.5",
+      });
+      const p2 = createMockPlayer({
+        id: 2,
+        web_name: "DailyFaller",
+        cost_change_day: -1,
+        price_change_percent: "-102.3",
+      });
+      const p3 = createMockPlayer({
+        id: 3,
+        web_name: "NeutralPlayer",
+        cost_change_day: 0,
+        price_change_percent: "15.0",
+      });
+
+      const result = calculateMarketRadar([p1, p2, p3]);
+      expect(result.totalDailyRisersCount).toBe(1);
+      expect(result.totalDailyFallersCount).toBe(1);
+      expect(result.dailyRisers[0]?.player.web_name).toBe("DailyRiser");
+      expect(result.dailyFallers[0]?.player.web_name).toBe("DailyFaller");
+      expect(result.predictedRisersTonight[0]?.player.web_name).toBe("DailyRiser");
+      expect(result.predictedFallersTonight[0]?.player.web_name).toBe("DailyFaller");
+    });
   });
 
   describe("calculateExpectedStats", () => {

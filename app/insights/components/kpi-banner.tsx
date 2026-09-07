@@ -126,19 +126,24 @@ export function KpiBanner({
 
       {/* Market Mover Count */}
       <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
-          Price Movers (GW)
-        </span>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+            Price Movers
+          </span>
+          <span className="text-[10px] font-medium text-[#869ab8] bg-[#061423] px-1.5 py-0.5 rounded border border-[#3b4b3d]/50">
+            Today
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[#00e478]">
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
             <div>
               <div className="text-sm font-bold text-[#00e478]">
-                {market.totalRisersCount}
+                +{market.totalDailyRisersCount}
               </div>
-              <div className="text-[10px] text-[#869ab8]">Risen</div>
+              <div className="text-[10px] text-[#869ab8]">GW: +{market.totalRisersCount}</div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -147,9 +152,9 @@ export function KpiBanner({
             </div>
             <div>
               <div className="text-sm font-bold text-rose-400">
-                {market.totalFallersCount}
+                -{market.totalDailyFallersCount}
               </div>
-              <div className="text-[10px] text-[#869ab8]">Fallen</div>
+              <div className="text-[10px] text-[#869ab8]">GW: -{market.totalFallersCount}</div>
             </div>
           </div>
         </div>

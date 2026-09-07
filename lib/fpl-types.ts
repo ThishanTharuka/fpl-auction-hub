@@ -29,6 +29,15 @@ export interface FPLPlayer {
   cost_change_event_fall?: number;
   cost_change_start?: number;
   cost_change_start_fall?: number;
+  cost_change_day?: number;
+  price_change_percent?: string;
+  price_change_hourly_rate?: number;
+  price_change_projections?: Array<{
+    offset: number;
+    projected_percent: string;
+    likelihood: number;
+  }>;
+  price_change_locked_until?: string | null;
   total_points: number;
   points_per_game: string;
   selected_by_percent: string;

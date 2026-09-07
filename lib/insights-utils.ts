@@ -12,22 +12,37 @@ export interface MarketPlayerSummary {
   netTransfersEvent: number;
   costChangeEvent: number;
   costChangeStart: number;
+  costChangeDay: number;
+  targetProgressPercent: number;
   ownershipPercent: number;
 }
 
 export interface MarketRadarData {
+  // Gameweek view
   risers: MarketPlayerSummary[];
   fallers: MarketPlayerSummary[];
   topNetTransfersIn: MarketPlayerSummary[];
   topNetTransfersOut: MarketPlayerSummary[];
   totalRisersCount: number;
   totalFallersCount: number;
+
+  // Daily view & Predictions
+  dailyRisers: MarketPlayerSummary[];
+  dailyFallers: MarketPlayerSummary[];
+  predictedRisersTonight: MarketPlayerSummary[];
+  predictedFallersTonight: MarketPlayerSummary[];
+  totalDailyRisersCount: number;
+  totalDailyFallersCount: number;
+  totalPredictedRisersCount: number;
+  totalPredictedFallersCount: number;
 }
 
 export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData {
   const summaries: MarketPlayerSummary[] = players.map((p) => {
     const costChangeEvent = p.cost_change_event ?? 0;
     const costChangeStart = p.cost_change_start ?? 0;
+    const costChangeDay = p.cost_change_day ?? 0;
+    const targetProgressPercent = parseFloat(p.price_change_percent || "0");
     const transfersIn = p.transfers_in_event ?? 0;
     const transfersOut = p.transfers_out_event ?? 0;
     const netTransfersEvent = transfersIn - transfersOut;
@@ -38,10 +53,13 @@ export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData
       netTransfersEvent,
       costChangeEvent,
       costChangeStart,
+      costChangeDay,
+      targetProgressPercent,
       ownershipPercent,
     };
   });
 
+  // Gameweek risers & fallers
   const risers = summaries
     .filter((s) => s.costChangeEvent > 0)
     .sort((a, b) => b.costChangeEvent - a.costChangeEvent || b.netTransfersEvent - a.netTransfersEvent);
@@ -60,6 +78,24 @@ export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData
     .sort((a, b) => a.netTransfersEvent - b.netTransfersEvent)
     .slice(0, 15);
 
+  // Daily risers & fallers (overnight changes today)
+  const dailyRisers = summaries
+    .filter((s) => s.costChangeDay > 0)
+    .sort((a, b) => b.costChangeDay - a.costChangeDay || b.netTransfersEvent - a.netTransfersEvent);
+
+  const dailyFallers = summaries
+    .filter((s) => s.costChangeDay < 0)
+    .sort((a, b) => a.costChangeDay - b.costChangeDay || a.netTransfersEvent - b.netTransfersEvent);
+
+  // Target predictions tonight
+  const predictedRisersTonight = summaries
+    .filter((s) => s.targetProgressPercent >= 60)
+    .sort((a, b) => b.targetProgressPercent - a.targetProgressPercent || b.netTransfersEvent - a.netTransfersEvent);
+
+  const predictedFallersTonight = summaries
+    .filter((s) => s.targetProgressPercent <= -60)
+    .sort((a, b) => a.targetProgressPercent - b.targetProgressPercent || a.netTransfersEvent - b.netTransfersEvent);
+
   return {
     risers,
     fallers,
@@ -67,6 +103,14 @@ export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData
     topNetTransfersOut,
     totalRisersCount: risers.length,
     totalFallersCount: fallers.length,
+    dailyRisers,
+    dailyFallers,
+    predictedRisersTonight,
+    predictedFallersTonight,
+    totalDailyRisersCount: dailyRisers.length,
+    totalDailyFallersCount: dailyFallers.length,
+    totalPredictedRisersCount: predictedRisersTonight.filter((s) => s.targetProgressPercent >= 85).length,
+    totalPredictedFallersCount: predictedFallersTonight.filter((s) => s.targetProgressPercent <= -85).length,
   };
 }
 
