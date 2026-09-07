@@ -58,6 +58,35 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 - Write cast: `JSON.parse(JSON.stringify(fresh))` strips non-serializable
 - Table has permissive RLS (public data)
 
+## Tournaments & Competitions (`lib/tournament/`)
+
+- **Domain modules**:
+  - `auto-score.ts`: state-aware auto-scoring engine with cooldown locks (`auto_score_lock_{competitionId}_gw_{gw}` in `fpl_cache`) and automatic knockout progression.
+  - `scoring.ts`: batch-fetches manager points from FPL in chunks of 5 with 50ms pauses to avoid burst rate limits.
+  - `fixture-breakdown.ts`: compiles head-to-head Playing 11, bench points, captain multipliers, autosubs, and aggregated team match stats.
+  - `knockout.ts` & `knockout-two-path.ts`: resolves single/two-legged ties, aggregate scores, away goals/tiebreakers, and two-path Champions/Europa League bracket trees.
+  - `round-robin.ts`: Berger / circle algorithm for single and double round-robin schedules.
+  - `parser.ts`: parses raw pasted text fixtures and fuzzy-matches team names to the roster.
+  - `standings.ts`: computes group tables (MP, W, D, L, GF, GA, GD, Points) with tiebreakers.
+- **FPL Live vs Finalized Scoring**:
+  - During live gameweeks (`finished: false`, `data_checked: false`), FPL's `entry_history.points` in `/api/entry/{id}/event/{gw}/picks/` is snapshotted in batch cycles and may lag behind live match element sums on the FPL mobile app until the gameweek is finalized or updated overnight.
+- **Fixture Breakdown Route**:
+  - `/api/tournaments/[id]/fixtures/[fixtureId]/breakdown` — `[id]` can be the competition ID or `"any"`; the route handler looks up the fixture by `fixtureId` directly.
+
+## Auction Realtime & Server Clock
+
+- **Server Clock Sync**: Countdown timers use `get_server_time` Postgres RPC via `useServerClock` to eliminate client device clock drift between host and bidders.
+- **Database Triggers**: Database enforces monotonic bid increments and guards against duplicate concurrent bids.
+- **Bid Increments**: Supports both flat increments and tiered increments (`lib/bid-increment.ts`).
+- **Lobby constraint**: Auctioneer can start before all teams are claimed. `canStart` only requires `teams.length > 0`.
+
+## Security Invariants
+
+- **SSRF Prevention**: All external API proxy routes (`/api/fpl/...`) must validate query/path parameters using digit regex (`/^\d+$/`) and numeric bounds before passing to `fetch()`. Never interpolate unvalidated string parameters into outgoing URLs.
+- **DOM XSS Prevention**: User/database avatar URLs must be validated with `isSafeImageUrl()` allowing only `https:`, `http:`, and `blob:` schemes before rendering in `<img src={...}>`.
+- **Workflow Script Injection**: In GitHub Actions (`.github/workflows/*.yml`), never interpolate `${{ ... }}` directly into inline `run: |` shell scripts. Always pass values via `env:` and construct JSON using `jq -n`.
+- **Workflow Permissions**: Workflows must declare explicit top-level `permissions` (e.g. `permissions: contents: read` or `permissions: {}`) to enforce least privilege.
+
 ## Codebase conventions
 
 - **Next.js ^16.2.11 + React 19.2.4** — breaking changes from training data
@@ -85,6 +114,5 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 - **TanStack Table v8 + React Compiler**: incompatible. Components using `useReactTable` must have `"use no memo"` at the top. `react-hooks/incompatible-library` is already OFF globally.
 - **`react-hooks/exhaustive-deps` is warn**, not error. Suppress with eslint-disable + comment when intentional.
 - **Vercel limits**: 10s function timeout, 100k invocations/month. `next.config.ts` has image remotePatterns for `resources.premierleague.com` + security headers.
-- **Lobby constraint**: Auctioneer can start before all teams are claimed. `canStart` only requires `teams.length > 0`.
 - **Tests**: Vitest (node env), default `*.test.ts`/`*.spec.ts` include (NOT `*_test`/`*_spec`). Tests live in `lib/__tests__/` and `components/__tests__/`. No Playwright/e2e.
 - **`.gitignore` excludes `opencode.json`** (contains MCP API keys) and `.vscode/` — do not commit these.

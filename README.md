@@ -31,26 +31,57 @@ A Fantasy Premier League auction tool with live bidding, squad management, and a
   </table>
 </div>
 
-## Stack
+## Tech Stack
 
-- **Next.js 16.2** (App Router, React 19, Streaming SSR)
-- **Supabase** — auth + database (PostgreSQL, RLS) + real-time channels
-- **TanStack Table v8** — sortable/filterable players table
-- **shadcn/ui** (style `"base-nova"`) + **Tailwind CSS v4** — UI components
-- **TypeScript** — strict mode, `noUncheckedIndexedAccess`
+- **Framework**: **Next.js 16** (App Router, React 19, Streaming SSR with Suspense)
+- **Backend / Database**: **Supabase** (PostgreSQL, Row-Level Security, Realtime Channels, Edge Functions & RPCs)
+- **Tables & Filtering**: **TanStack Table v8** with React 19 `"use no memo"` directive
+- **Styling & UI**: **Tailwind CSS v4** + **shadcn/ui** (style `"base-nova"`) + **tw-animate-css**
+- **Motion & UI**: **Framer Motion**, **Vaul** (drawers), **Sonner** (toasts), **Lucide React** (icons)
+- **Data Visualization**: **Recharts**
+- **Drag & Drop**: **@dnd-kit/core** + **@dnd-kit/sortable**
+- **Type Safety**: **TypeScript 5** (`strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`)
+- **Testing**: **Vitest 4** (Node environment, `@/*` alias support)
+- **CI / CD**: **GitHub Actions** (`verify` + `semantic-release` on push to `master`)
 
 ## Pages
 
+### Core & Analytics
 | Route | Description |
 |---|---|
-| `/players` | FPL player data table with sorting, filtering, and player details — **Streaming SSR** |
-| `/index-builder` | Custom weighted scoring index for auction valuation — **Streaming SSR** |
-| `/teams` | Global teams/pitch overview — **Streaming SSR** (two loading layers) |
-| `/auction` | Auction lobby — create or join a session |
-| `/auction/[id]` | Auction overview for a session |
-| `/auction/[id]/auctioneer` | Auctioneer view — nominate players, manage bids |
-| `/auction/[id]/bid` | Bidder view — live player stats, place bids in real time |
-| `/auction/[id]/teams` | Pitch view of each participant's squad by formation |
+| `/` | Landing page with platform overview and feature showcase |
+| `/players` | Sortable/filterable FPL player database with detailed stats modal — **Streaming SSR** |
+| `/index-builder` | Custom weighted scoring engine for player auction valuation — **Streaming SSR** |
+| `/insights` | Auction spending trends, value buys, and squad balance analytics |
+| `/teams` | Global pitch view of squads across all leagues — **Streaming SSR** (two loading layers) |
+
+### Live Auction System
+| Route | Description |
+|---|---|
+| `/auction` | Live & upcoming auction lobby directory |
+| `/auction/setup` | Auction creation wizard with rule configuration |
+| `/auction/[id]` | Auction lobby — team claiming, host approvals, live chat, and rules settings |
+| `/auction/[id]/auctioneer` | Host control desk — player search, nominations, countdown timers, bid actions (Sold/Unsold/Rebid) |
+| `/auction/[id]/bid` | Manager bidding room — synchronized live timer, player stats, 1-click validated bidding |
+| `/auction/[id]/spectate` | Real-time read-only spectator view with live chat |
+| `/auction/[id]/chat` | Dedicated auction chat view |
+| `/auction/[id]/teams` | Pitch view of squad formations (4-3-3, 3-4-3, etc.), drag-and-drop starter/bench allocation |
+| `/auction/[id]/teams/[participantId]/edit` | Manager profile — custom crest upload and verified FPL ID linking |
+
+### Tournament & Competition System
+| Route | Description |
+|---|---|
+| `/tournaments` | Tournaments directory and manager dashboard |
+| `/tournaments/new` | Tournament wizard — formats, starting Gameweek, group allocation, and rosters |
+| `/tournaments/[id]` | Admin tournament workspace — automated schedule builder, bracket management, and live scores |
+| `/tournaments/[id]/public` | Public spectator view for tournament fixtures, standings, and brackets |
+
+### User & Auth
+| Route | Description |
+|---|---|
+| `/profile` | User profile management |
+| `/login`, `/auth/forgot-password`, `/auth/update-password` | Authentication pages |
+| `/privacy`, `/terms` | Privacy policy and terms of service |
 
 ## Getting Started
 
@@ -95,187 +126,147 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## User Guide
 
-### For the Auctioneer (League Owner)
+### 1. The Auction Workflow
 
-The auctioneer creates the league, configures rules, manages teams, and runs the live auction.
+#### Step 1: Create an Auction
+Navigate to `/auction` and click **+ New Auction** (or `/auction/setup`). Configure:
+* **General**: League name and optional room password.
+* **Economics**: Starting budget (£m per team), minimum starting bid by position (GKP, DEF, MID, FWD), and maximum players allowed from any single Premier League club.
+* **Bidding Rules**: Flat increment or **Tiered Bid Increments** (e.g., £0.5m under £10m, £1m under £30m, £2m above).
+* **Timers**: Nomination countdown duration (15–120 seconds).
+* **Teams**: Define participating team slots (minimum 2).
 
-#### 1. Create a League
+#### Step 2: Lobby & Team Claiming (`/auction/[id]`)
+* Share the lobby link with managers.
+* Managers click **Claim** on their team slot.
+* Managers customize their team at `/auction/[id]/teams/[participantId]/edit`: upload custom team crests and link their official FPL Manager ID.
+* The host reviews and approves team claims.
+* The host can start the auction at any time once at least one team is present.
 
-Go to `/auction` and click **+ New Auction**. Configure:
+#### Step 3: Running the Auction (`/auction/[id]/auctioneer`)
+* Search and filter all FPL players from the left panel.
+* Select a player to stage them, choose a countdown duration, and click **Start Bidding**.
+* Controls available to the host during active bidding:
+  * **Pause / Resume**: Temporarily freeze the countdown.
+  * **Extend (+15s)**: Add emergency seconds to the timer.
+  * **SOLD**: Finalize sale to the current highest bidder (automatically deducts budget, updates squad counts, and records sale).
+  * **UNSOLD**: Pass the nomination if no bids are placed.
+  * **Rebid (↩)**: Undo a previous sale from the sold log and re-nominate the player.
 
-| Setting | Description |
-|---|---|
-| League Name | Name visible to all managers |
-| Room Password | Optional — managers must enter this to join |
-| Budget per Team | Total £m each manager can spend |
-| Timer | Countdown seconds per nomination (15–120) |
-| Bid Increment | Minimum £m increase per bid |
-| Starting Prices | Base bid price per position (GKP, DEF, MID, FWD) |
-| Max Per Club | Limit players from the same FPL club |
-| Teams | Add participating team/manager names (at least 2) |
+#### Step 4: Placing Bids (`/auction/[id]/bid`)
+* Real-time synchronized timer backed by Supabase server clock RPC to prevent device clock skew.
+* Single-click bid buttons with instant client and database validation:
+  * Budget verification (cannot exceed remaining funds).
+  * Position limits (e.g., max 2 GKP).
+  * Self-outbid prevention (cannot bid against yourself).
+  * Duplicate and monotonic bid protections enforced via Postgres database triggers.
+* Spectators can join via `/auction/[id]/spectate` for a read-only live feed and chat participation.
 
-Click **Create Auction** to save.
-
-#### 2. Lobby — Manage Teams
-
-After creation you land on the lobby (`/auction/[id]`). Here you can:
-
-- **Share the lobby URL** — copy the URL from the Quick Links section and send it to managers
-- **Approve or reject** team claims — managers who claim a team appear with a yellow "pending" badge; click ✓ to approve or ✗ to reject
-- **Edit settings** — the right sidebar (or "Settings" button on mobile) lets you change league rules before the auction starts
-- **Start Auction** — click the green button to set the league to "Live" at any time. Managers can claim remaining teams after the auction starts.
-
-#### 3. Auctioneer Panel
-
-Once live, click **Open Auctioneer Panel** (`/auction/[id]/auctioneer`).
-
-##### Nominating a Player
-
-1. Use the **search bar** in the left panel to find a player by name or club
-2. Filter by position using the GKP / DEF / MID / FWD buttons
-3. Click a player to **stage** them — the centre panel shows their stats and a timer dropdown
-4. Select the timer duration (10–60 seconds) and click **Start Bidding**
-
-##### During a Bid
-
-While bidding is open you can:
-
-- **Monitor the timer** — green (>15s), yellow (5–15s), or red (<5s)
-- **See the current bid** and who placed it
-- **View bid history** in the panel below the player card
-- **Sell** — click the green **SOLD** button to finalise the sale to the current highest bidder
-- **Unsold** — if the timer hits 0 with no bids, click **Unsold** to remove the player
-- **Extend** — add extra seconds to the timer (or to the paused counter)
-- **Pause / Resume** — pause the countdown mid-bid
-- **Cancel** — cancel the current nomination entirely
-
-The sold log on the left shows all sales so far. Click ↩ next to any sold player to **rebid** them (clears the previous sale and stages the player again).
-
-##### Budgets Panel
-
-The right sidebar shows every team's remaining budget and squad count. Sold players automatically deduct from the buying team's budget.
-
-### For the Bidder (Manager)
-
-#### 1. Find and Join an Auction
-
-Go to `/auction` to browse all available leagues. Look for:
-
-- **Live** (green) and **Setup** (yellow) leagues
-- Leagues marked **Your auction** are ones you created
-- 🔒 **Password** badges mean you'll need the room password to enter
-
-Click **Enter** to go to the lobby.
-
-#### 2. Claim a Team
-
-In the lobby, find a team you want to manage and click **Claim**. The auctioneer must approve you before you can bid. While waiting, your status shows as "pending".
-
-Once approved, a **Go to Live Auction** button appears.
-
-#### 3. Live Bidding
-
-Click the bid link to open `/auction/[id]/bid`. The page shows:
-
-- **Player card** with position, club, and stats (xG, goals, assists, etc.)
-- **Timer** counting down — same time visible to the auctioneer
-- **Current bid** and who placed it
-- **Your squad** list below
-
-To bid, click **Bid £Xm**. Rules that block a bid:
-
-- You cannot outbid yourself
-- You must have enough budget remaining
-- You cannot exceed the position limit (e.g. max 2 GKP)
-- Bidding is disabled while the timer is paused or expired
-
-If you are outbid, the timer resets and you can bid again.
-
-#### 4. After the Auction
-
-Use the **Teams** view (`/auction/[id]/teams`) to see every participant's squad sorted by formation (4-3-3 / 3-4-3 / 4-4-2 / 3-5-2 / 5-3-2 / 4-5-1).
+#### Step 5: Squad Management & Google Sheets Export (`/auction/[id]/teams`)
+* Interactive pitch visualizer for squads across standard formations (4-3-3, 3-4-3, 4-4-2, 3-5-2, 5-3-2, 4-5-1).
+* Drag-and-drop starter vs bench allocation.
+* One-click Google Sheets export: Uses Google Identity Services (GIS) OAuth in-memory token authentication without saving credentials on the server.
 
 ---
 
-### For Everyone: Other Pages
+### 2. Tournaments & Competition Manager
 
-| Page | Description |
-|---|---|
-| `/players` | Browse all FPL players with sorting, filtering, and detailed stats — **Streaming SSR** |
-| `/index-builder` | Build a custom weighted scoring index to value players for your auction |
-| `/teams` | Global view of all squads across all leagues |
+#### Step 1: Create a Tournament (`/tournaments/new`)
+* Formats supported:
+  * **Single Round-Robin** (every team plays each other once)
+  * **Double Round-Robin** (home and away legs)
+  * **Group Stage + Two-Path Knockout** (Champions League & Europa League brackets)
+* Set starting gameweek (`start_gw`) and assign team rosters to groups (Group A, Group B).
 
-## Architecture
+#### Step 2: Fixture Scheduling (`/tournaments/[id]`)
+* **Auto-Schedule Generator**: Generates balanced group stage matchdays using the Berger / circle round-robin algorithm.
+* **Text Fixture Parser**: Paste raw text fixtures copied from external spreadsheets or match planners; the parser fuzzy-matches team names to the tournament roster with match accuracy scoring.
 
-### Streaming SSR
+#### Step 3: Automated Scoring & Knockout Progression (`/api/tournaments/auto-score`)
+* Fetches live matchday performance and official points from the FPL API based on each team's linked `fpl_manager_id`.
+* Automatic state-aware polling:
+  * Checks whether gameweeks are `live`, `finished_unchecked` (matches ended, autosubs pending), or `finalized`.
+  * Protects against FPL burst limits with chunked batching (5 managers per batch with interval delays).
+  * Concurrency lock via `fpl_cache` (`auto_score_lock_...`) to prevent duplicate executions.
+* Automatically updates group standings (MP, W, D, L, GF, GA, GD, Points) with tiebreakers.
+* Automatically resolves knockout winners across single-leg or two-legged ties and advances qualifying teams into the visual bracket.
 
-Pages that load the FPL bootstrap payload (`/players`, `/index-builder`, `/teams`) use **Streaming SSR with Suspense**. A synchronous `page.tsx` wraps an async data-fetching component inside `<Suspense>` with a skeleton fallback. This gives instant FCP (skeleton streams immediately) while data is fetched server-side.
+#### Step 4: Head-to-Head Match Breakdown (`FixtureBreakdownModal`)
+Click any fixture card to open the comprehensive head-to-head match inspection dialog:
+* **Playing 11 vs Playing 11**: Pitch-order breakdown with position color badges, captain 2x / 3x multipliers, and automatic substitution indicators (`subbedIn` / `subbedOut`).
+* **Bench**: Real gameweek points scored by reserve players.
+* **Match Stats Summary**: Comparative team statistics including goals, assists, clean sheets, saves, bonus points, yellow/red cards, own goals, and captain points.
 
-The `/teams` page has two loading layers: the outer Suspense skeleton for the FPL data fetch, and an inner client-side skeleton for Supabase DB queries (leagues, participants, formations).
+---
 
-### FPL data cache
+### 3. Analytics & Research Tools
 
-The FPL bootstrap payload (~2.6MB) exceeds Vercel's free-tier fetch cache limit (2MB). Custom Supabase JSONB cache (`fpl_cache` table) replaces Vercel's `next: { revalidate }`:
+* **Players Database (`/players`)**: Complete FPL player statistics powered by TanStack Table v8 with instant filtering by club, position, and price. Includes detailed individual player history modals.
+* **Index Builder (`/index-builder`)**: Tailor-made auction valuation engine. Assign custom weights to stats (Total Points, Form, xG, xA, ICT Index, Clean Sheets, Minutes, Bonus Points) to generate customized player rankings and price targets.
+* **Insights (`/insights`)**: Interactive charts (powered by Recharts) visualizing league economy trends, spend-by-position distributions, and squad efficiency.
 
-- **TTL**: 5 min on matchday, 30 min day before, 2h otherwise
-- **Server-only** — fetched in async child components via `getFplData()` in `lib/fpl-data.ts`
-- **Typed reads**: `data.value as unknown as FplDataResult` (zero-cost JSONB boundary)
-- **Safe writes**: `JSON.parse(JSON.stringify(fresh))` strips non-serializable values
+---
 
-### Three Supabase clients
+## Architectural Deep Dive
 
-| Module | Session | Use |
-|---|---|---|
-| `@/lib/supabase` | No — `auth.uid()` always null | Server reads, RLS-unaware ops |
-| `@/lib/supabase-browser` | Yes | RLS-protected writes in client components |
-| `@/lib/supabase-server` | Yes | RLS reads in Server Components |
+### 1. Streaming SSR with Suspense
+Pages loading the heavy FPL dataset (`/players`, `/index-builder`, `/teams`):
+* `page.tsx` is synchronous and immediately streams the layout and skeleton components to the client for instant First Contentful Paint (FCP).
+* The data fetch (`getFplData()`) runs inside an async child component wrapped in `<Suspense>`.
+* **No `force-dynamic`**: Skeleton layers are cached at the edge.
 
-### Auth middleware
+### 2. High-Capacity FPL Data Cache (`fpl_cache` Table)
+The complete FPL bootstrap payload (~2.6MB) exceeds Vercel's free-tier fetch cache threshold (2MB). A PostgreSQL JSONB cache table (`fpl_cache`) replaces `next: { revalidate }`:
+* **Matchday TTL**: 5 minutes during live matches.
+* **Pre-matchday TTL**: 30 minutes the day before gameweek kickoff.
+* **Off-peak TTL**: 2 hours.
+* Typed zero-cost JSONB reads (`data.value as unknown as FplDataResult`) and safe serializable write serialization.
 
-`proxy.ts` wraps all routes using `getSession()` (cookie read), not `getUser()` (network). Public routes: `/login`, `/auth/*`, `/api/*`, `/_next/*`.
+### 3. Three-Client Supabase Architecture
+To strictly respect Row-Level Security (RLS) and optimize connection limits:
+| Client | Module | Session Context | Purpose |
+|---|---|---|---|
+| **Bare Client** | `@/lib/supabase` | No (`auth.uid()` null) | Server-side public reads, RLS-unaware background sync |
+| **Browser Client** | `@/lib/supabase-browser` | Yes (Cookies) | RLS-protected client operations (bidding, team management) |
+| **Server Client** | `@/lib/supabase-server` | Yes (Cookies) | Authenticated reads within Server Components |
 
-## Deploying to Vercel
+### 4. Auth & Navigation Middleware (`proxy.ts`)
+In Next.js 16, the root `proxy.ts` serves as the middleware (no `middleware.ts`). It uses cookie-based `getSession()` rather than network-dependent `getUser()` to prevent latency on every route transition. Public paths (such as `/`, `/login`, `/auth/*`, `/api/*`) pass through unconditionally.
 
-1. Push the repo to GitHub.
-2. Import the project in [Vercel](https://vercel.com).
-3. Add environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in Vercel project settings.
-4. Deploy — Vercel auto-detects Next.js.
+### 5. Server Clock Synchronization
+Countdown timers in live auctions rely on Postgres `get_server_time()` RPC via the `useServerClock` hook, ensuring accurate timer expiration down to the millisecond across all connected devices regardless of local clock drift.
 
-### CI/CD pipeline
+### 6. Security Standards
+* **SSRF Prevention**: All external API proxy routes strictly validate query parameters using integer digit regex (`/^\d+$/`) and numeric bounds before interpolating into outgoing requests.
+* **DOM XSS Mitigation**: Image URLs are strictly validated against safe protocols (`https:`, `http:`, `blob:`) before injection into `<img src>` elements.
+* **Workflow Protection**: GitHub Actions workflows utilize environment variables (`env:`) and `jq` for JSON payload generation to prevent script injection and cache poisoning. Workflows enforce explicit least-privilege token permissions.
 
-On push to `master`, GitHub Actions runs:
+---
 
-- **verify** — `type-check` → `lint` → `test`. Must all pass before the release job runs.
-- **release** — `npx semantic-release` publishes a new version (auto-bumped via conventional commits).
+### 5. Automated Scoring via Cron (`/api/tournaments/auto-score`)
+The tournament engine supports scheduled automated scoring via HTTP POST. Configure an external cron job (e.g. Vercel Cron or GitHub Actions):
+* **Method**: `POST`
+* **Header**: `Authorization: Bearer <CRON_SECRET>` (or `?secret=<CRON_SECRET>`)
+* Runs state-aware scoring across all active tournaments, honors matchday cooldown locks, and automatically progresses tournament brackets.
 
-### Vercel deployment checks
+### 6. Realtime Synchronization
+The live auction and chat features leverage Supabase PostgreSQL Realtime channels:
+* Synchronizes `nominations`, `auction_bids`, `auction_results`, `chat_messages`, and `leagues` without manual polling.
+* Realtime connection health is visually monitored by the built-in `ConnectionStatus` indicator.
 
-To require the `verify` check before promoting to production:
+---
 
-1. In Vercel project settings → **Deployment Checks** → **Add Checks** → **GitHub**.
-2. Search for the job name `Release / verify` and add it.
-3. Set **Ignore Build Step** to skip `[skip ci]` commits (preventing semantic-release's version bumps from triggering redundant deploys):
+## Deployment & CI/CD
 
-   ```
-   git log -1 --pretty=format:"%s" | grep -q "\[skip ci\]" && exit 0 || exit 1
-   ```
+### Automated Releases
+Pushes to the `master` branch trigger the GitHub Actions verification pipeline:
+1. `npm run type-check` (`tsc --noEmit`)
+2. `npm run lint` (`eslint .`)
+3. `npm test` (`vitest run`)
+4. On success, `npx semantic-release` automatically analyzes commit messages ([Conventional Commits](https://www.conventionalcommits.org/)), determines version bumps, updates `CHANGELOG.md`, and creates GitHub releases.
 
-**Vercel free tier limits**: 10s function timeout, 100k invocations/month.
+---
 
-## Code Standards
+## License
 
-- **TypeScript**: strict mode, `noUncheckedIndexedAccess`, `noImplicitOverride`, `no-explicit-any` error
-- **ESLint**: flat config (`eslint.config.mjs`), `consistent-type-imports` with `inline-type-imports` fix style
-- **Commits**: [Conventional Commits](https://www.conventionalcommits.org/) — CI runs `npx semantic-release` on push to `master`
-- **Pre-commit verification**: `npm run type-check && npm run lint`
-- **Key reference file**: `AGENTS.md` — critical context for working in this repo
-
-## Key conventions
-
-- **Imports**: `@/*` path alias, type-imports preferred
-- **`cn()`**: `clsx` + `tailwind-merge` via `@/lib/utils`
-- **Animations**: `tw-animate-css` (NOT `tailwindcss-animate`)
-- **TanStack Table v8** components must have `"use no memo"` at the top (React Compiler incompatibility)
-- **Navigation feedback**: NProgress (no `loading.tsx` files)
-- **No emojis** in code
-- **Version** auto-bumped by semantic-release — do not edit `package.json` version manually
+This project is open-source software licensed under the [MIT License](LICENSE) — see the [LICENSE](LICENSE) file for details.
