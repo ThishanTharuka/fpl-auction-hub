@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.2...v1.31.3) (2026-09-07)
+
+
+### Bug Fixes
+
+* Implement daily price history tracking and enhance market radar functionality ([f580218](https://github.com/ThishanTharuka/fpl-auction-hub/commit/f580218a373880f52de471dc6be3780db5fb60d9))
+
 ## [1.31.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.1...v1.31.2) (2026-09-07)
 
 
