@@ -11,6 +11,7 @@ import {
   Zap,
   Calendar,
   AlertTriangle,
+  History,
 } from "lucide-react";
 import type { MarketRadarData, MarketPlayerSummary } from "@/lib/insights-utils";
 
@@ -22,6 +23,7 @@ type Timeframe = "today" | "gameweek";
 type MarketSubView =
   | "dailyRisers"
   | "dailyFallers"
+  | "allMovers"
   | "predictedRisers"
   | "predictedFallers"
   | "risers"
@@ -29,28 +31,138 @@ type MarketSubView =
   | "netIn"
   | "netOut";
 
+function parseDateParts(dateStr: string) {
+  const parts = dateStr.split("-").map(Number);
+  return {
+    year: parts[0] ?? 2026,
+    month: (parts[1] ?? 1) - 1,
+    day: parts[2] ?? 1,
+  };
+}
+
+function formatDatePill(dateStr: string, todayStr: string, yesterdayStr: string): string {
+  if (dateStr === todayStr) return "Today";
+  if (dateStr === yesterdayStr) return "Yesterday";
+  const { year, month, day } = parseDateParts(dateStr);
+  const d = new Date(year, month, day);
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatDateLabel(dateStr: string, todayStr: string, yesterdayStr: string): string {
+  if (dateStr === todayStr) return "Today";
+  if (dateStr === yesterdayStr) return "Yesterday";
+  const { year, month, day } = parseDateParts(dateStr);
+  const d = new Date(year, month, day);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function formatDateFull(dateStr: string): string {
+  const { year, month, day } = parseDateParts(dateStr);
+  const d = new Date(year, month, day);
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
 export function MarketRadarTab({ data }: MarketRadarTabProps) {
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const yesterdayStr = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }, []);
+
   const [timeframe, setTimeframe] = useState<Timeframe>("today");
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    return data.availableDates[0] || new Date().toISOString().slice(0, 10);
+  });
   const [activeView, setActiveView] = useState<MarketSubView>("dailyRisers");
   const [search, setSearch] = useState("");
+
+  const isToday = selectedDate === todayStr;
 
   const handleTimeframeChange = (next: Timeframe) => {
     setTimeframe(next);
     if (next === "today") {
-      setActiveView(data.totalDailyRisersCount > 0 ? "dailyRisers" : "predictedRisers");
+      if (isToday) {
+        setActiveView(data.totalDailyRisersCount > 0 ? "dailyRisers" : "predictedRisers");
+      } else {
+        setActiveView("dailyRisers");
+      }
     } else {
       setActiveView("risers");
     }
   };
 
+  const handleDateChange = (newDate: string) => {
+    setSelectedDate(newDate);
+    if (newDate !== todayStr && (activeView === "predictedRisers" || activeView === "predictedFallers")) {
+      setActiveView("dailyRisers");
+    }
+  };
+
+  const dateChangesMap = useMemo(() => {
+    if (!data.dailyPriceHistory) return {};
+    return data.dailyPriceHistory[selectedDate] || {};
+  }, [data.dailyPriceHistory, selectedDate]);
+
+  const { selectedDateRisers, selectedDateFallers } = useMemo(() => {
+    if (isToday) {
+      return {
+        selectedDateRisers: data.dailyRisers,
+        selectedDateFallers: data.dailyFallers,
+      };
+    }
+
+    const risers: MarketPlayerSummary[] = [];
+    const fallers: MarketPlayerSummary[] = [];
+
+    for (const s of data.summaries) {
+      const change = dateChangesMap[s.player.id.toString()];
+      if (change !== undefined && change !== 0) {
+        const adaptedSummary: MarketPlayerSummary = {
+          ...s,
+          costChangeDay: change,
+        };
+        if (change > 0) {
+          risers.push(adaptedSummary);
+        } else {
+          fallers.push(adaptedSummary);
+        }
+      }
+    }
+
+    risers.sort((a, b) => b.costChangeDay - a.costChangeDay || b.netTransfersEvent - a.netTransfersEvent);
+    fallers.sort((a, b) => a.costChangeDay - b.costChangeDay || a.netTransfersEvent - b.netTransfersEvent);
+
+    return { selectedDateRisers: risers, selectedDateFallers: fallers };
+  }, [isToday, data.dailyRisers, data.dailyFallers, data.summaries, dateChangesMap]);
+
+  const getDayMoversCount = (dStr: string) => {
+    if (dStr === todayStr) {
+      return data.totalDailyRisersCount + data.totalDailyFallersCount;
+    }
+    const hist = data.dailyPriceHistory?.[dStr];
+    return hist ? Object.keys(hist).length : 0;
+  };
+
+  const pillDates = useMemo(() => {
+    const dates = data.availableDates.slice(0, 6);
+    if (selectedDate && !dates.includes(selectedDate)) {
+      return [selectedDate, ...dates].slice(0, 7);
+    }
+    return dates;
+  }, [data.availableDates, selectedDate]);
+
   const currentList: MarketPlayerSummary[] = useMemo(() => {
     let list: MarketPlayerSummary[] = [];
     switch (activeView) {
       case "dailyRisers":
-        list = data.dailyRisers;
+        list = selectedDateRisers;
         break;
       case "dailyFallers":
-        list = data.dailyFallers;
+        list = selectedDateFallers;
+        break;
+      case "allMovers":
+        list = [...selectedDateRisers, ...selectedDateFallers];
         break;
       case "predictedRisers":
         list = data.predictedRisersTonight;
@@ -81,7 +193,9 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
         s.player.team_name.toLowerCase().includes(q) ||
         s.player.team_short.toLowerCase().includes(q),
     );
-  }, [activeView, data, search]);
+  }, [activeView, data, search, selectedDateRisers, selectedDateFallers]);
+
+  const selectedDateLabel = formatDateLabel(selectedDate, todayStr, yesterdayStr);
 
   return (
     <div className="space-y-4">
@@ -98,10 +212,10 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Today & Predictions</span>
-            {data.totalDailyRisersCount > 0 && (
+            <span>{isToday ? "Daily & Predictions" : `Daily (${selectedDateLabel})`}</span>
+            {selectedDateRisers.length > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#061423]/20 text-[#061423]">
-                +{data.totalDailyRisersCount}
+                +{selectedDateRisers.length}
               </span>
             )}
           </button>
@@ -131,93 +245,247 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
         </div>
       </div>
 
+      {/* Date Selector Strip (shown in Daily mode) */}
+      {timeframe === "today" && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-[#0f1c2c] p-2 rounded-xl border border-[#3b4b3d]/80">
+          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 max-w-full scrollbar-none">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#869ab8] px-2 shrink-0">
+              Date:
+            </span>
+            {pillDates.map((dStr) => {
+              const isSelected = selectedDate === dStr;
+              const pillLabel = formatDatePill(dStr, todayStr, yesterdayStr);
+              const dayMovers = getDayMoversCount(dStr);
+              return (
+                <button
+                  key={dStr}
+                  type="button"
+                  onClick={() => handleDateChange(dStr)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                    isSelected
+                      ? "bg-[#00e478] text-[#061423] font-bold shadow-sm"
+                      : "bg-[#061423] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]/50 hover:border-[#3b4b3d]"
+                  }`}
+                >
+                  <span>{pillLabel}</span>
+                  {dayMovers > 0 && (
+                    <span
+                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        isSelected
+                          ? "bg-[#061423]/25 text-[#061423]"
+                          : "bg-[#132030] text-[#00e478]"
+                      }`}
+                    >
+                      {dayMovers}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Inline Date Picker */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#061423] border border-[#3b4b3d]/70 text-xs shrink-0 self-start sm:self-auto">
+            <Calendar className="w-3.5 h-3.5 text-[#869ab8]" />
+            <span className="text-[11px] text-[#869ab8]">Pick date:</span>
+            <input
+              type="date"
+              value={selectedDate}
+              max={todayStr}
+              min="2026-08-01"
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleDateChange(e.target.value);
+                }
+              }}
+              className="bg-transparent text-xs text-[#d6e4f9] focus:outline-none cursor-pointer [color-scheme:dark]"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Top summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {timeframe === "today" ? (
-          <>
-            <button
-              onClick={() => setActiveView("dailyRisers")}
-              className={`text-left p-3.5 rounded-xl border transition-all ${
-                activeView === "dailyRisers"
-                  ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
-                  Risen Today
-                </span>
-                <TrendingUp className="w-4 h-4 text-[#00e478]" />
-              </div>
-              <div className="mt-2 text-2xl font-black text-[#00e478]">
-                {data.totalDailyRisersCount}
-              </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Price rise today (+£0.1m)</p>
-            </button>
+          isToday ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveView("dailyRisers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "dailyRisers"
+                    ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Risen Today
+                  </span>
+                  <TrendingUp className="w-4 h-4 text-[#00e478]" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#00e478]">
+                  {selectedDateRisers.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Price rise today (+£0.1m)</p>
+              </button>
 
-            <button
-              onClick={() => setActiveView("dailyFallers")}
-              className={`text-left p-3.5 rounded-xl border transition-all ${
-                activeView === "dailyFallers"
-                  ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
-                  Fallen Today
-                </span>
-                <TrendingDown className="w-4 h-4 text-rose-400" />
-              </div>
-              <div className="mt-2 text-2xl font-black text-rose-400">
-                {data.totalDailyFallersCount}
-              </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Price drop today (-£0.1m)</p>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("dailyFallers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "dailyFallers"
+                    ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Fallen Today
+                  </span>
+                  <TrendingDown className="w-4 h-4 text-rose-400" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-rose-400">
+                  {selectedDateFallers.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Price drop today (-£0.1m)</p>
+              </button>
 
-            <button
-              onClick={() => setActiveView("predictedRisers")}
-              className={`text-left p-3.5 rounded-xl border transition-all ${
-                activeView === "predictedRisers"
-                  ? "border-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
-                  Imminent Rise
-                </span>
-                <Zap className="w-4 h-4 text-[#00e478]" />
-              </div>
-              <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
-                {data.predictedRisersTonight.length}
-              </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≥ 60%</p>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("predictedRisers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "predictedRisers"
+                    ? "border-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Imminent Rise
+                  </span>
+                  <Zap className="w-4 h-4 text-[#00e478]" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                  {data.predictedRisersTonight.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≥ 60%</p>
+              </button>
 
-            <button
-              onClick={() => setActiveView("predictedFallers")}
-              className={`text-left p-3.5 rounded-xl border transition-all ${
-                activeView === "predictedFallers"
-                  ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
-                  Imminent Fall
-                </span>
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
-              </div>
-              <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
-                {data.predictedFallersTonight.length}
-              </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≤ -60%</p>
-            </button>
-          </>
+              <button
+                type="button"
+                onClick={() => setActiveView("predictedFallers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "predictedFallers"
+                    ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Imminent Fall
+                  </span>
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                  {data.predictedFallersTonight.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≤ -60%</p>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveView("dailyRisers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "dailyRisers"
+                    ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Risen ({selectedDateLabel})
+                  </span>
+                  <TrendingUp className="w-4 h-4 text-[#00e478]" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#00e478]">
+                  {selectedDateRisers.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Price rise on date (+£0.1m)</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveView("dailyFallers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "dailyFallers"
+                    ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    Fallen ({selectedDateLabel})
+                  </span>
+                  <TrendingDown className="w-4 h-4 text-rose-400" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-rose-400">
+                  {selectedDateFallers.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Price drop on date (-£0.1m)</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveView("allMovers")}
+                className={`text-left p-3.5 rounded-xl border transition-all ${
+                  activeView === "allMovers"
+                    ? "border-sky-400 bg-sky-500/10 ring-1 ring-sky-400"
+                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                    All Movers ({selectedDateLabel})
+                  </span>
+                  <History className="w-4 h-4 text-sky-400" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                  {selectedDateRisers.length + selectedDateFallers.length}
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Total price changes</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(todayStr);
+                  setActiveView("predictedRisers");
+                }}
+                className="text-left p-3.5 rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030] transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8] group-hover:text-[#d6e4f9]">
+                    Predictions Tonight
+                  </span>
+                  <Zap className="w-4 h-4 text-[#00e478]" />
+                </div>
+                <div className="mt-2 text-2xl font-black text-[#d6e4f9] flex items-center gap-2">
+                  <span>{data.predictedRisersTonight.length + data.predictedFallersTonight.length}</span>
+                  <span className="text-xs font-normal text-[#00e478] bg-[#00e478]/10 px-1.5 py-0.5 rounded border border-[#00e478]/20">
+                    Live Today
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#869ab8] mt-0.5">Switch to Today&apos;s radar</p>
+              </button>
+            </>
+          )
         ) : (
           <>
             <button
+              type="button"
               onClick={() => setActiveView("risers")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "risers"
@@ -238,6 +506,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveView("fallers")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "fallers"
@@ -258,6 +527,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveView("netIn")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "netIn"
@@ -278,6 +548,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveView("netOut")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "netOut"
@@ -320,9 +591,34 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
       {/* Main Table */}
       <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
         {currentList.length === 0 ? (
-          <div className="p-8 text-center text-[#869ab8] text-sm">
-            No players found matching your criteria.
-          </div>
+          timeframe === "today" && !isToday && selectedDateRisers.length === 0 && selectedDateFallers.length === 0 && !search.trim() ? (
+            <div className="p-8 text-center space-y-3">
+              <div className="inline-flex p-3 rounded-full bg-[#061423] border border-[#3b4b3d] text-[#869ab8]">
+                <Calendar className="w-5 h-5 text-[#869ab8]" />
+              </div>
+              <div className="text-sm font-semibold text-[#d6e4f9]">
+                No price changes recorded on {formatDateFull(selectedDate)}
+              </div>
+              <p className="text-xs text-[#869ab8] max-w-md mx-auto">
+                FPL price changes only occur overnight (00:00 - 01:30 UK time) when player net transfer velocity reaches the required threshold.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(todayStr);
+                  setActiveView(data.totalDailyRisersCount > 0 ? "dailyRisers" : "predictedRisers");
+                }}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#00e478] text-[#061423] hover:bg-[#00c868] transition-colors"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                View Today&apos;s Price Changes
+              </button>
+            </div>
+          ) : (
+            <div className="p-8 text-center text-[#869ab8] text-sm">
+              {search.trim() ? `No players found matching "${search}".` : "No players found matching your criteria."}
+            </div>
+          )
         ) : (
           <>
             {/* Desktop Table View */}
@@ -334,7 +630,9 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                       <th className="py-3 px-4">Player</th>
                       <th className="py-3 px-3">Position</th>
                       <th className="py-3 px-3">Price</th>
-                      <th className="py-3 px-3">Today Change</th>
+                      <th className="py-3 px-3">
+                        {isToday ? "Today Change" : `Change (${selectedDateLabel})`}
+                      </th>
                       <th className="py-3 px-3">Target Progress Tonight</th>
                       <th className="py-3 px-3">GW Delta</th>
                       <th className="py-3 px-4 text-right">Net Velocity</th>
@@ -576,7 +874,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                       <div className="pt-1.5 space-y-2 border-t border-[#3b4b3d]/30">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="text-[#869ab8]">Today:</span>
+                            <span className="text-[#869ab8]">{selectedDateLabel}:</span>
                             {costChangeDay > 0 ? (
                               <span className="font-bold text-[#00e478]">
                                 +£{(costChangeDay / 10).toFixed(1)}m

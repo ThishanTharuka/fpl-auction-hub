@@ -35,9 +35,15 @@ export interface MarketRadarData {
   totalDailyFallersCount: number;
   totalPredictedRisersCount: number;
   totalPredictedFallersCount: number;
+  dailyPriceHistory: Record<string, Record<string, number>>;
+  availableDates: string[];
+  summaries: MarketPlayerSummary[];
 }
 
-export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData {
+export function calculateMarketRadar(
+  players: EnrichedPlayer[],
+  dailyPriceHistory?: Record<string, Record<string, number>>,
+): MarketRadarData {
   const summaries: MarketPlayerSummary[] = players.map((p) => {
     const costChangeEvent = p.cost_change_event ?? 0;
     const costChangeStart = p.cost_change_start ?? 0;
@@ -96,6 +102,19 @@ export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData
     .filter((s) => s.targetProgressPercent <= -60)
     .sort((a, b) => a.targetProgressPercent - b.targetProgressPercent || a.netTransfersEvent - b.netTransfersEvent);
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const combinedHistory = { ...(dailyPriceHistory || {}) };
+  if (!combinedHistory[todayStr]) {
+    const todayMap: Record<string, number> = {};
+    for (const s of summaries) {
+      if (s.costChangeDay !== 0) {
+        todayMap[s.player.id.toString()] = s.costChangeDay;
+      }
+    }
+    combinedHistory[todayStr] = todayMap;
+  }
+  const availableDates = Object.keys(combinedHistory).sort().reverse();
+
   return {
     risers,
     fallers,
@@ -111,6 +130,9 @@ export function calculateMarketRadar(players: EnrichedPlayer[]): MarketRadarData
     totalDailyFallersCount: dailyFallers.length,
     totalPredictedRisersCount: predictedRisersTonight.filter((s) => s.targetProgressPercent >= 85).length,
     totalPredictedFallersCount: predictedFallersTonight.filter((s) => s.targetProgressPercent <= -85).length,
+    dailyPriceHistory: combinedHistory,
+    availableDates,
+    summaries,
   };
 }
 

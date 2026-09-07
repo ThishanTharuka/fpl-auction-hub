@@ -40,6 +40,7 @@ interface InsightsClientProps {
   fixtures?: FPLFixture[];
   currentGameweek: number;
   liveGameweek?: number | null;
+  dailyPriceHistory?: Record<string, Record<string, number>>;
 }
 
 type TabType =
@@ -68,11 +69,15 @@ export function InsightsClient({
   fixtures = [],
   currentGameweek,
   liveGameweek,
+  dailyPriceHistory,
 }: InsightsClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>("market");
 
   // In-memory calculated insight models
-  const marketRadar = useMemo(() => calculateMarketRadar(players), [players]);
+  const marketRadar = useMemo(
+    () => calculateMarketRadar(players, dailyPriceHistory),
+    [players, dailyPriceHistory],
+  );
   const expectedStats = useMemo(() => calculateExpectedStats(players), [players]);
   const valueRoi = useMemo(() => calculateValueRoi(players), [players]);
   const differentials = useMemo(() => calculateDifferentials(players, 10), [players]);
