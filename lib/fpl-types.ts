@@ -193,6 +193,7 @@ export interface FplDataResult {
   fixtures?: FPLFixture[];
   currentGameweek: number;
   liveGameweek?: number | null;
+  dailyPriceHistory?: Record<string, Record<string, number>>;
 }
 
 // ─── Index Builder Types ──────────────────────────────────────────────────────

@@ -133,7 +133,39 @@ interface DailyPriceSnapshot {
   date: string;
   baselinePrices: Record<string, number>;
   todayChanges: Record<string, number>;
+  history?: Record<string, Record<string, number>>;
 }
+
+// Seed historical daily movers for recent days in Gameweek 3
+const INITIAL_DAILY_HISTORY: Record<string, Record<string, number>> = {
+  "2026-09-07": {
+    "40": 1, "277": 1, "367": 1, // Rogers, Egan, Gakpo
+    "23": -1, "27": -1, "43": -1, "63": -1, "100": -1, "114": -1, "175": -1,
+    "239": -1, "252": -1, "285": -1, "303": -1, "355": -1, "362": -1, "363": -1,
+    "364": -1, "381": -1, "401": -1, "471": -1, "488": -1, "545": -1, "608": -1, "621": -1,
+  },
+  "2026-09-06": {
+    "399": 1, // Cherki
+    "13": -1, "149": -1, "121": -1, "142": -1, "583": -1, "104": -1, // Rice, Colwill, Mitoma, James, Chavarria, Onyeka
+  },
+  "2026-09-05": {
+    "249": 1, // Barry
+    "262": -1, "271": -1, "357": -1, "358": -1, "241": -1, // Smith Rowe, Muniz, Frimpong, Kerkez, McNeil
+  },
+  "2026-09-04": {
+    "464": 1, // Wissa
+    "2": -1, "3": -1, "9": -1, "11": -1, "20": -1, // Arrizabalaga, Meslier, Hincapie, Mosquera, Dowman
+  },
+  "2026-09-03": {
+    "65": -1, "67": -1, "72": -1, "95": -1, "106": -1, "135": -1, // J.Araujo, Rayan, Gannon-Doak, O.Dango, Thiago, Yohanna
+  },
+  "2026-09-02": {
+    "575": -1, "584": -1, "574": -1, "562": -1, "329": -1, // Yirenkyi, Hamer, Hjertø-Dahl, Maeda, Rodon
+  },
+  "2026-09-01": {
+    "337": -1, "339": -1, "347": -1, // Aaronson, Longstaff, Nmecha
+  },
+};
 
 // Seed for Sept 7, 2026 overnight price change batch
 const KNOWN_SEPT_7_RISERS = new Set([40, 277, 367]); // Rogers (40), Egan (277), Gakpo (367)
@@ -143,9 +175,13 @@ const KNOWN_SEPT_7_FALLERS = new Set([
 
 async function getDailyPriceChanges(
   elements: Array<{ id: number; now_cost: number }>,
-): Promise<Map<number, number>> {
+): Promise<{
+  changesMap: Map<number, number>;
+  history: Record<string, Record<string, number>>;
+}> {
   const changesMap = new Map<number, number>();
   const todayStr = new Date().toISOString().slice(0, 10);
+  let history: Record<string, Record<string, number>> = { ...INITIAL_DAILY_HISTORY };
 
   try {
     const { data: cached } = await supabase
@@ -157,6 +193,7 @@ async function getDailyPriceChanges(
     const snapshot = cached?.value as unknown as DailyPriceSnapshot | null;
 
     if (snapshot && snapshot.baselinePrices) {
+      history = { ...INITIAL_DAILY_HISTORY, ...(snapshot.history || {}) };
       if (snapshot.date === todayStr) {
         for (const [idStr, change] of Object.entries(snapshot.todayChanges || {})) {
           changesMap.set(Number(idStr), change);
@@ -176,18 +213,27 @@ async function getDailyPriceChanges(
             }
           }
         }
-        if (hasNewChange) {
+        history[todayStr] = updatedTodayChanges;
+        const historyNeedsUpdate =
+          !snapshot.history ||
+          Object.keys(snapshot.history).length < Object.keys(history).length;
+
+        if (hasNewChange || historyNeedsUpdate) {
           await supabase.from("fpl_cache").upsert(
             {
               key: DAILY_PRICES_CACHE_KEY,
-              value: { ...snapshot, todayChanges: updatedTodayChanges } as unknown as Json,
+              value: {
+                ...snapshot,
+                todayChanges: updatedTodayChanges,
+                history,
+              } as unknown as Json,
               updated_at: new Date().toISOString(),
               ttl_ms: 24 * 60 * 60 * 1000,
             },
             { onConflict: "key" },
           );
         }
-        return changesMap;
+        return { changesMap, history };
       } else {
         const previousPrices = snapshot.baselinePrices;
         const newTodayChanges: Record<string, number> = {};
@@ -205,6 +251,11 @@ async function getDailyPriceChanges(
           }
         }
 
+        if (snapshot.todayChanges && Object.keys(snapshot.todayChanges).length > 0) {
+          history[snapshot.date] = snapshot.todayChanges;
+        }
+        history[todayStr] = newTodayChanges;
+
         await supabase.from("fpl_cache").upsert(
           {
             key: DAILY_PRICES_CACHE_KEY,
@@ -212,6 +263,7 @@ async function getDailyPriceChanges(
               date: todayStr,
               baselinePrices: newBaselinePrices,
               todayChanges: newTodayChanges,
+              history,
             } as unknown as Json,
             updated_at: new Date().toISOString(),
             ttl_ms: 24 * 60 * 60 * 1000,
@@ -219,7 +271,7 @@ async function getDailyPriceChanges(
           { onConflict: "key" },
         );
 
-        return changesMap;
+        return { changesMap, history };
       }
     }
   } catch {
@@ -243,6 +295,8 @@ async function getDailyPriceChanges(
     initialBaseline[el.id.toString()] = el.now_cost - seededChange;
   }
 
+  history[todayStr] = initialChanges;
+
   try {
     await supabase.from("fpl_cache").upsert(
       {
@@ -251,6 +305,7 @@ async function getDailyPriceChanges(
           date: todayStr,
           baselinePrices: initialBaseline,
           todayChanges: initialChanges,
+          history,
         } as unknown as Json,
         updated_at: new Date().toISOString(),
         ttl_ms: 24 * 60 * 60 * 1000,
@@ -261,10 +316,11 @@ async function getDailyPriceChanges(
     // ignore
   }
 
-  return changesMap;
+  return { changesMap, history };
 }
 
-  const dailyChangesMap = await getDailyPriceChanges(bootstrap.elements);
+  const { changesMap: dailyChangesMap, history: dailyPriceHistory } =
+    await getDailyPriceChanges(bootstrap.elements);
 
   const players: EnrichedPlayer[] = bootstrap.elements.map((p) => {
     const team = teamMap.get(p.team);
@@ -290,6 +346,7 @@ async function getDailyPriceChanges(
       fixtures,
       currentGameweek: currentGw,
       liveGameweek: liveGw,
+      dailyPriceHistory,
     },
     ttl,
   };
@@ -322,7 +379,15 @@ export async function getFplData(): Promise<FplDataResult> {
     const age = Date.now() - new Date(data.updated_at).getTime();
     const ttl = data.ttl_ms ?? TTL.DEFAULT;
     const cached = data.value as unknown as FplDataResult;
-    if (age < ttl && cached && cached.players && cached.events && cached.fixtures) {
+    if (
+      age < ttl &&
+      cached &&
+      cached.players &&
+      cached.events &&
+      cached.fixtures &&
+      cached.dailyPriceHistory &&
+      Object.keys(cached.dailyPriceHistory).length > 1
+    ) {
       return cached;
     }
   }

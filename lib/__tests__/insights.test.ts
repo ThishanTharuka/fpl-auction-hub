@@ -123,6 +123,23 @@ describe("insights-utils", () => {
       expect(result.predictedRisersTonight[0]?.player.web_name).toBe("DailyRiser");
       expect(result.predictedFallersTonight[0]?.player.web_name).toBe("DailyFaller");
     });
+
+    it("aggregates daily price history and available dates correctly", () => {
+      const p1 = createMockPlayer({ id: 1, web_name: "Salah", cost_change_day: 1 });
+      const p2 = createMockPlayer({ id: 2, web_name: "Haaland", cost_change_day: 0 });
+
+      const mockHistory = {
+        "2026-09-06": { "1": 1 },
+        "2026-09-05": { "2": -1 },
+      };
+
+      const result = calculateMarketRadar([p1, p2], mockHistory);
+      expect(result.availableDates.includes("2026-09-06")).toBe(true);
+      expect(result.availableDates.includes("2026-09-05")).toBe(true);
+      expect(result.dailyPriceHistory?.["2026-09-06"]?.["1"]).toBe(1);
+      expect(result.dailyPriceHistory?.["2026-09-05"]?.["2"]).toBe(-1);
+      expect(result.summaries.length).toBe(2);
+    });
   });
 
   describe("calculateExpectedStats", () => {

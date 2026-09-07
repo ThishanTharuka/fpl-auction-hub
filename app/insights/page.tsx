@@ -75,6 +75,7 @@ async function InsightsDataLoader() {
       fixtures={data.fixtures}
       currentGameweek={data.currentGameweek}
       liveGameweek={data.liveGameweek}
+      dailyPriceHistory={data.dailyPriceHistory}
     />
   );
 }
