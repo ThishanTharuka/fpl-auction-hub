@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.31.2](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.1...v1.31.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* Add validation for gameweek limits and tournament duration in fixtures ([4e13159](https://github.com/ThishanTharuka/fpl-auction-hub/commit/4e13159b4b2e63fc90934ac24a23c31a21a2cf35))
+* Enhance auction platform with real-time auction features, tournament capabilities, and market insights ([5abf175](https://github.com/ThishanTharuka/fpl-auction-hub/commit/5abf175405ba3737bc3caf8bfeae8c31119e8808))
+
 ## [1.31.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.0...v1.31.1) (2026-09-06)
 
 
