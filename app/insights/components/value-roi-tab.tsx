@@ -5,6 +5,21 @@ import Image from "next/image";
 import { Coins, Filter } from "lucide-react";
 import type { ValuePlayer } from "@/lib/insights-utils";
 
+function getPositionBadgeClass(pos: string): string {
+  switch (pos) {
+    case "GKP":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    case "DEF":
+      return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    case "MID":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    case "FWD":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+  }
+}
+
 interface ValueRoiTabProps {
   players: ValuePlayer[];
 }
@@ -43,15 +58,15 @@ export function ValueRoiTab({ players }: ValueRoiTabProps) {
       {/* Filter and Control Bar */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-[#0f1c2c] p-3.5 rounded-xl border border-[#3b4b3d]">
         {/* Position toggles */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
             <button
               key={pos}
               onClick={() => setPosition(pos)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                 position === pos
-                  ? "bg-[#00e478] text-[#061423]"
-                  : "bg-[#1e2b3b] text-[#869ab8] hover:text-[#d6e4f9]"
+                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
+                  : "bg-[#1e2b3b] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]/60 hover:border-[#3b4b3d]"
               }`}
             >
               {pos}
@@ -137,22 +152,22 @@ export function ValueRoiTab({ players }: ValueRoiTabProps) {
                     </div>
                   </td>
                   <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]">
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${getPositionBadgeClass(player.position)}`}>
                       {player.position}
                     </span>
                   </td>
-                  <td className="py-3 px-3 font-semibold text-[#d6e4f9]">
+                  <td className="py-3 px-3 font-mono font-semibold text-[#d6e4f9]">
                     £{player.price.toFixed(1)}m
                   </td>
-                  <td className="py-3 px-3 font-bold text-[#d6e4f9]">
+                  <td className="py-3 px-3 font-mono font-bold text-[#d6e4f9]">
                     {player.total_points}
                   </td>
                   <td className="py-3 px-3">
-                    <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/15 text-[#00e478] border border-emerald-500/30">
+                    <span className="inline-block px-2 py-0.5 rounded text-xs font-mono font-bold bg-emerald-500/15 text-[#00e478] border border-emerald-500/30">
                       {pointsPerMillion.toFixed(1)} pts/£m
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-[#d6e4f9]">
+                  <td className="py-3 px-3 font-mono text-[#d6e4f9]">
                     {player.form}
                   </td>
                   <td className="py-3 px-3 font-mono text-xs text-[#b9cbb9]">
@@ -188,14 +203,20 @@ export function ValueRoiTab({ players }: ValueRoiTabProps) {
                     <div className="font-semibold text-sm text-[#d6e4f9]">
                       {player.web_name}
                     </div>
-                    <div className="text-[11px] text-[#869ab8]">
-                      {player.team_short} · {player.position} · £{player.price.toFixed(1)}m
+                    <div className="text-[11px] text-[#869ab8] flex items-center gap-1.5 mt-0.5">
+                      <span>{player.team_short}</span>
+                      <span>·</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getPositionBadgeClass(player.position)}`}>
+                        {player.position}
+                      </span>
+                      <span>·</span>
+                      <span className="font-mono">£{player.price.toFixed(1)}m</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-[#869ab8]">Total Pts</div>
-                  <div className="font-bold text-sm text-[#d6e4f9]">
+                  <div className="font-mono font-bold text-sm text-[#d6e4f9]">
                     {player.total_points}
                   </div>
                 </div>

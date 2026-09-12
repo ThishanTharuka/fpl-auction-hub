@@ -61,9 +61,9 @@ export function FixtureTickerTab({
               <button
                 key={h}
                 onClick={() => setHorizon(h)}
-                className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                   horizon === h
-                    ? "bg-[#00e478] text-[#061423]"
+                    ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
                     : "text-[#869ab8] hover:text-[#d6e4f9]"
                 }`}
               >

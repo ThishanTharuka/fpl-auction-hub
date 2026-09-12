@@ -108,20 +108,20 @@ export function InsightsClient({
       />
 
       {/* Main Tabs Navigation */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-[#3b4b3d] mb-6 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#3b4b3d] mb-6 scrollbar-none">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
           return (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 min-h-[40px] px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 group ${
                 isActive
-                  ? "bg-[#00e478] text-[#061423] shadow-md shadow-[#00e478]/10"
+                  ? "bg-[#00e478] text-[#003919] font-bold shadow-md shadow-[#00e478]/15 ring-1 ring-[#00e478]"
                   : "bg-[#0f1c2c] text-[#869ab8] hover:text-[#d6e4f9] hover:bg-[#132030] border border-[#3b4b3d]"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-[#061423]" : "text-[#869ab8]"}`} />
+              <Icon className={`w-4 h-4 transition-colors ${isActive ? "text-[#003919]" : "text-[#869ab8] group-hover:text-[#d6e4f9]"}`} />
               <span>{label}</span>
             </button>
           );

@@ -31,7 +31,7 @@ export function KpiBanner({
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
       {/* Gameweek Status */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
+      <div className="rounded-xl border border-[#3b4b3d] hover:border-[#00e478]/40 transition-colors bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
             Gameweek {currentGw}
@@ -53,13 +53,13 @@ export function KpiBanner({
             <span className="truncate">{deadlineDate || "Deadline TBD"}</span>
           </div>
           <div className="mt-1 text-xs text-[#869ab8]">
-            Avg Score: <strong className="text-[#d6e4f9]">{meta.averageScore} pts</strong>
+            Avg Score: <strong className="font-mono text-[#d6e4f9]">{meta.averageScore} pts</strong>
           </div>
         </div>
       </div>
 
       {/* Most Captained */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
+      <div className="rounded-xl border border-[#3b4b3d] hover:border-[#00e478]/40 transition-colors bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8] flex items-center gap-1">
           <Award className="w-3.5 h-3.5 text-amber-400" />
           Most Captained
@@ -82,7 +82,7 @@ export function KpiBanner({
                 {meta.mostCaptainedPlayer.web_name}
               </div>
               <div className="text-[11px] text-[#869ab8] truncate">
-                {meta.mostCaptainedPlayer.team_short} · {meta.mostCaptainedPlayer.selected_by_percent}% owned
+                {meta.mostCaptainedPlayer.team_short} · <span className="font-mono">{meta.mostCaptainedPlayer.selected_by_percent}%</span> owned
               </div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function KpiBanner({
       </div>
 
       {/* Most Transferred In */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
+      <div className="rounded-xl border border-[#3b4b3d] hover:border-[#00e478]/40 transition-colors bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8] flex items-center gap-1">
           <UserCheck className="w-3.5 h-3.5 text-[#00e478]" />
           Top Transfer In
@@ -115,7 +115,7 @@ export function KpiBanner({
                 {meta.mostTransferredInPlayer.web_name}
               </div>
               <div className="text-[11px] text-[#00e478] font-medium truncate">
-                +{meta.mostTransferredInPlayer.transfers_in_event?.toLocaleString() ?? 0} in
+                +<span className="font-mono">{meta.mostTransferredInPlayer.transfers_in_event?.toLocaleString() ?? 0}</span> in
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function KpiBanner({
       </div>
 
       {/* Market Mover Count */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
+      <div className="rounded-xl border border-[#3b4b3d] hover:border-[#00e478]/40 transition-colors bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
             Price Movers
@@ -140,10 +140,10 @@ export function KpiBanner({
               <TrendingUp className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-[#00e478]">
+              <div className="text-sm font-mono font-bold text-[#00e478]">
                 +{market.totalDailyRisersCount}
               </div>
-              <div className="text-[10px] text-[#869ab8]">GW: +{market.totalRisersCount}</div>
+              <div className="text-[10px] text-[#869ab8]">GW: <span className="font-mono">+{market.totalRisersCount}</span></div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -151,22 +151,22 @@ export function KpiBanner({
               <TrendingDown className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="text-sm font-bold text-rose-400">
+              <div className="text-sm font-mono font-bold text-rose-400">
                 -{market.totalDailyFallersCount}
               </div>
-              <div className="text-[10px] text-[#869ab8]">GW: -{market.totalFallersCount}</div>
+              <div className="text-[10px] text-[#869ab8]">GW: <span className="font-mono">-{market.totalFallersCount}</span></div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Highest GW Score */}
-      <div className="col-span-2 md:col-span-4 lg:col-span-1 rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
+      <div className="col-span-2 md:col-span-4 lg:col-span-1 rounded-xl border border-[#3b4b3d] hover:border-[#00e478]/40 transition-colors bg-[#0f1c2c]/80 backdrop-blur p-3.5 sm:p-4 flex flex-col justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
           Top Score
         </span>
         <div className="mt-2 flex items-baseline justify-between lg:block">
-          <div className="text-xl font-black text-[#d6e4f9]">
+          <div className="text-xl font-mono font-black text-[#d6e4f9]">
             {meta.highestScore ? `${meta.highestScore} pts` : "Pending"}
           </div>
           <div className="text-[11px] text-[#869ab8]">

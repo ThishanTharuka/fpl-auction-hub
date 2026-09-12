@@ -5,6 +5,21 @@ import Image from "next/image";
 import { Compass, Sparkles, Filter } from "lucide-react";
 import type { DifferentialPlayer } from "@/lib/insights-utils";
 
+function getPositionBadgeClass(pos: string): string {
+  switch (pos) {
+    case "GKP":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    case "DEF":
+      return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    case "MID":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    case "FWD":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+  }
+}
+
 interface DifferentialsTabProps {
   differentials: DifferentialPlayer[];
 }
@@ -46,9 +61,9 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
           <div className="flex bg-[#020f1e] p-0.5 rounded-lg border border-[#3b4b3d]">
             <button
               onClick={() => setThreshold(10)}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 threshold === 10
-                  ? "bg-[#00e478] text-[#061423]"
+                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
                   : "text-[#869ab8] hover:text-[#d6e4f9]"
               }`}
             >
@@ -56,9 +71,9 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
             </button>
             <button
               onClick={() => setThreshold(5)}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 threshold === 5
-                  ? "bg-[#00e478] text-[#061423]"
+                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
                   : "text-[#869ab8] hover:text-[#d6e4f9]"
               }`}
             >
@@ -68,14 +83,14 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
         </div>
 
         {/* Position filters */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
             <button
               key={pos}
               onClick={() => setPosition(pos)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                 position === pos
-                  ? "bg-[#1e2b3b] text-[#00e478] border border-[#00e478]/40"
+                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
                   : "bg-[#020f1e] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]"
               }`}
             >
@@ -134,17 +149,21 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
                   <div className="font-bold text-sm text-[#d6e4f9] group-hover:text-[#00e478] transition-colors">
                     {player.web_name}
                   </div>
-                  <div className="text-xs text-[#869ab8]">
-                    {player.team_name} · {player.position}
+                  <div className="text-xs text-[#869ab8] flex items-center gap-1.5 mt-0.5">
+                    <span>{player.team_name}</span>
+                    <span>·</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getPositionBadgeClass(player.position)}`}>
+                      {player.position}
+                    </span>
                   </div>
-                  <div className="text-xs font-semibold text-[#d6e4f9] mt-0.5">
+                  <div className="text-xs font-mono font-semibold text-[#d6e4f9] mt-1">
                     £{player.price.toFixed(1)}m
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-[#1e2b3b] text-sky-400 border border-sky-500/30">
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#1e2b3b] text-sky-400 border border-sky-500/30">
                   {ownership.toFixed(1)}% owned
                 </span>
               </div>
@@ -153,20 +172,20 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
             <div className="grid grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-[#3b4b3d]/40 text-center text-xs">
               <div className="bg-[#020f1e] rounded-lg p-1.5">
                 <div className="text-[10px] text-[#869ab8]">Form</div>
-                <div className="font-bold text-[#00e478]">{form.toFixed(1)}</div>
+                <div className="font-mono font-bold text-[#00e478]">{form.toFixed(1)}</div>
               </div>
               <div className="bg-[#020f1e] rounded-lg p-1.5">
                 <div className="text-[10px] text-[#869ab8]">Total Pts</div>
-                <div className="font-bold text-[#d6e4f9]">{totalPoints}</div>
+                <div className="font-mono font-bold text-[#d6e4f9]">{totalPoints}</div>
               </div>
               <div className="bg-[#020f1e] rounded-lg p-1.5">
                 <div className="text-[10px] text-[#869ab8]">xGI</div>
-                <div className="font-bold text-amber-400">{xgi.toFixed(2)}</div>
+                <div className="font-mono font-bold text-amber-400">{xgi.toFixed(2)}</div>
               </div>
               <div className="bg-[#020f1e] rounded-lg p-1.5">
                 <div className="text-[10px] text-[#869ab8]">Next 5 FDR</div>
                 <div
-                  className={`font-bold ${
+                  className={`font-mono font-bold ${
                     player.avg_fdr_next5 <= 2.5
                       ? "text-[#00e478]"
                       : player.avg_fdr_next5 >= 3.5

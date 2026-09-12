@@ -8,12 +8,28 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Search,
+  X,
   Zap,
   Calendar,
   AlertTriangle,
   History,
 } from "lucide-react";
 import type { MarketRadarData, MarketPlayerSummary } from "@/lib/insights-utils";
+
+function getPositionBadgeClass(pos: string): string {
+  switch (pos) {
+    case "GKP":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    case "DEF":
+      return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    case "MID":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    case "FWD":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+  }
+}
 
 interface MarketRadarTabProps {
   data: MarketRadarData;
@@ -205,16 +221,22 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
           <button
             type="button"
             onClick={() => handleTimeframeChange("today")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               timeframe === "today"
-                ? "bg-[#00e478] text-[#061423] shadow-sm font-bold"
+                ? "bg-[#00e478] text-[#003919] shadow-sm font-bold ring-1 ring-[#00e478]"
                 : "text-[#869ab8] hover:text-[#d6e4f9]"
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
             <span>{isToday ? "Daily & Predictions" : `Daily (${selectedDateLabel})`}</span>
             {selectedDateRisers.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#061423]/20 text-[#061423]">
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  timeframe === "today"
+                    ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
+                    : "bg-[#1e2b3b] text-[#869ab8] border border-[#3b4b3d]/50"
+                }`}
+              >
                 +{selectedDateRisers.length}
               </span>
             )}
@@ -223,16 +245,22 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
           <button
             type="button"
             onClick={() => handleTimeframeChange("gameweek")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               timeframe === "gameweek"
-                ? "bg-[#00e478] text-[#061423] shadow-sm font-bold"
+                ? "bg-[#00e478] text-[#003919] shadow-sm font-bold ring-1 ring-[#00e478]"
                 : "text-[#869ab8] hover:text-[#d6e4f9]"
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Gameweek Overview</span>
             {data.totalRisersCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#061423]/20 text-[#061423]">
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  timeframe === "gameweek"
+                    ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
+                    : "bg-[#1e2b3b] text-[#869ab8] border border-[#3b4b3d]/50"
+                }`}
+              >
                 +{data.totalRisersCount}
               </span>
             )}
@@ -261,19 +289,19 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   key={dStr}
                   type="button"
                   onClick={() => handleDateChange(dStr)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                  className={`flex items-center gap-1.5 min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
                     isSelected
-                      ? "bg-[#00e478] text-[#061423] font-bold shadow-sm"
+                      ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
                       : "bg-[#061423] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]/50 hover:border-[#3b4b3d]"
                   }`}
                 >
                   <span>{pillLabel}</span>
                   {dayMovers > 0 && (
                     <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                         isSelected
-                          ? "bg-[#061423]/25 text-[#061423]"
-                          : "bg-[#132030] text-[#00e478]"
+                          ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
+                          : "bg-[#132030] text-[#00e478] border border-emerald-500/20"
                       }`}
                     >
                       {dayMovers}
@@ -580,8 +608,18 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             placeholder="Search by player or team..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478]"
+            className="w-full pl-9 pr-8 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478] focus:ring-1 focus:ring-[#00e478]"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#869ab8] hover:text-[#d6e4f9] rounded transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <div className="text-xs text-[#869ab8] self-center sm:self-auto">
           Showing {currentList.length} player{currentList.length === 1 ? "" : "s"}
@@ -608,7 +646,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   setSelectedDate(todayStr);
                   setActiveView(data.totalDailyRisersCount > 0 ? "dailyRisers" : "predictedRisers");
                 }}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#00e478] text-[#061423] hover:bg-[#00c868] transition-colors"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00e478] text-[#003919] hover:bg-[#00c868] transition-colors shadow-sm"
               >
                 <Zap className="w-3.5 h-3.5" />
                 View Today&apos;s Price Changes
@@ -689,7 +727,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${getPositionBadgeClass(player.position)}`}>
                             {player.position}
                           </span>
                         </td>
@@ -730,11 +768,11 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                       : `${targetProgressPercent.toFixed(1)}%`}
                                   </span>
                                   {targetProgressPercent >= 90 ? (
-                                    <span className="text-[10px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1.5 py-0.2 rounded border border-[#00e478]/30 animate-pulse">
+                                    <span className="text-[10px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1.5 py-0.5 rounded border border-[#00e478]/30 animate-pulse">
                                       Imminent
                                     </span>
                                   ) : targetProgressPercent <= -90 ? (
-                                    <span className="text-[10px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/30 animate-pulse">
+                                    <span className="text-[10px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
                                       Imminent
                                     </span>
                                   ) : null}
@@ -855,8 +893,12 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           <div className="font-semibold text-sm text-[#d6e4f9]">
                             {player.web_name}
                           </div>
-                          <div className="text-[11px] text-[#869ab8]">
-                            {player.team_short} · {player.position}
+                          <div className="text-[11px] text-[#869ab8] flex items-center gap-1.5 mt-0.5">
+                            <span>{player.team_short}</span>
+                            <span>·</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getPositionBadgeClass(player.position)}`}>
+                              {player.position}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -925,11 +967,11 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                   : `${targetProgressPercent.toFixed(1)}%`}
                               </span>
                               {targetProgressPercent >= 90 ? (
-                                <span className="text-[9px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1 py-0.2 rounded border border-[#00e478]/30">
+                                <span className="text-[9px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1.5 py-0.5 rounded border border-[#00e478]/30">
                                   Imminent
                                 </span>
                               ) : targetProgressPercent <= -90 ? (
-                                <span className="text-[9px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1 py-0.2 rounded border border-rose-500/30">
+                                <span className="text-[9px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/30">
                                   Imminent
                                 </span>
                               ) : null}

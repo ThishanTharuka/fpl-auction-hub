@@ -5,6 +5,21 @@ import Image from "next/image";
 import { Sparkles, Flame, Snowflake, ShieldCheck } from "lucide-react";
 import type { ExpectedStatsData, ExpectedStatsPlayer } from "@/lib/insights-utils";
 
+function getPositionBadgeClass(pos: string): string {
+  switch (pos) {
+    case "GKP":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    case "DEF":
+      return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    case "MID":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    case "FWD":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+  }
+}
+
 interface ExpectedStatsTabProps {
   data: ExpectedStatsData;
 }
@@ -184,22 +199,22 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
                     </div>
                   </td>
                   <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]">
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${getPositionBadgeClass(player.position)}`}>
                       {player.position}
                     </span>
                   </td>
-                  <td className="py-3 px-3 font-semibold text-[#d6e4f9]">
+                  <td className="py-3 px-3 font-mono font-semibold text-[#d6e4f9]">
                     £{player.price.toFixed(1)}m
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 font-mono">
                     <span className="text-[#d6e4f9] font-medium">{goals}</span>
                     <span className="text-[#869ab8] text-xs ml-1">({xg.toFixed(2)})</span>
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 font-mono">
                     <span className="text-[#d6e4f9] font-medium">{assists}</span>
                     <span className="text-[#869ab8] text-xs ml-1">({xa.toFixed(2)})</span>
                   </td>
-                  <td className="py-3 px-3 font-bold text-[#00e478]">
+                  <td className="py-3 px-3 font-mono font-bold text-[#00e478]">
                     {xgi.toFixed(2)}
                   </td>
                   <td className="py-3 px-3 font-mono text-xs text-[#d6e4f9]">
@@ -245,21 +260,27 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
                     <div className="font-semibold text-sm text-[#d6e4f9]">
                       {player.web_name}
                     </div>
-                    <div className="text-[11px] text-[#869ab8]">
-                      {player.team_short} · {player.position} · £{player.price.toFixed(1)}m
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#869ab8] mt-0.5">
+                      <span>{player.team_short}</span>
+                      <span>·</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${getPositionBadgeClass(player.position)}`}>
+                        {player.position}
+                      </span>
+                      <span>·</span>
+                      <span className="font-mono">£{player.price.toFixed(1)}m</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-[#869ab8]">xGI</div>
-                  <div className="font-bold text-sm text-[#00e478]">
+                  <div className="font-mono font-bold text-sm text-[#00e478]">
                     {xgi.toFixed(2)}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-1 text-xs border-t border-[#3b4b3d]/30">
-                <div>
+                <div className="font-mono">
                   <span className="text-[#869ab8]">G:</span> {goals} (xG {xg.toFixed(1)}) ·{" "}
                   <span className="text-[#869ab8]">A:</span> {assists} (xA {xa.toFixed(1)})
                 </div>

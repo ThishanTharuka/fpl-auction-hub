@@ -2,8 +2,23 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import { AlertTriangle, ShieldAlert, HeartPulse, Search } from "lucide-react";
+import { AlertTriangle, ShieldAlert, HeartPulse, Search, X } from "lucide-react";
 import type { StatusWatchItem } from "@/lib/insights-utils";
+
+function getPositionBadgeClass(pos: string): string {
+  switch (pos) {
+    case "GKP":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    case "DEF":
+      return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+    case "MID":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    case "FWD":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    default:
+      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+  }
+}
 
 interface StatusWatchTabProps {
   flaggedPlayers: StatusWatchItem[];
@@ -180,69 +195,98 @@ export function StatusWatchTab({
             placeholder="Search flagged players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478]"
+            className="w-full pl-9 pr-8 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478] focus:ring-1 focus:ring-[#00e478]"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#869ab8] hover:text-[#d6e4f9] p-0.5 rounded transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <div className="text-xs text-[#869ab8] self-center sm:self-auto">
-          Showing {filteredList.length} player{filteredList.length === 1 ? "" : "s"}
+          Showing <span className="font-mono font-semibold text-[#d6e4f9]">{filteredList.length}</span> player{filteredList.length === 1 ? "" : "s"}
         </div>
       </div>
 
       {/* Flagged Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filteredList.map(({ player, news, chanceThisRound, chanceNextRound, yellowCards, isYellowCardRisk }) => (
-          <div
-            key={player.id}
-            className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col justify-between hover:border-[#3b4b3d]/80 transition-all"
-          >
-            <div>
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0">
-                    {player.image_url ? (
-                      <Image
-                        src={player.image_url}
-                        alt={player.web_name}
-                        fill
-                        sizes="40px"
-                        className="object-cover object-top"
-                      />
-                    ) : null}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-[#d6e4f9]">
-                      {player.web_name}
+      {filteredList.length === 0 ? (
+        <div className="py-12 text-center text-[#869ab8] bg-[#0f1c2c] rounded-xl border border-[#3b4b3d]">
+          <p className="text-sm">No players matching the selected status filter.</p>
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#003919] bg-[#00e478] hover:bg-[#00c868] transition-colors"
+            >
+              Clear search query
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredList.map(({ player, news, chanceThisRound, chanceNextRound, yellowCards, isYellowCardRisk }) => (
+            <div
+              key={player.id}
+              className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col justify-between hover:border-[#00e478]/40 transition-colors"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0">
+                      {player.image_url ? (
+                        <Image
+                          src={player.image_url}
+                          alt={player.web_name}
+                          fill
+                          sizes="40px"
+                          className="object-cover object-top"
+                        />
+                      ) : null}
                     </div>
-                    <div className="text-xs text-[#869ab8]">
-                      {player.team_name} · {player.position} · £{player.price.toFixed(1)}m
+                    <div>
+                      <div className="font-bold text-sm text-[#d6e4f9]">
+                        {player.web_name}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-[#869ab8] mt-0.5">
+                        <span>{player.team_name}</span>
+                        <span>·</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${getPositionBadgeClass(player.position)}`}>
+                          {player.position}
+                        </span>
+                        <span>·</span>
+                        <span className="font-mono">£{player.price.toFixed(1)}m</span>
+                      </div>
                     </div>
                   </div>
+
+                  <div>{getChanceBadge(chanceThisRound ?? chanceNextRound)}</div>
                 </div>
 
-                <div>{getChanceBadge(chanceThisRound ?? chanceNextRound)}</div>
-              </div>
-
-              {/* News / Medical Notes */}
-              <div className="mt-3 p-2.5 rounded-lg bg-[#020f1e] border border-[#3b4b3d]/60 text-xs text-[#b9cbb9] leading-relaxed">
-                {news || "Status flagged by FPL medical update."}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#3b4b3d]/40 text-xs">
-              <div className="text-[#869ab8]">
-                Total Pts: <strong className="text-[#d6e4f9]">{player.total_points}</strong> · Owned:{" "}
-                <strong className="text-[#d6e4f9]">{player.selected_by_percent}%</strong>
-              </div>
-              {isYellowCardRisk && (
-                <div className="flex items-center gap-1 font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded text-[11px] border border-yellow-500/20">
-                  <ShieldAlert className="w-3 h-3" />
-                  {yellowCards} Yellows (Risk)
+                {/* News / Medical Notes */}
+                <div className="mt-3 p-2.5 rounded-lg bg-[#020f1e] border border-[#3b4b3d]/60 text-xs text-[#b9cbb9] leading-relaxed">
+                  {news || "Status flagged by FPL medical update."}
                 </div>
-              )}
+              </div>
+
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#3b4b3d]/40 text-xs">
+                <div className="text-[#869ab8]">
+                  Total Pts: <strong className="font-mono text-[#d6e4f9]">{player.total_points}</strong> · Owned:{" "}
+                  <strong className="font-mono text-[#d6e4f9]">{player.selected_by_percent}%</strong>
+                </div>
+                {isYellowCardRisk && (
+                  <div className="flex items-center gap-1 font-mono font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded text-[11px] border border-yellow-500/20">
+                    <ShieldAlert className="w-3 h-3" />
+                    {yellowCards} Yellows (Risk)
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
