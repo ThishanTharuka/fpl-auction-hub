@@ -1,1 +1,8 @@
-{\n  "crons": [\n    {\n      "path": "/api/fpl/daily-prices/sync",\n      "schedule": "15 2 * * *"\n    }\n  ]\n}\n
+{
+  "crons": [
+    {
+      "path": "/api/fpl/daily-prices/sync",
+      "schedule": "15 2 * * *"
+    }
+  ]
+}
