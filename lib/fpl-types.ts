@@ -138,6 +138,7 @@ export interface FPLBootstrapResponse {
     plural_name_short: string;
   }>;
   events: FPLEvent[];
+  total_players?: number;
 }
 
 export interface FPLElementSummary {
