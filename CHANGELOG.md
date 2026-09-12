@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.4...v1.31.5) (2026-09-12)
+
+
+### Bug Fixes
+
+* Format vercel.json for consistency and readability ([a88e974](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a88e974674c74822b9e1542ec7e951eac6e791f5))
+
 ## [1.31.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.3...v1.31.4) (2026-09-12)
 
 
