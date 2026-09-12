@@ -1,0 +1,40 @@
+name: FPL Daily Price Sync
+
+on:
+  schedule:
+    # 02:15 AM UTC daily (after FPL 01:15-02:00 AM UK price change window)
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Target Application URL (e.g. https://fpl-auction-hub.vercel.app)'
+        required: false
+        default: ''
+
+permissions: {}
+
+jobs:
+  sync-prices:
+    name: Sync Daily Prices
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger Price Sync Endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          INPUT_URL: ${{ github.event.inputs.target_url }}
+          APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://fpl-auction-hub.vercel.app' }}
+        run: |
+          TARGET="${INPUT_URL:-$APP_URL}"
+          echo "Triggering price sync on: ${TARGET}/api/fpl/daily-prices/sync"
+          
+          if [ -n "$CRON_SECRET" ]; then
+            curl -f -sS -X POST "${TARGET}/api/fpl/daily-prices/sync" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "Content-Type: application/json"
+          else
+            curl -f -sS -X POST "${TARGET}/api/fpl/daily-prices/sync" \
+              -H "Content-Type: application/json"
+          fi
+          echo ""
+          echo "Price sync completed successfully."

@@ -9,6 +9,7 @@ import {
   calculateGameweekMeta,
 } from "@/lib/insights-utils";
 import type { EnrichedPlayer, FPLTeam, FPLFixture, FPLEvent } from "@/lib/fpl-types";
+import { calculatePriceChangeProgress } from "@/lib/fpl-data";
 
 function createMockPlayer(overrides: Partial<EnrichedPlayer>): EnrichedPlayer {
   return {
@@ -280,4 +281,54 @@ describe("insights-utils", () => {
       expect(meta.chipPlays[0]?.name).toBe("Wildcard");
     });
   });
+
+  describe("calculatePriceChangeProgress", () => {
+    it("returns positive progress for players with net positive transfers", () => {
+      const progress = calculatePriceChangeProgress({
+        selected_by_percent: "15.0",
+        transfers_in_event: 120000,
+        transfers_out_event: 20000,
+      });
+      const numeric = parseFloat(progress);
+      expect(numeric).toBeGreaterThan(0);
+      expect(numeric).toBeLessThanOrEqual(120);
+    });
+
+    it("returns negative progress for players with net negative transfers", () => {
+      const progress = calculatePriceChangeProgress({
+        selected_by_percent: "8.0",
+        transfers_in_event: 10000,
+        transfers_out_event: 80000,
+      });
+      const numeric = parseFloat(progress);
+      expect(numeric).toBeLessThan(0);
+      expect(numeric).toBeGreaterThanOrEqual(-120);
+    });
+
+    it("clamps progress to -120% and 120%", () => {
+      const hugeRiser = calculatePriceChangeProgress({
+        selected_by_percent: "5.0",
+        transfers_in_event: 1000000,
+        transfers_out_event: 0,
+      });
+      expect(hugeRiser).toBe("120.0");
+
+      const hugeFaller = calculatePriceChangeProgress({
+        selected_by_percent: "5.0",
+        transfers_in_event: 0,
+        transfers_out_event: 1000000,
+      });
+      expect(hugeFaller).toBe("-120.0");
+    });
+
+    it("defaults to 0.0 when transfers are zero", () => {
+      const neutral = calculatePriceChangeProgress({
+        selected_by_percent: "2.0",
+        transfers_in_event: 0,
+        transfers_out_event: 0,
+      });
+      expect(neutral).toBe("0.0");
+    });
+  });
 });
+

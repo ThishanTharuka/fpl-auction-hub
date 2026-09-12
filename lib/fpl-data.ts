@@ -11,8 +11,8 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "./database.types";
 
 const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder",
 );
 
 const FPL_BOOTSTRAP_URL =
@@ -24,6 +24,192 @@ const FPL_CREST_BASE_URL =
   "https://resources.premierleague.com/premierleague/badges/70/t";
 
 const CACHE_KEY = "fpl_data";
+export const DAILY_PRICES_CACHE_KEY = "fpl_daily_prices";
+
+export interface DailyPriceSnapshot {
+  date: string;
+  baselinePrices: Record<string, number>;
+  todayChanges: Record<string, number>;
+  history?: Record<string, Record<string, number>>;
+}
+
+export interface DailyPriceSyncPlayer {
+  id: number;
+  name: string;
+  change: number;
+  newCost: number;
+}
+
+export interface DailyPriceSyncResult {
+  success: boolean;
+  date: string;
+  risersCount: number;
+  fallersCount: number;
+  risers: DailyPriceSyncPlayer[];
+  fallers: DailyPriceSyncPlayer[];
+}
+
+export function calculatePriceChangeProgress(
+  player: {
+    selected_by_percent?: string;
+    transfers_in_event?: number;
+    transfers_out_event?: number;
+  },
+  totalPlayers = 10_500_000,
+): string {
+  const ownershipPercent = parseFloat(player.selected_by_percent || "0");
+  const activeTotal = totalPlayers > 0 ? totalPlayers : 10_500_000;
+  const ownershipCount = Math.round((ownershipPercent / 100) * activeTotal);
+  const netTransfers = (player.transfers_in_event ?? 0) - (player.transfers_out_event ?? 0);
+
+  // Dynamic threshold based on ownership scale:
+  // Players with higher ownership require more net transfers to shift price.
+  // Minimum threshold ~15,000; maximum threshold ~150,000.
+  const threshold = Math.max(
+    15_000,
+    Math.min(150_000, Math.round(Math.sqrt(Math.max(1_000, ownershipCount)) * 80)),
+  );
+
+  const rawProgress = (netTransfers / threshold) * 100;
+  const clampedProgress = Math.max(-120, Math.min(120, Math.round(rawProgress * 10) / 10));
+  return clampedProgress.toFixed(1);
+}
+
+export async function getDailyPriceChanges(
+  elements: Array<{ id: number; now_cost: number }>,
+): Promise<{
+  changesMap: Map<number, number>;
+  history: Record<string, Record<string, number>>;
+}> {
+  const changesMap = new Map<number, number>();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let history: Record<string, Record<string, number>> = {};
+
+  try {
+    const { data: cached } = await supabase
+      .from("fpl_cache")
+      .select("value")
+      .eq("key", DAILY_PRICES_CACHE_KEY)
+      .single();
+
+    const snapshot = cached?.value as unknown as DailyPriceSnapshot | null;
+
+    if (snapshot && snapshot.baselinePrices) {
+      history = { ...(snapshot.history || {}) };
+      if (snapshot.date === todayStr) {
+        for (const [idStr, change] of Object.entries(snapshot.todayChanges || {})) {
+          changesMap.set(Number(idStr), change);
+        }
+        let hasNewChange = false;
+        const updatedTodayChanges = { ...(snapshot.todayChanges || {}) };
+        for (const el of elements) {
+          const baseline = snapshot.baselinePrices[el.id.toString()];
+          if (baseline !== undefined) {
+            const diff = el.now_cost - baseline;
+            if (diff !== 0) {
+              changesMap.set(el.id, diff);
+              if (updatedTodayChanges[el.id.toString()] !== diff) {
+                updatedTodayChanges[el.id.toString()] = diff;
+                hasNewChange = true;
+              }
+            }
+          }
+        }
+        history[todayStr] = updatedTodayChanges;
+        const historyNeedsUpdate =
+          !snapshot.history ||
+          Object.keys(snapshot.history).length < Object.keys(history).length;
+
+        if (hasNewChange || historyNeedsUpdate) {
+          await supabase.from("fpl_cache").upsert(
+            {
+              key: DAILY_PRICES_CACHE_KEY,
+              value: {
+                ...snapshot,
+                todayChanges: updatedTodayChanges,
+                history,
+              } as unknown as Json,
+              updated_at: new Date().toISOString(),
+              ttl_ms: 24 * 60 * 60 * 1000,
+            },
+            { onConflict: "key" },
+          );
+        }
+        return { changesMap, history };
+      } else {
+        const previousPrices = snapshot.baselinePrices;
+        const newTodayChanges: Record<string, number> = {};
+        const newBaselinePrices: Record<string, number> = {};
+
+        for (const el of elements) {
+          newBaselinePrices[el.id.toString()] = el.now_cost;
+          const prevCost = previousPrices[el.id.toString()];
+          if (prevCost !== undefined) {
+            const diff = el.now_cost - prevCost;
+            if (diff !== 0) {
+              newTodayChanges[el.id.toString()] = diff;
+              changesMap.set(el.id, diff);
+            }
+          }
+        }
+
+        if (snapshot.todayChanges && Object.keys(snapshot.todayChanges).length > 0) {
+          history[snapshot.date] = snapshot.todayChanges;
+        }
+        history[todayStr] = newTodayChanges;
+
+        await supabase.from("fpl_cache").upsert(
+          {
+            key: DAILY_PRICES_CACHE_KEY,
+            value: {
+              date: todayStr,
+              baselinePrices: newBaselinePrices,
+              todayChanges: newTodayChanges,
+              history,
+            } as unknown as Json,
+            updated_at: new Date().toISOString(),
+            ttl_ms: 24 * 60 * 60 * 1000,
+          },
+          { onConflict: "key" },
+        );
+
+        return { changesMap, history };
+      }
+    }
+  } catch (err) {
+    console.error("Error reading daily price snapshot:", err);
+  }
+
+  const initialBaseline: Record<string, number> = {};
+  const initialChanges: Record<string, number> = {};
+
+  for (const el of elements) {
+    initialBaseline[el.id.toString()] = el.now_cost;
+  }
+
+  history[todayStr] = initialChanges;
+
+  try {
+    await supabase.from("fpl_cache").upsert(
+      {
+        key: DAILY_PRICES_CACHE_KEY,
+        value: {
+          date: todayStr,
+          baselinePrices: initialBaseline,
+          todayChanges: initialChanges,
+          history,
+        } as unknown as Json,
+        updated_at: new Date().toISOString(),
+        ttl_ms: 24 * 60 * 60 * 1000,
+      },
+      { onConflict: "key" },
+    );
+  } catch (err) {
+    console.error("Error initializing daily price snapshot:", err);
+  }
+
+  return { changesMap, history };
+}
 
 const TTL = {
   MATCHDAY: 5 * 60 * 1000,
@@ -127,198 +313,6 @@ async function fetchFromUpstream(): Promise<{
     bootstrap.teams.map((t) => [t.id, t]),
   );
 
-const DAILY_PRICES_CACHE_KEY = "fpl_daily_prices";
-
-interface DailyPriceSnapshot {
-  date: string;
-  baselinePrices: Record<string, number>;
-  todayChanges: Record<string, number>;
-  history?: Record<string, Record<string, number>>;
-}
-
-// Seed historical daily movers for recent days in Gameweek 3
-const INITIAL_DAILY_HISTORY: Record<string, Record<string, number>> = {
-  "2026-09-07": {
-    "40": 1, "277": 1, "367": 1, // Rogers, Egan, Gakpo
-    "23": -1, "27": -1, "43": -1, "63": -1, "100": -1, "114": -1, "175": -1,
-    "239": -1, "252": -1, "285": -1, "303": -1, "355": -1, "362": -1, "363": -1,
-    "364": -1, "381": -1, "401": -1, "471": -1, "488": -1, "545": -1, "608": -1, "621": -1,
-  },
-  "2026-09-06": {
-    "399": 1, // Cherki
-    "13": -1, "149": -1, "121": -1, "142": -1, "583": -1, "104": -1, // Rice, Colwill, Mitoma, James, Chavarria, Onyeka
-  },
-  "2026-09-05": {
-    "249": 1, // Barry
-    "262": -1, "271": -1, "357": -1, "358": -1, "241": -1, // Smith Rowe, Muniz, Frimpong, Kerkez, McNeil
-  },
-  "2026-09-04": {
-    "464": 1, // Wissa
-    "2": -1, "3": -1, "9": -1, "11": -1, "20": -1, // Arrizabalaga, Meslier, Hincapie, Mosquera, Dowman
-  },
-  "2026-09-03": {
-    "65": -1, "67": -1, "72": -1, "95": -1, "106": -1, "135": -1, // J.Araujo, Rayan, Gannon-Doak, O.Dango, Thiago, Yohanna
-  },
-  "2026-09-02": {
-    "575": -1, "584": -1, "574": -1, "562": -1, "329": -1, // Yirenkyi, Hamer, Hjertø-Dahl, Maeda, Rodon
-  },
-  "2026-09-01": {
-    "337": -1, "339": -1, "347": -1, // Aaronson, Longstaff, Nmecha
-  },
-};
-
-// Seed for Sept 7, 2026 overnight price change batch
-const KNOWN_SEPT_7_RISERS = new Set([40, 277, 367]); // Rogers (40), Egan (277), Gakpo (367)
-const KNOWN_SEPT_7_FALLERS = new Set([
-  23, 27, 43, 63, 100, 114, 175, 239, 252, 285, 303, 355, 362, 363, 364, 381, 401, 471, 488, 545, 608, 621,
-]);
-
-async function getDailyPriceChanges(
-  elements: Array<{ id: number; now_cost: number }>,
-): Promise<{
-  changesMap: Map<number, number>;
-  history: Record<string, Record<string, number>>;
-}> {
-  const changesMap = new Map<number, number>();
-  const todayStr = new Date().toISOString().slice(0, 10);
-  let history: Record<string, Record<string, number>> = { ...INITIAL_DAILY_HISTORY };
-
-  try {
-    const { data: cached } = await supabase
-      .from("fpl_cache")
-      .select("value")
-      .eq("key", DAILY_PRICES_CACHE_KEY)
-      .single();
-
-    const snapshot = cached?.value as unknown as DailyPriceSnapshot | null;
-
-    if (snapshot && snapshot.baselinePrices) {
-      history = { ...INITIAL_DAILY_HISTORY, ...(snapshot.history || {}) };
-      if (snapshot.date === todayStr) {
-        for (const [idStr, change] of Object.entries(snapshot.todayChanges || {})) {
-          changesMap.set(Number(idStr), change);
-        }
-        let hasNewChange = false;
-        const updatedTodayChanges = { ...(snapshot.todayChanges || {}) };
-        for (const el of elements) {
-          const baseline = snapshot.baselinePrices[el.id.toString()];
-          if (baseline !== undefined) {
-            const diff = el.now_cost - baseline;
-            if (diff !== 0) {
-              changesMap.set(el.id, diff);
-              if (updatedTodayChanges[el.id.toString()] !== diff) {
-                updatedTodayChanges[el.id.toString()] = diff;
-                hasNewChange = true;
-              }
-            }
-          }
-        }
-        history[todayStr] = updatedTodayChanges;
-        const historyNeedsUpdate =
-          !snapshot.history ||
-          Object.keys(snapshot.history).length < Object.keys(history).length;
-
-        if (hasNewChange || historyNeedsUpdate) {
-          await supabase.from("fpl_cache").upsert(
-            {
-              key: DAILY_PRICES_CACHE_KEY,
-              value: {
-                ...snapshot,
-                todayChanges: updatedTodayChanges,
-                history,
-              } as unknown as Json,
-              updated_at: new Date().toISOString(),
-              ttl_ms: 24 * 60 * 60 * 1000,
-            },
-            { onConflict: "key" },
-          );
-        }
-        return { changesMap, history };
-      } else {
-        const previousPrices = snapshot.baselinePrices;
-        const newTodayChanges: Record<string, number> = {};
-        const newBaselinePrices: Record<string, number> = {};
-
-        for (const el of elements) {
-          newBaselinePrices[el.id.toString()] = el.now_cost;
-          const prevCost = previousPrices[el.id.toString()];
-          if (prevCost !== undefined) {
-            const diff = el.now_cost - prevCost;
-            if (diff !== 0) {
-              newTodayChanges[el.id.toString()] = diff;
-              changesMap.set(el.id, diff);
-            }
-          }
-        }
-
-        if (snapshot.todayChanges && Object.keys(snapshot.todayChanges).length > 0) {
-          history[snapshot.date] = snapshot.todayChanges;
-        }
-        history[todayStr] = newTodayChanges;
-
-        await supabase.from("fpl_cache").upsert(
-          {
-            key: DAILY_PRICES_CACHE_KEY,
-            value: {
-              date: todayStr,
-              baselinePrices: newBaselinePrices,
-              todayChanges: newTodayChanges,
-              history,
-            } as unknown as Json,
-            updated_at: new Date().toISOString(),
-            ttl_ms: 24 * 60 * 60 * 1000,
-          },
-          { onConflict: "key" },
-        );
-
-        return { changesMap, history };
-      }
-    }
-  } catch {
-    // If Supabase read fails, fallback to initial seeding
-  }
-
-  const initialBaseline: Record<string, number> = {};
-  const initialChanges: Record<string, number> = {};
-
-  for (const el of elements) {
-    let seededChange = 0;
-    if (KNOWN_SEPT_7_RISERS.has(el.id)) {
-      seededChange = 1;
-    } else if (KNOWN_SEPT_7_FALLERS.has(el.id)) {
-      seededChange = -1;
-    }
-    if (seededChange !== 0) {
-      initialChanges[el.id.toString()] = seededChange;
-      changesMap.set(el.id, seededChange);
-    }
-    initialBaseline[el.id.toString()] = el.now_cost - seededChange;
-  }
-
-  history[todayStr] = initialChanges;
-
-  try {
-    await supabase.from("fpl_cache").upsert(
-      {
-        key: DAILY_PRICES_CACHE_KEY,
-        value: {
-          date: todayStr,
-          baselinePrices: initialBaseline,
-          todayChanges: initialChanges,
-          history,
-        } as unknown as Json,
-        updated_at: new Date().toISOString(),
-        ttl_ms: 24 * 60 * 60 * 1000,
-      },
-      { onConflict: "key" },
-    );
-  } catch {
-    // ignore
-  }
-
-  return { changesMap, history };
-}
-
   const { changesMap: dailyChangesMap, history: dailyPriceHistory } =
     await getDailyPriceChanges(bootstrap.elements);
 
@@ -335,6 +329,10 @@ async function getDailyPriceChanges(
       price: p.now_cost / 10,
       avg_fdr_next5: teamFdrMap.get(p.team) ?? 3,
       cost_change_day: dailyChangesMap.get(p.id) ?? 0,
+      price_change_percent: calculatePriceChangeProgress(
+        p,
+        bootstrap.total_players,
+      ),
     };
   });
 
@@ -386,13 +384,57 @@ export async function getFplData(): Promise<FplDataResult> {
       cached.events &&
       cached.fixtures &&
       cached.dailyPriceHistory &&
-      Object.keys(cached.dailyPriceHistory).length > 1
+      Object.keys(cached.dailyPriceHistory).length > 0
     ) {
       return cached;
     }
   }
 
   return fetchAndCacheFplData();
+}
+
+export async function syncDailyPrices(
+  force = false,
+): Promise<DailyPriceSyncResult> {
+  const bootstrapRes = await fetch(FPL_BOOTSTRAP_URL, { headers: HEADERS });
+  if (!bootstrapRes.ok) {
+    throw new Error(
+      `Failed to fetch FPL bootstrap data: ${bootstrapRes.statusText}`,
+    );
+  }
+  const bootstrap: FPLBootstrapResponse = await bootstrapRes.json();
+  const { changesMap } = await getDailyPriceChanges(bootstrap.elements);
+
+  const risers: DailyPriceSyncPlayer[] = [];
+  const fallers: DailyPriceSyncPlayer[] = [];
+
+  const playerMap = new Map(bootstrap.elements.map((p) => [p.id, p]));
+
+  for (const [id, change] of changesMap.entries()) {
+    const p = playerMap.get(id);
+    if (!p) continue;
+    const item: DailyPriceSyncPlayer = {
+      id,
+      name: p.web_name,
+      change,
+      newCost: p.now_cost,
+    };
+    if (change > 0) risers.push(item);
+    else if (change < 0) fallers.push(item);
+  }
+
+  if (force || risers.length > 0 || fallers.length > 0) {
+    await fetchAndCacheFplData();
+  }
+
+  return {
+    success: true,
+    date: new Date().toISOString().slice(0, 10),
+    risersCount: risers.length,
+    fallersCount: fallers.length,
+    risers,
+    fallers,
+  };
 }
 
 export interface FplGameweekInfo {
