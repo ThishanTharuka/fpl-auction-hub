@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.4](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.3...v1.31.4) (2026-09-12)
+
+
+### Bug Fixes
+
+* Implement daily price sync functionality with authorization and progress calculation ([44b0a1e](https://github.com/ThishanTharuka/fpl-auction-hub/commit/44b0a1e7e7015ac6cfd3ded71a0587f6d9e42240))
+
 ## [1.31.3](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.2...v1.31.3) (2026-09-07)
 
 
