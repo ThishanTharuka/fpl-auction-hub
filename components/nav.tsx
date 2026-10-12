@@ -7,6 +7,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X } from "lucide-react";
 
 const links = [
@@ -29,11 +30,11 @@ export function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#3b4b3d] bg-[#020f1e]/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border bg-sidebar/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 sm:gap-8 px-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-[#00e478] shrink-0"
+          className="flex items-center gap-2 font-bold text-primary shrink-0"
         >
           <Image
             src="/fplah.webp"
@@ -55,8 +56,8 @@ export function Nav() {
                 className={cn(
                   "rounded px-3 py-1.5 text-sm font-medium transition-colors",
                   pathname.startsWith(href)
-                    ? "bg-[#1e2b3b] text-[#00e478]"
-                    : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
+                    ? "bg-secondary text-primary font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 {label}
@@ -65,12 +66,14 @@ export function Nav() {
           </nav>
         )}
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-3 text-sm text-[#b9cbb9]">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3 text-sm text-muted-foreground">
+          <ThemeToggle />
+
           {user ? (
             <>
               <Link
                 href="/profile"
-                className="text-xs hidden sm:block truncate max-w-[180px] hover:text-[#00e478] transition-colors"
+                className="text-xs hidden sm:block truncate max-w-[180px] hover:text-primary transition-colors"
                 title={user.email}
               >
                 {user.email}
@@ -78,7 +81,7 @@ export function Nav() {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs border-[#3b4b3d] hover:bg-[#132030]"
+                className="text-xs border-border hover:bg-muted"
                 onClick={signOut}
               >
                 Sign out
@@ -89,7 +92,7 @@ export function Nav() {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs border-[#3b4b3d] hover:bg-[#132030]"
+                className="text-xs border-border hover:bg-muted"
               >
                 Sign in
               </Button>
@@ -98,7 +101,7 @@ export function Nav() {
 
           {user && (
             <button
-              className="md:hidden p-1.5 text-[#b9cbb9] hover:text-[#d6e4f9]"
+              className="md:hidden p-1.5 text-muted-foreground hover:text-foreground"
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="Toggle navigation menu"
             >
@@ -119,7 +122,7 @@ export function Nav() {
             onClick={() => setMenuOpen(false)}
           />
           {user && (
-            <nav className="absolute top-full left-0 right-0 bg-[#020f1e] border-b border-[#3b4b3d] md:hidden z-50 px-4 pb-3 pt-2">
+            <nav className="absolute top-full left-0 right-0 bg-sidebar border-b border-border md:hidden z-50 px-4 pb-3 pt-2 shadow-lg">
               {links.map(({ href, label }) => (
                 <Link
                   key={href}
@@ -127,8 +130,8 @@ export function Nav() {
                   className={cn(
                     "block rounded px-3 py-2.5 text-sm font-medium transition-colors",
                     pathname.startsWith(href)
-                      ? "bg-[#1e2b3b] text-[#00e478]"
-                      : "text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030]",
+                      ? "bg-secondary text-primary font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
                   )}
                   onClick={() => setMenuOpen(false)}
                 >
@@ -137,7 +140,7 @@ export function Nav() {
               ))}
               <Link
                 href="/profile"
-                className="block sm:hidden rounded px-3 py-2.5 text-sm font-medium text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#132030] transition-colors"
+                className="block sm:hidden rounded px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 onClick={() => setMenuOpen(false)}
               >
                 Profile

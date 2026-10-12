@@ -44,10 +44,10 @@ import {
 } from "@/components/ui/drawer";
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  DEF: "bg-green-500/20 text-green-400 border-green-500/30",
-  MID: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  FWD: "bg-red-500/20 text-red-400 border-red-500/30",
+  GKP: "bg-amber-500/15 text-amber-800 dark:text-yellow-400 border-amber-500/30",
+  DEF: "bg-emerald-500/15 text-emerald-800 dark:text-green-400 border-emerald-500/30",
+  MID: "bg-blue-500/15 text-blue-800 dark:text-blue-400 border-blue-500/30",
+  FWD: "bg-rose-500/15 text-rose-800 dark:text-red-400 border-rose-500/30",
 };
 
 const POSITION_LABELS: Record<string, string> = {
@@ -240,12 +240,12 @@ function FdrPip({ diff }: Readonly<{ diff: number }>) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; text: string; chip: string }> = {
-  a: { label: "Available", dot: "bg-green-400", text: "text-green-400", chip: "bg-green-500/15 border-green-500/30 text-green-400" },
-  d: { label: "Doubt", dot: "bg-orange-400", text: "text-orange-400", chip: "bg-orange-500/15 border-orange-500/30 text-orange-400" },
-  i: { label: "Injured", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
-  s: { label: "Suspended", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
-  n: { label: "Intl", dot: "bg-[#849585]", text: "text-foreground-dim", chip: "bg-[#849585]/15 border-[#849585]/30 text-foreground-dim" },
-  u: { label: "Out", dot: "bg-red-400", text: "text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-400" },
+  a: { label: "Available", dot: "bg-emerald-500", text: "text-emerald-700 dark:text-green-400", chip: "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-green-400" },
+  d: { label: "Doubt", dot: "bg-amber-500", text: "text-amber-700 dark:text-orange-400", chip: "bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-orange-400" },
+  i: { label: "Injured", dot: "bg-red-500", text: "text-red-700 dark:text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-700 dark:text-red-400" },
+  s: { label: "Suspended", dot: "bg-red-500", text: "text-red-700 dark:text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-700 dark:text-red-400" },
+  n: { label: "Intl", dot: "bg-muted-foreground", text: "text-muted-foreground", chip: "bg-muted border-border text-muted-foreground" },
+  u: { label: "Out", dot: "bg-red-500", text: "text-red-700 dark:text-red-400", chip: "bg-red-500/15 border-red-500/30 text-red-700 dark:text-red-400" },
 };
 
 function getStatusInfo(status: string, chance: number | null) {
@@ -341,7 +341,7 @@ function PlayerCard({
   const statusInfo = getStatusInfo(player.status, player.chance_of_playing_next_round);
 
   return (
-    <div className="bg-[#0a1828] rounded-lg border border-border/50">
+    <div className="bg-card rounded-lg border border-border/60 shadow-sm">
       <Accordion type="single" collapsible>
         <AccordionItem value="more" className="border-0">
           <div
@@ -367,7 +367,7 @@ function PlayerCard({
               onClick={(e) => e.stopPropagation()}
             >
               <span className={`inline-block w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
-              <span className={`text-[10px] ${statusInfo.text}`}>{statusInfo.label}</span>
+              <span className={`text-[10px] font-medium ${statusInfo.text}`}>{statusInfo.label}</span>
               <Badge
                 variant="outline"
                 className={`text-[9px] font-bold w-[48px] justify-center ${POSITION_COLORS[player.position]}`}
@@ -381,11 +381,11 @@ function PlayerCard({
           <div className="px-3.5 pb-3">
             <div className="grid grid-cols-4 gap-1">
               {visibleStats.map((stat) => (
-                <div key={stat.key} className="bg-background rounded-md p-1.5 text-center">
-                  <div className="text-[12px] font-medium text-slate-200">
+                <div key={stat.key} className="bg-muted/50 rounded-md p-1.5 text-center">
+                  <div className="text-[12px] font-medium text-foreground">
                     {stat.get(player)}
                   </div>
-                  <div className="text-[9px] text-slate-500 mt-0.5">{stat.label}</div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -394,11 +394,11 @@ function PlayerCard({
               <AccordionContent>
                 <div className="grid grid-cols-4 gap-1 pt-2.5 mt-2.5 border-t border-border/40">
                   {remainingStats.map((stat) => (
-                    <div key={stat.key} className="bg-background rounded-md p-1.5 text-center">
-                      <div className="text-[12px] font-medium text-slate-200">
+                    <div key={stat.key} className="bg-muted/50 rounded-md p-1.5 text-center">
+                      <div className="text-[12px] font-medium text-foreground">
                         {stat.get(player)}
                       </div>
-                      <div className="text-[9px] text-slate-500 mt-0.5">{stat.label}</div>
+                      <div className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -569,7 +569,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "Form",
         accessorFn: (r) => parseFloat(r.form),
         cell: ({ getValue }) => (
-          <span className="font-mono text-primary">
+          <span className="font-mono font-semibold text-emerald-700 dark:text-[#00e478]">
             {(getValue() as number).toFixed(1)}
           </span>
         ),
@@ -611,7 +611,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xG",
         accessorFn: (r) => parseFloat(r.expected_goals),
         cell: ({ getValue }) => (
-          <span className="font-mono text-chart-2">
+          <span className="font-mono font-medium text-sky-700 dark:text-sky-400">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -621,7 +621,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xA",
         accessorFn: (r) => parseFloat(r.expected_assists),
         cell: ({ getValue }) => (
-          <span className="font-mono text-chart-2">
+          <span className="font-mono font-medium text-sky-700 dark:text-sky-400">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -631,7 +631,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xGI",
         accessorFn: (r) => parseFloat(r.expected_goal_involvements),
         cell: ({ getValue }) => (
-          <span className="font-mono text-chart-2">
+          <span className="font-mono font-medium text-sky-700 dark:text-sky-400">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -641,7 +641,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "xGC",
         accessorFn: (r) => parseFloat(r.expected_goals_conceded),
         cell: ({ getValue }) => (
-          <span className="font-mono text-chart-2">
+          <span className="font-mono font-medium text-sky-700 dark:text-sky-400">
             {(getValue() as number).toFixed(2)}
           </span>
         ),
@@ -701,7 +701,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "YC",
         accessorFn: (r) => r.yellow_cards,
         cell: ({ getValue }) => (
-          <span className="font-mono text-yellow-400">
+          <span className="font-mono text-amber-700 dark:text-yellow-400">
             {getValue() as number}
           </span>
         ),
@@ -711,7 +711,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "RC",
         accessorFn: (r) => r.red_cards,
         cell: ({ getValue }) => (
-          <span className="font-mono text-red-400">{getValue() as number}</span>
+          <span className="font-mono text-rose-700 dark:text-red-400">{getValue() as number}</span>
         ),
       },
       {
@@ -719,7 +719,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "GW In",
         accessorFn: (r) => r.transfers_in_event,
         cell: ({ getValue }) => (
-          <span className="font-mono text-green-400">
+          <span className="font-mono text-emerald-700 dark:text-emerald-400">
             +{(getValue() as number).toLocaleString()}
           </span>
         ),
@@ -729,7 +729,7 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
         header: "GW Out",
         accessorFn: (r) => r.transfers_out_event,
         cell: ({ getValue }) => (
-          <span className="font-mono text-red-400">
+          <span className="font-mono text-rose-700 dark:text-rose-400">
             -{(getValue() as number).toLocaleString()}
           </span>
         ),
@@ -808,8 +808,8 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
                 variant={availFilter === "available" ? "default" : "outline"}
                 className={
                   availFilter === "available"
-                    ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
-                    : "border-border text-muted-foreground hover:text-white hover:bg-green-900/40 hover:border-green-700"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                    : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary shrink-0"
                 }
                 onClick={() =>
                   setAvailFilter((v) => (v === "all" ? "available" : "all"))
@@ -834,8 +834,8 @@ export function PlayersTable({ players }: Readonly<{ players: EnrichedPlayer[] }
               variant={availFilter === "available" ? "default" : "outline"}
               className={
                 availFilter === "available"
-                  ? "bg-green-500 text-black border-green-500 hover:bg-green-600 hover:border-green-600"
-                  : "border-border text-muted-foreground hover:text-white hover:bg-green-900/40 hover:border-green-700"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary shrink-0"
               }
               onClick={() =>
                 setAvailFilter((v) => (v === "all" ? "available" : "all"))

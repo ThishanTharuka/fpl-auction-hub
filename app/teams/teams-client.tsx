@@ -607,14 +607,14 @@ export function TeamsClient({
               <Button
                 type="button"
                 variant="outline"
-                className="h-8 text-xs border-[#3b4b3d] bg-[#132030] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                className="h-8 text-xs border-border bg-muted text-foreground hover:bg-muted/80"
               >
                 FPL Team
               </Button>
             </DrawerTrigger>
-            <DrawerContent className="bg-[#0f1c2c] border-l border-[#3b4b3d] text-[#d6e4f9] max-w-[400px]">
-              <DrawerHeader className="border-b border-[#3b4b3d]/50">
-                <DrawerTitle className="text-sm font-semibold text-[#d6e4f9]">
+            <DrawerContent className="bg-card border-l border-border text-foreground max-w-[400px]">
+              <DrawerHeader className="border-b border-border">
+                <DrawerTitle className="text-sm font-semibold text-foreground">
                   {fplTeamLoading ? "Loading..." : fplTeamManager ? `${fplTeamManager}'s FPL Team` : "FPL Team"}
                 </DrawerTitle>
               </DrawerHeader>
@@ -622,17 +622,17 @@ export function TeamsClient({
                 {fplTeamLoading && (
                   <div className="space-y-2">
                     {Array.from({ length: 11 }).map((_, i) => (
-                      <div key={i} className="h-10 bg-[#1e2b3b] rounded animate-pulse" />
+                      <div key={i} className="h-10 bg-muted rounded animate-pulse" />
                     ))}
                   </div>
                 )}
                 {fplTeamError && (
-                  <div className="flex items-center justify-center h-32 text-sm text-red-400">
+                  <div className="flex items-center justify-center h-32 text-sm text-destructive">
                     {fplTeamError}
                   </div>
                 )}
                 {fplTeamPicks && fplTeamPicks.length > 0 && (
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     {fplTeamPicks
                       .sort((a, b) => a.position - b.position)
                       .map((pick) => {
@@ -642,11 +642,13 @@ export function TeamsClient({
                         return (
                           <div
                             key={pick.position}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs ${
-                              isStarting ? "bg-[#132030]" : "bg-[#0d1824]"
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                              isStarting
+                                ? "bg-card hover:bg-muted/60 border border-border/70 shadow-2xs"
+                                : "bg-muted/70 hover:bg-muted border border-border/40"
                             }`}
                           >
-                            <span className="w-5 text-center text-[#6b7b6b] font-mono text-[10px]">
+                            <span className="w-5 text-center text-muted-foreground font-mono text-[10px]">
                               {pick.position}
                             </span>
                             <div className="flex-1 min-w-0 flex items-center gap-1.5">
@@ -657,10 +659,10 @@ export function TeamsClient({
                                   className="w-4 h-4 object-contain"
                                 />
                               )}
-                              <span className="font-medium truncate text-[#d6e4f9]">
+                              <span className="font-medium truncate text-foreground">
                                 {player.web_name}
                               </span>
-                              <span className="text-[#6b7b6b] text-[10px] uppercase">
+                              <span className="text-muted-foreground text-[10px] uppercase font-mono">
                                 {player.element_type === 1
                                   ? "GKP"
                                   : player.element_type === 2
@@ -672,15 +674,15 @@ export function TeamsClient({
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px]">
                               {pick.is_captain && (
-                                <span className="text-amber-400 font-bold">(C)</span>
+                                <span className="text-amber-500 font-bold bg-amber-500/10 px-1 py-0.2 rounded">(C)</span>
                               )}
                               {pick.is_vice_captain && !pick.is_captain && (
-                                <span className="text-sky-400 font-bold">(VC)</span>
+                                <span className="text-sky-500 font-bold bg-sky-500/10 px-1 py-0.2 rounded">(VC)</span>
                               )}
-                              <span className="text-[#849585]">
+                              <span className="text-muted-foreground">
                                 £{(player.now_cost / 10).toFixed(1)}m
                               </span>
-                              <span className="text-[#00ff87] w-6 text-right">
+                              <span className="text-emerald-700 dark:text-[#00ff87] font-semibold w-6 text-right tabular-nums">
                                 {player.total_points}
                               </span>
                             </div>
@@ -690,7 +692,7 @@ export function TeamsClient({
                   </div>
                 )}
                 {fplTeamPicks && fplTeamPicks.length === 0 && !fplTeamLoading && !fplTeamError && (
-                  <div className="flex items-center justify-center h-32 text-sm text-[#6b7b6b]">
+                  <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
                     No picks found for any gameweek
                   </div>
                 )}
@@ -808,13 +810,13 @@ export function TeamsClient({
         </div>
 
         {/* ─── Right: Squad Sidebar ────────────────── */}
-        <div className="border-l border-border flex flex-col bg-[#0f1c2c]">
+        <div className="border-l border-border flex flex-col bg-card">
           <div className="px-4 py-3 border-b border-border/50">
-            <div className="text-sm font-semibold text-[#d6e4f9]">
+            <div className="text-sm font-semibold text-foreground">
               {participants.find((p) => p.id === selectedParticipant)?.name ??
                 "Squad"}
             </div>
-            <div className="text-[11px] text-[#849585]">
+            <div className="text-[11px] text-muted-foreground">
               {squad.length} players ·{" "}
               {currentLeague
                 ? Math.max(0, (currentLeague.squad_size ?? 15) - squad.length)
@@ -831,25 +833,25 @@ export function TeamsClient({
               if (posPlayers.length === 0) return null;
               return (
                 <div key={pos}>
-                  <div className="text-[10px] font-medium text-[#849585] tracking-[0.8px] uppercase px-4 pt-3 pb-1">
+                  <div className="text-[10px] font-medium text-muted-foreground tracking-[0.8px] uppercase px-4 pt-3 pb-1">
                     {pos} ({posPlayers.length})
                   </div>
                   {posPlayers.map((p) => (
                     <div
                       key={p.auction_result_id}
-                      className="flex items-center gap-2 px-4 py-1.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-[#132030] transition-colors"
+                      className="flex items-center gap-2 px-4 py-1.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-muted/60 transition-colors"
                       onClick={() => setSelectedPlayer(p)}
                     >
                       <span
                         className={`w-2 h-2 rounded-full shrink-0 ${POSITION_DOT[p.is_bench ? "BENCH" : p.position_slot] ?? POSITION_DOT.BENCH}`}
                       />
-                      <span className="text-[12px] text-[#d6e4f9] flex-1 truncate">
+                      <span className="text-[12px] text-foreground flex-1 truncate">
                         {p.web_name}
                       </span>
-                      <span className="text-[11px] text-[#849585]">
+                      <span className="text-[11px] text-muted-foreground">
                         {p.total_points}
                       </span>
-                      <span className="text-[11px] text-[#00d166] min-w-[36px] text-right font-mono">
+                      <span className="text-[11px] text-emerald-700 dark:text-[#00d166] min-w-[36px] text-right font-mono font-semibold">
                         £{p.price_paid.toFixed(1)}m
                       </span>
                     </div>
@@ -858,7 +860,7 @@ export function TeamsClient({
               );
             })}
             {squad.length === 0 && (
-              <div className="p-4 text-xs text-[#849585] text-center">
+              <div className="p-4 text-xs text-muted-foreground text-center">
                 No players yet
               </div>
             )}
@@ -867,8 +869,8 @@ export function TeamsClient({
           {/* Budget bar */}
           <div className="px-4 py-3 border-t border-border/50 mt-auto space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#849585]">Budget spent</span>
-              <span className="font-mono text-[#d6e4f9]">
+              <span className="text-muted-foreground">Budget spent</span>
+              <span className="font-mono text-foreground">
                 £{totalSpent.toFixed(1)}m / £{budget}m
               </span>
             </div>
@@ -1150,12 +1152,12 @@ function Stat({
   highlight,
 }: Readonly<{ label: string; value: string | number; highlight?: boolean }>) {
   return (
-    <div className="bg-[#132030] rounded p-2 sm:p-3">
-      <div className="text-[9px] sm:text-[10px] text-[#849585] uppercase tracking-wider mb-0.5 sm:mb-1">
+    <div className="bg-muted rounded p-2 sm:p-3 border border-border/40">
+      <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5 sm:mb-1">
         {label}
       </div>
       <div
-        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-[#00e478]" : "text-[#d6e4f9]"}`}
+        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-primary font-bold" : "text-foreground"}`}
       >
         {value}
       </div>

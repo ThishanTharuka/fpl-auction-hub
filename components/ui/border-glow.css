@@ -12,16 +12,13 @@
   isolation: isolate;
   transform: translate3d(0, 0, 0.01px);
   display: grid;
-  border: 1px solid rgb(255 255 255 / 15%);
-  background: var(--card-bg, #120f17);
+  border: 1px solid var(--card-border, var(--border));
+  background: var(--card-bg, var(--card));
   overflow: visible;
   box-shadow:
-    rgba(0, 0, 0, 0.1) 0px 1px 2px,
-    rgba(0, 0, 0, 0.1) 0px 2px 4px,
-    rgba(0, 0, 0, 0.1) 0px 4px 8px,
-    rgba(0, 0, 0, 0.1) 0px 8px 16px,
-    rgba(0, 0, 0, 0.1) 0px 16px 32px,
-    rgba(0, 0, 0, 0.1) 0px 32px 64px;
+    rgba(0, 0, 0, 0.05) 0px 1px 2px,
+    rgba(0, 0, 0, 0.05) 0px 2px 4px,
+    rgba(0, 0, 0, 0.05) 0px 4px 8px;
 }
 
 .border-glow-card::before,
@@ -46,7 +43,7 @@
 .border-glow-card::before {
   border: 1px solid transparent;
   background:
-    linear-gradient(var(--card-bg, #120f17) 0 100%) padding-box,
+    linear-gradient(var(--card-bg, var(--card)) 0 100%) padding-box,
     linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box,
     var(--gradient-one, radial-gradient(at 80% 55%, hsla(268, 100%, 76%, 1) 0px, transparent 50%)) border-box,
     var(--gradient-two, radial-gradient(at 69% 34%, hsla(349, 100%, 74%, 1) 0px, transparent 50%)) border-box,

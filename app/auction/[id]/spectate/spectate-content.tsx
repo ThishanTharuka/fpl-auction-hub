@@ -446,16 +446,16 @@ export function SpectateContent({
     <div className="min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden">
       <div className="mx-auto w-full max-w-[1440px] h-full flex flex-col gap-3 px-4 sm:px-6 py-4">
         {/* ── Scoreboard ─────────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] px-4 py-3 flex items-center justify-between gap-3">
+        <div className="rounded-xl border border-border bg-card px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {league.status === "active" && (
-              <span className="h-2.5 w-2.5 rounded-full bg-[#00e478] animate-pulse shrink-0" />
+              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shrink-0" />
             )}
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-[#849585]">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Spectator view
               </div>
-              <div className="text-base sm:text-lg font-bold text-[#d6e4f9] truncate">
+              <div className="text-base sm:text-lg font-bold text-foreground truncate">
                 {league.name}
               </div>
             </div>
@@ -463,18 +463,18 @@ export function SpectateContent({
           <div className="flex items-center gap-4 sm:gap-6 shrink-0">
             <StatusPill status={league.status} />
             <div className="text-right">
-              <div className="font-mono text-xl font-bold text-[#d6e4f9]">
+              <div className="font-mono text-xl font-bold text-foreground">
                 {soldCount}
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-[#849585]">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 sold
               </div>
             </div>
             <div className="text-right">
-              <div className="font-mono text-xl font-bold text-[#00e478]">
+              <div className="font-mono text-xl font-bold text-primary">
                 &pound;{totalSpent.toFixed(1)}m
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-[#849585]">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 spent
               </div>
             </div>
@@ -485,16 +485,16 @@ export function SpectateContent({
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3">
           {/* ── Tape (left rail) ─────────────────────────────────────────── */}
           <aside className="w-full lg:w-72 lg:shrink-0 lg:min-h-0 lg:overflow-hidden lg:flex order-2 lg:order-1 max-h-180">
-            <div className="w-full rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] flex flex-col overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#3b4b3d] flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#849585]">
+            <div className="w-full rounded-xl border border-border bg-card flex flex-col overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border flex items-center justify-between shrink-0">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Sold history
                 </h3>
-                <span className="text-[10px] text-[#849585]">live</span>
+                <span className="text-[10px] text-muted-foreground">live</span>
               </div>
               <div className="px-2 py-1.5 flex-1 min-h-0 overflow-y-auto space-y-0.5 max-h-44 lg:max-h-none">
                 {soldHistory.length === 0 && (
-                  <p className="text-xs text-[#849585] italic text-center py-2">
+                  <p className="text-xs text-muted-foreground italic text-center py-2">
                     Nothing sold yet — players will appear here as they&apos;re
                     won.
                   </p>
@@ -504,13 +504,13 @@ export function SpectateContent({
                     key={ev.fplPlayerId}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00e478] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold uppercase text-[#00e478]">
+                        <span className="text-[10px] font-bold uppercase text-primary">
                           SOLD
                         </span>
-                        <span className="text-[#d6e4f9] truncate">
+                        <span className="text-foreground truncate">
                           {ev.playerName}
                         </span>
                       </div>
@@ -521,7 +521,7 @@ export function SpectateContent({
                         >
                           {ev.teamName}
                         </span>
-                        <span className="text-[10px] font-mono font-bold text-[#00e478] shrink-0">
+                        <span className="text-[10px] font-mono font-bold text-primary shrink-0">
                           &pound;{ev.amount}m
                         </span>
                       </div>
@@ -546,15 +546,15 @@ export function SpectateContent({
                   timerExpired={timerExpired}
                   participantsById={participantsById}
                 />
-                <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] flex flex-col overflow-hidden flex-1 min-h-0 max-h-87">
-                  <div className="px-4 py-2.5 border-b border-[#3b4b3d] shrink-0">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#849585]">
+                <div className="rounded-xl border border-border bg-card flex flex-col overflow-hidden flex-1 min-h-0 max-h-87">
+                  <div className="px-4 py-2.5 border-b border-border shrink-0">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Bidding so far
                     </h3>
                   </div>
                   <div className="px-2 py-1.5 space-y-0.5 overflow-y-auto flex-1 min-h-0">
                     {recentBids.length === 0 && (
-                      <p className="text-xs text-[#849585] italic text-center py-3">
+                      <p className="text-xs text-muted-foreground italic text-center py-3">
                         No bids yet — the opening price stands.
                       </p>
                     )}
@@ -570,10 +570,10 @@ export function SpectateContent({
                               colorOf(b.participant_id) ?? "#849585",
                           }}
                         />
-                        <span className="text-[#d6e4f9] truncate">
+                        <span className="text-foreground truncate">
                           {b.participant_name}
                         </span>
-                        <span className="font-mono text-[#00e478] ml-auto shrink-0">
+                        <span className="font-mono text-primary ml-auto shrink-0">
                           &pound;{b.amount}m
                         </span>
                       </div>
@@ -591,24 +591,24 @@ export function SpectateContent({
 
           {/* ── Standings rail ───────────────────────────────────────────── */}
           <aside className="w-full lg:w-80 lg:shrink-0 lg:min-h-0 lg:overflow-y-auto order-3 max-h-180">
-            <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c]">
-              <div className="px-4 py-3 border-b border-[#3b4b3d] flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#849585]">
+            <div className="rounded-xl border border-border bg-card">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Standings
                 </h3>
-                <span className="text-xs text-[#849585]">{soldCount} sold</span>
+                <span className="text-xs text-muted-foreground">{soldCount} sold</span>
               </div>
               <div>
                 {standings.map((t) => (
                   <div
                     key={t.id}
-                    className="border-b border-[#3b4b3d] last:border-b-0"
+                    className="border-b border-border last:border-b-0"
                   >
                     <button
                       onClick={() =>
                         setExpandedTeamId(expandedTeamId === t.id ? null : t.id)
                       }
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-[#132030] transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-muted transition-colors"
                     >
                       <TeamAvatar
                         name={t.name}
@@ -618,7 +618,7 @@ export function SpectateContent({
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-medium text-[#d6e4f9] truncate">
+                          <span className="text-sm font-medium text-foreground truncate">
                             {t.name}
                           </span>
                           <span
@@ -631,7 +631,7 @@ export function SpectateContent({
                           </span>
                         </div>
                         <div className="mt-1 flex items-center gap-2">
-                          <div className="h-1 flex-1 rounded-full bg-[#1e2b3b] overflow-hidden">
+                          <div className="h-1 flex-1 rounded-full bg-muted overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all"
                               style={{
@@ -647,7 +647,7 @@ export function SpectateContent({
                               }}
                             />
                           </div>
-                          <span className="text-[10px] text-[#849585] shrink-0">
+                          <span className="text-[10px] text-muted-foreground shrink-0">
                             {t.squad.length} · &pound;{t.spent.toFixed(1)}m
                           </span>
                         </div>
@@ -656,7 +656,7 @@ export function SpectateContent({
                     {expandedTeamId === t.id && (
                       <div className="px-4 pb-3 space-y-0.5">
                         {t.squad.length === 0 && (
-                          <p className="text-xs text-[#849585] italic py-1">
+                          <p className="text-xs text-muted-foreground italic py-1">
                             No players yet
                           </p>
                         )}
@@ -667,18 +667,18 @@ export function SpectateContent({
                           if (players.length === 0) return null;
                           return (
                             <div key={pos}>
-                              <div className="text-[10px] uppercase tracking-wider text-[#849585] font-semibold py-0.5">
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold py-0.5">
                                 {pos} ({players.length})
                               </div>
                               {players.map((p) => (
                                 <div
                                   key={p.id}
-                                  className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1"
+                                  className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1"
                                 >
-                                  <span className="text-[#d6e4f9] truncate">
+                                  <span className="text-foreground truncate">
                                     {p.name}
                                   </span>
-                                  <span className="font-mono text-[#b9cbb9] ml-2 shrink-0">
+                                  <span className="font-mono text-muted-foreground ml-2 shrink-0">
                                     &pound;{p.price}m
                                   </span>
                                 </div>
@@ -691,7 +691,7 @@ export function SpectateContent({
                   </div>
                 ))}
                 {standings.length === 0 && (
-                  <p className="text-xs text-[#849585] italic text-center py-6">
+                  <p className="text-xs text-muted-foreground italic text-center py-6">
                     No teams yet
                   </p>
                 )}
@@ -719,14 +719,14 @@ export function SpectateContent({
 function StatusPill({ status }: { status: string | null }) {
   if (status === "active") {
     return (
-      <span className="text-xs border border-[#00e478]/40 bg-[#00e478]/10 text-[#00e478] rounded px-2 py-0.5 font-semibold">
+      <span className="text-xs border border-primary/40 bg-primary/10 text-primary rounded px-2 py-0.5 font-semibold">
         LIVE
       </span>
     );
   }
   if (status === "complete") {
     return (
-      <span className="text-xs border border-[#3b4b3d] text-[#849585] rounded px-2 py-0.5">
+      <span className="text-xs border border-border text-muted-foreground rounded px-2 py-0.5">
         Complete
       </span>
     );
@@ -749,7 +749,7 @@ function PlayerPortrait({
   const [error, setError] = useState(false);
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-lg bg-[#0a1724] ${className ?? ""}`}
+      className={`relative shrink-0 overflow-hidden rounded-lg bg-muted ${className ?? ""}`}
     >
       {error ? (
         <img
@@ -780,8 +780,8 @@ function ClubCrest({ player }: { player: EnrichedPlayer }) {
   if (!player.team_crest_url) return null;
   if (error) {
     return (
-      <div className="h-5 w-5 rounded-sm bg-[#132030] border border-[#3b4b3d] flex items-center justify-center">
-        <span className="text-[9px] font-bold text-[#849585]">
+      <div className="h-5 w-5 rounded-sm bg-muted border border-border flex items-center justify-center">
+        <span className="text-[9px] font-bold text-muted-foreground">
           {player.team_short?.charAt(0) ?? "?"}
         </span>
       </div>
@@ -846,7 +846,7 @@ function LotCard({
     : null;
 
   return (
-    <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden shrink-0 sticky top-0 z-10">
+    <div className="rounded-xl border border-border bg-card overflow-hidden shrink-0 sticky top-0 z-10">
       <div className="flex flex-col sm:flex-row gap-5 p-5 lg:p-6">
         <div className="flex gap-4 min-w-0">
           {fplPlayer && (
@@ -865,12 +865,12 @@ function LotCard({
               </Badge>
               {fplPlayer && <ClubCrest player={fplPlayer} />}
               {clubName && (
-                <span className="text-xs text-[#849585] truncate">
+                <span className="text-xs text-muted-foreground truncate">
                   {clubName}
                 </span>
               )}
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#d6e4f9] leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
               {fullName}
             </h2>
             {(nomination.is_paused || timerExpired) && (
@@ -891,7 +891,7 @@ function LotCard({
         </div>
 
         <div className="sm:ml-auto shrink-0">
-          <div className="text-[10px] uppercase tracking-wider text-[#849585] text-right">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground text-right">
             Time left
           </div>
           <div className="mt-1 font-mono font-bold flex justify-end">
@@ -910,21 +910,21 @@ function LotCard({
                 )}
               />
             ) : (
-              <span className="text-4xl text-[#849585]">
+              <span className="text-4xl text-muted-foreground">
                 {timerDisplayValue}
               </span>
             )}
           </div>
-          <div className="text-xs text-[#849585] text-right">{timerUnit}</div>
+          <div className="text-xs text-muted-foreground text-right">{timerUnit}</div>
         </div>
       </div>
 
-      <div className="border-t border-[#3b4b3d] bg-[#132030] px-5 py-4 flex items-center justify-between gap-4">
+      <div className="border-t border-border bg-muted px-5 py-4 flex items-center justify-between gap-4">
         <div>
-          <div className="text-xs uppercase tracking-wider text-[#849585]">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">
             {nomination.current_bidder_id ? "Current bid" : "Starting price"}
           </div>
-          <div className="mt-1 font-mono font-bold text-[#00e478] inline-flex items-center">
+          <div className="mt-1 font-mono font-bold text-primary inline-flex items-center">
             <span className="text-[40px] leading-none shrink-0">&pound;</span>
             <Counter
               value={nomination.current_bid}
@@ -942,7 +942,7 @@ function LotCard({
         <div className="min-w-0">
           {bidder ? (
             <div className="flex items-center justify-end gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-[#849585] shrink-0">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
                 Highest bidder
               </span>
               <TeamAvatar
@@ -959,7 +959,7 @@ function LotCard({
               </span>
             </div>
           ) : (
-            <span className="text-xs text-[#849585]">
+            <span className="text-xs text-muted-foreground">
               Opening price &mdash; no bids yet
             </span>
           )}
@@ -967,7 +967,7 @@ function LotCard({
       </div>
 
       {fplPlayer && (
-        <div className="px-5 py-4 border-t border-[#3b4b3d]">
+        <div className="px-5 py-4 border-t border-border">
           <PlayerChips player={fplPlayer} />
         </div>
       )}
@@ -989,10 +989,10 @@ function EmptyBlock({
         ? "The block is empty — the auctioneer is lining up the next player."
         : "The auction hasn't started yet. Teams are still claiming their spots.";
   return (
-    <div className="flex flex-1 min-h-[320px] items-center justify-center rounded-xl border border-dashed border-[#3b4b3d] bg-[#0f1c2c]">
+    <div className="flex flex-1 min-h-[320px] items-center justify-center rounded-xl border border-dashed border-border bg-card">
       <div className="text-center px-6">
-        <Gavel className="mx-auto h-10 w-10 text-[#3b4b3d]" />
-        <p className="mt-4 text-sm text-[#849585] max-w-[300px]">{copy}</p>
+        <Gavel className="mx-auto h-10 w-10 text-border" />
+        <p className="mt-4 text-sm text-muted-foreground max-w-[300px]">{copy}</p>
         {status === "active" && participants.length > 0 && (
           <div className="mt-5 flex items-center justify-center gap-2">
             {participants.slice(0, 8).map((p) => (
@@ -1036,7 +1036,7 @@ function StrikeCard({
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl border-2 bg-[#0f1c2c] flex-1 min-h-[320px] flex flex-col items-center justify-center text-center px-6 py-10"
+      className="relative overflow-hidden rounded-xl border-2 bg-card flex-1 min-h-[320px] flex flex-col items-center justify-center text-center px-6 py-10"
       style={{ borderColor }}
     >
       <motion.div
@@ -1057,7 +1057,7 @@ function StrikeCard({
 
       {sold && (
         <motion.div
-          className="text-[#00e478]"
+          className="text-primary"
           initial={reduceMotion ? { opacity: 0 } : { y: -70, opacity: 0 }}
           animate={reduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
           transition={
@@ -1090,7 +1090,7 @@ function StrikeCard({
       </motion.div>
 
       <motion.div
-        className="mt-3 text-2xl sm:text-3xl font-bold text-[#d6e4f9]"
+        className="mt-3 text-2xl sm:text-3xl font-bold text-foreground"
         initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: sold ? 0.6 : 0.25, duration: 0.3 }}
@@ -1099,7 +1099,7 @@ function StrikeCard({
       </motion.div>
 
       {sold && strike.playerTeam && (
-        <div className="mt-1 text-[10px] uppercase tracking-wider text-[#849585]">
+        <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
           {strike.position} · {strike.playerTeam}
         </div>
       )}
@@ -1112,7 +1112,7 @@ function StrikeCard({
           transition={{ delay: 0.7, duration: 0.3 }}
         >
           <TeamAvatar name={strike.winnerName} color={strike.winnerColor} />
-          <span className="text-sm text-[#b9cbb9]">to</span>
+          <span className="text-sm text-muted-foreground">to</span>
           <span
             className="text-lg font-semibold"
             style={{ color: strike.winnerColor ?? "#d6e4f9" }}
@@ -1124,7 +1124,7 @@ function StrikeCard({
 
       {sold && (
         <motion.div
-          className="mt-3 inline-flex items-center font-mono font-bold text-[#00e478]"
+          className="mt-3 inline-flex items-center font-mono font-bold text-primary"
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.3 }}
@@ -1144,7 +1144,7 @@ function StrikeCard({
         </motion.div>
       )}
 
-      <p className="mt-6 text-xs text-[#849585]">
+      <p className="mt-6 text-xs text-muted-foreground">
         Next player coming up&hellip;
       </p>
     </div>

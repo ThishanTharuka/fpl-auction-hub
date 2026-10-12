@@ -814,7 +814,7 @@ export function BidContent({
 
   let timerColor = "text-red-400";
   let timerHexColor = "#f87171";
-  if (secondsLeft > 15) { timerColor = "text-[#00e478]"; timerHexColor = "#00e478"; }
+  if (secondsLeft > 15) { timerColor = "text-primary"; timerHexColor = "#00e478"; }
   else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
 
   return (
@@ -999,10 +999,10 @@ function BidUI({
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-[#849585] pb-1">{league.name}</p>
-              <h1 className="text-lg font-bold text-[#d6e4f9] flex items-center gap-2">
+              <p className="text-xs text-muted-foreground pb-1">{league.name}</p>
+              <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
                 {pendingTeam ? (
-                  <span className="text-[#849585] text-base font-normal">
+                  <span className="text-muted-foreground text-base font-normal">
                     Loading team info...
                   </span>
                 ) : (
@@ -1028,17 +1028,17 @@ function BidUI({
                 auctioneerId={league.created_by}
               />
               <div className="text-right">
-                <div className="text-2xl font-mono font-bold text-[#00e478]">
+                <div className="text-2xl font-mono font-bold text-primary">
                   {pendingTeam ? "\u2014" : `\u00a3${remaining.toFixed(1)}m`}
                 </div>
-                <div className="text-xs text-[#849585]">remaining</div>
+                <div className="text-xs text-muted-foreground">remaining</div>
               </div>
             </div>
           </div>
 
           {/* Live nomination */}
           {nomination ? (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -1048,11 +1048,11 @@ function BidUI({
                     >
                       {nomination.position}
                     </Badge>
-                    <span className="text-xs text-[#849585]">
+                    <span className="text-xs text-muted-foreground">
                       {fplPlayer?.team_name ?? nomination.player_team}
                     </span>
                   </div>
-                  <h2 className="text-2xl font-bold text-[#d6e4f9]">
+                  <h2 className="text-2xl font-bold text-foreground">
                     {fplPlayer?.full_name ?? nomination.player_name}
                   </h2>
                 </div>
@@ -1078,7 +1078,7 @@ function BidUI({
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-[#849585]">
+                  <div className="text-xs text-muted-foreground">
                     {nomination.is_paused ? "paused" : "secs"}
                   </div>
                 </div>
@@ -1088,27 +1088,27 @@ function BidUI({
                 {fplPlayer ? (
                   <PlayerStatsBar player={fplPlayer} />
                 ) : (
-                  <div className="rounded-2xl border border-[#1e3248] bg-[linear-gradient(160deg,#0f2236_0%,#0a1724_100%)] p-4 animate-pulse">
+                  <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-4 animate-pulse">
                     <div className="flex gap-4 flex-wrap items-start">
-                      <div className="w-[120px] h-[148px] rounded-xl bg-[#0a1724]" />
+                      <div className="w-[120px] h-[148px] rounded-xl bg-muted" />
                       <div className="flex-1 min-w-0 space-y-2">
-                        <div className="h-5 w-44 rounded bg-[#0a1724]" />
-                        <div className="h-3 w-24 rounded bg-[#0a1724]" />
-                        <div className="h-5 w-16 rounded-full bg-[#102133]" />
-                        <div className="h-3 w-16 rounded bg-[#0a1724]" />
-                        <div className="h-3 w-20 rounded bg-[#0a1724]" />
+                        <div className="h-5 w-44 rounded bg-muted" />
+                        <div className="h-3 w-24 rounded bg-muted" />
+                        <div className="h-5 w-16 rounded-full bg-muted" />
+                        <div className="h-3 w-16 rounded bg-muted" />
+                        <div className="h-3 w-20 rounded bg-muted" />
                       </div>
                       <div className="shrink-0 grid grid-cols-1 gap-2">
-                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
-                        <div className="h-[68px] w-[76px] rounded-xl bg-[#0a1724]" />
+                        <div className="h-[68px] w-[76px] rounded-xl bg-muted" />
+                        <div className="h-[68px] w-[76px] rounded-xl bg-muted" />
                       </div>
                     </div>
-                    <div className="my-3 border-t border-[#1a2e42]" />
+                    <div className="my-3 border-t border-border/40" />
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {Array.from({ length: 6 }).map((_, i) => (
                         <div
                           key={i}
-                          className="h-[52px] rounded-xl bg-[#0a1724]"
+                          className="h-[52px] rounded-xl bg-muted"
                         />
                       ))}
                     </div>
@@ -1116,9 +1116,9 @@ function BidUI({
                 )}
               </div>
 
-              <div className="bg-[#132030] rounded-lg p-4 mb-4">
+              <div className="bg-muted rounded-lg p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs text-[#849585] uppercase tracking-wider">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider">
                     {nomination.current_bidder_id === null
                       ? "Starting Price"
                       : "Current Bid"}
@@ -1127,14 +1127,14 @@ function BidUI({
                     <DrawerTrigger asChild>
                       <Button
                         variant="outline"
-                        className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs py-1.5 h-auto px-3"
+                        className="border-border text-muted-foreground hover:bg-secondary text-xs py-1.5 h-auto px-3"
                       >
                         Bid History ({recentBids.length})
                       </Button>
                     </DrawerTrigger>
                     <DrawerContent>
                       <DrawerHeader>
-                        <DrawerTitle className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                        <DrawerTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                           Bid History
                         </DrawerTitle>
                       </DrawerHeader>
@@ -1142,18 +1142,18 @@ function BidUI({
                         {recentBids.map((b) => (
                           <div
                             key={b.id}
-                            className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
+                            className="flex items-center justify-between text-sm bg-muted rounded px-3 py-2"
                           >
-                            <span className="text-[#d6e4f9]">
+                            <span className="text-foreground">
                               {b.participant_name}
                             </span>
-                            <span className="font-mono text-[#00e478]">
+                            <span className="font-mono text-primary">
                               £{b.amount}m
                             </span>
                           </div>
                         ))}
                         {recentBids.length === 0 && (
-                          <p className="text-xs text-[#849585] italic text-center py-4">
+                          <p className="text-xs text-muted-foreground italic text-center py-4">
                             No bids yet
                           </p>
                         )}
@@ -1162,7 +1162,7 @@ function BidUI({
                   </Drawer>
                 </div>
                 <div className="flex items-end justify-between gap-3">
-                  <div className="text-3xl font-mono font-bold text-[#00e478] inline-flex items-center">
+                  <div className="text-3xl font-mono font-bold text-primary inline-flex items-center">
                     &pound;
                     <Counter
                       value={nomination.current_bid}
@@ -1177,15 +1177,15 @@ function BidUI({
                     m
                   </div>
                   {nomination.current_bidder_name && (
-                    <div className="text-sm text-[#b9cbb9] text-right">
+                    <div className="text-sm text-muted-foreground text-right">
                       {nomination.current_bidder_id === myTeam?.id ? (
-                        <span className="text-[#00e478] font-semibold">
+                        <span className="text-primary font-semibold">
                           You are the highest bidder
                         </span>
                       ) : (
                         <span>
                           by{" "}
-                          <span className="font-semibold text-[#d6e4f9]">
+                          <span className="font-semibold text-foreground">
                             {nomination.current_bidder_name}
                           </span>
                         </span>
@@ -1195,7 +1195,7 @@ function BidUI({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-[#849585] mb-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                 <span>
                   Maximum bid for the player: &pound;{maxBid.toFixed(1)}m
                 </span>
@@ -1210,13 +1210,13 @@ function BidUI({
               <Button
                 onClick={onBid}
                 disabled={!canBid || bidding}
-                className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-xl py-7 disabled:opacity-40"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xl py-7 disabled:opacity-40"
               >
                 {bidding ? "Placing..." : `Bid \u00a3${myBid}m`}
               </Button>
 
               {nomination.current_bidder_id === myTeam?.id && (
-                <p className="text-xs text-[#849585] text-center mt-2">
+                <p className="text-xs text-muted-foreground text-center mt-2">
                   You are already the highest bidder
                 </p>
               )}
@@ -1259,12 +1259,12 @@ function BidUI({
               myTeamId={myTeam?.id ?? ""}
             />
           ) : (
-            <div className="flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] min-h-[300px]">
+            <div className="flex items-center justify-center rounded-lg border border-dashed border-border bg-card min-h-[300px]">
               <div className="text-center">
                 <div className="text-4xl mb-3">
                   {/* hourglass placeholder */}
                 </div>
-                <p className="text-[#849585]">Waiting for next nomination...</p>
+                <p className="text-muted-foreground">Waiting for next nomination...</p>
               </div>
             </div>
           )}
@@ -1272,14 +1272,14 @@ function BidUI({
 
         {/* ── Right: Team Requirement ────────────────────────────────────── */}
         <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-3 lg:order-3">
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
-            <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Team Requirement
             </h3>
 
             {/* Position rows */}
             <div className="space-y-2 mb-4">
-              <div className="grid grid-cols-5 gap-1 text-[10px] text-[#849585] font-semibold uppercase pb-1 border-b border-[#3b4b3d]">
+              <div className="grid grid-cols-5 gap-1 text-[10px] text-muted-foreground font-semibold uppercase pb-1 border-b border-border">
                 <span>Pos</span>
                 <span className="text-center">Have</span>
                 <span className="text-center">Need</span>
@@ -1297,16 +1297,16 @@ function BidUI({
                   >
                     {r.position}
                   </Badge>
-                  <span className="text-center text-[#d6e4f9] self-center">
+                  <span className="text-center text-foreground self-center">
                     {r.have}
                   </span>
-                  <span className="text-center text-[#d6e4f9] self-center">
+                  <span className="text-center text-foreground self-center">
                     {r.need}
                   </span>
-                  <span className="text-right font-mono text-[#b9cbb9] self-center">
+                  <span className="text-right font-mono text-muted-foreground self-center">
                     &pound;{r.spent.toFixed(1)}m
                   </span>
-                  <span className="text-right font-mono text-[#849585] self-center">
+                  <span className="text-right font-mono text-muted-foreground self-center">
                     &pound;{r.minAllocation.toFixed(1)}m
                   </span>
                 </div>
@@ -1314,25 +1314,25 @@ function BidUI({
             </div>
 
             {/* Summary */}
-            <div className="border-t border-[#3b4b3d] pt-3 space-y-1.5">
+            <div className="border-t border-border pt-3 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#849585]">Remaining budget</span>
-                <span className="font-mono text-[#d6e4f9]">
+                <span className="text-muted-foreground">Remaining budget</span>
+                <span className="font-mono text-foreground">
                   &pound;{remaining.toFixed(1)}m
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-[#849585]">
+                <span className="text-muted-foreground">
                   Min. reserve for {totalRemainingSlots} slot
                   {totalRemainingSlots === 1 ? "" : "s"}
                 </span>
-                <span className="font-mono text-[#849585]">
+                <span className="font-mono text-muted-foreground">
                   -&pound;{totalMinAllocation.toFixed(1)}m
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#3b4b3d]">
-                <span className="text-[#00e478] font-semibold">Surplus</span>
-                <span className="font-mono font-bold text-[#00e478]">
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-border">
+                <span className="text-primary font-semibold">Surplus</span>
+                <span className="font-mono font-bold text-primary">
                   &pound;{surplus.toFixed(1)}m
                 </span>
               </div>
@@ -1340,35 +1340,35 @@ function BidUI({
           </div>
 
           {/* Sold Players */}
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
-            <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Sold Players ({soldPlayers.length})
             </h3>
             <div className="space-y-1 max-h-87 overflow-y-auto">
               {soldPlayers.length === 0 ? (
-                <p className="text-xs text-[#849585] italic text-center py-2">
+                <p className="text-xs text-muted-foreground italic text-center py-2">
                   No sales yet
                 </p>
               ) : (
                 soldPlayers.map((s, i) => (
                   <div
                     key={`${s.fplPlayerId}-${i}`}
-                    className="text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                    className="text-xs bg-muted rounded px-2.5 py-1.5"
                   >
                     <div className="flex items-center justify-between">
                       <span>
-                        <span className="text-[#d6e4f9] font-medium">
+                        <span className="text-foreground font-medium">
                           {s.playerName}
                         </span>
-                        <span className="text-[#849585] ml-1">
+                        <span className="text-muted-foreground ml-1">
                           {s.position}
                         </span>
                       </span>
-                      <span className="font-mono text-[#00e478] shrink-0 ml-2">
+                      <span className="font-mono text-primary shrink-0 ml-2">
                         &pound;{s.price}m
                       </span>
                     </div>
-                    <div className="mt-0.5 text-[#849585] truncate">
+                    <div className="mt-0.5 text-muted-foreground truncate">
                       {s.buyerName}
                     </div>
                   </div>
@@ -1381,12 +1381,12 @@ function BidUI({
         {/* ── Left: My Squad ────────────────────────────────────────────── */}
         <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-4 order-3 lg:order-1">
           {teamMeta && (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
+            <div className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   My Squad
                 </h3>
-                <span className="text-xs text-[#849585]">
+                <span className="text-xs text-muted-foreground">
                   {squadSize} / {maxSquad}
                 </span>
               </div>
@@ -1399,23 +1399,23 @@ function BidUI({
                     if (players.length === 0) return null;
                     return (
                       <div key={pos} className="mb-2">
-                        <div className="text-[10px] text-[#849585] font-semibold uppercase mb-1">
+                        <div className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">
                           {pos} ({players.length})
                         </div>
                         {players.map((p) => (
                           <div
                             key={p.id}
-                            className="flex items-center justify-between text-xs bg-[#132030] rounded px-3 py-1.5 mb-0.5"
+                            className="flex items-center justify-between text-xs bg-muted rounded px-3 py-1.5 mb-0.5"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-[#d6e4f9] truncate">
+                              <span className="text-foreground truncate">
                                 {p.name}
                               </span>
-                              <span className="text-[#849585] shrink-0">
+                              <span className="text-muted-foreground shrink-0">
                                 {p.team}
                               </span>
                             </div>
-                            <span className="font-mono text-[#b9cbb9] shrink-0 ml-2">
+                            <span className="font-mono text-muted-foreground shrink-0 ml-2">
                               &pound;{p.price}m
                             </span>
                           </div>
@@ -1425,26 +1425,26 @@ function BidUI({
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-[#849585] italic text-center py-2">
+                <p className="text-xs text-muted-foreground italic text-center py-2">
                   No players yet
                 </p>
               )}
-              <div className="mt-3 pt-3 border-t border-[#3b4b3d] grid grid-cols-3 gap-2 text-center">
+              <div className="mt-3 pt-3 border-t border-border grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <div className="text-xs text-[#849585]">Budget</div>
-                  <div className="text-sm font-mono text-[#d6e4f9]">
+                  <div className="text-xs text-muted-foreground">Budget</div>
+                  <div className="text-sm font-mono text-foreground">
                     &pound;{teamMeta.budget_per_team}m
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-[#849585]">Spent</div>
-                  <div className="text-sm font-mono text-[#d6e4f9]">
+                  <div className="text-xs text-muted-foreground">Spent</div>
+                  <div className="text-sm font-mono text-foreground">
                     &pound;{teamMeta.spent}m
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-[#849585]">Left</div>
-                  <div className="text-sm font-mono text-[#00e478]">
+                  <div className="text-xs text-muted-foreground">Left</div>
+                  <div className="text-sm font-mono text-primary">
                     &pound;{remaining.toFixed(1)}m
                   </div>
                 </div>
@@ -1453,8 +1453,8 @@ function BidUI({
           )}
 
           {/* ── All Teams Budget ───────────────────────────────────────── */}
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4">
-            <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               All Teams
             </h3>
             <div className="space-y-1 max-h-[40vh] overflow-y-auto">
@@ -1464,7 +1464,7 @@ function BidUI({
                     onClick={() =>
                       onToggleTeam(expandedTeamId === t.id ? null : t.id)
                     }
-                    className="w-full flex items-center justify-between gap-2 rounded bg-[#132030] px-3 py-1.5 text-xs hover:bg-[#1a2e42] transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between gap-2 rounded bg-muted px-3 py-1.5 text-xs hover:bg-muted transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <TeamAvatar
@@ -1474,7 +1474,7 @@ function BidUI({
                         size="sm"
                       />
                       <Tooltip>
-                        <TooltipTrigger render={<span />} className="text-[#d6e4f9] truncate">
+                        <TooltipTrigger render={<span />} className="text-foreground truncate">
                           {t.name}
                         </TooltipTrigger>
                         <TooltipContent>{t.name}</TooltipContent>
@@ -1482,17 +1482,17 @@ function BidUI({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span
-                        className={`font-mono ${t.remaining >= 0 ? "text-[#b9cbb9]" : "text-red-400"}`}
+                        className={`font-mono ${t.remaining >= 0 ? "text-muted-foreground" : "text-red-400"}`}
                       >
                         &pound;{t.remaining.toFixed(1)}m
                       </span>
-                      <span className="text-[#849585]">{t.squad.length}</span>
+                      <span className="text-muted-foreground">{t.squad.length}</span>
                     </div>
                   </button>
                   {expandedTeamId === t.id && (
                     <div className="ml-4 mt-1 mb-1 space-y-0.5">
                       {t.squad.length === 0 && (
-                        <p className="text-[10px] text-[#849585] italic px-2 py-1">
+                        <p className="text-[10px] text-muted-foreground italic px-2 py-1">
                           No players yet
                         </p>
                       )}
@@ -1503,23 +1503,23 @@ function BidUI({
                         if (players.length === 0) return null;
                         return (
                           <div key={pos}>
-                            <div className="text-[10px] text-[#849585] font-semibold uppercase px-2 py-0.5">
+                            <div className="text-[10px] text-muted-foreground font-semibold uppercase px-2 py-0.5">
                               {pos} ({players.length})
                             </div>
                             {players.map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center justify-between text-[11px] bg-[#0f1c2c] rounded px-2 py-0.5"
+                                className="flex items-center justify-between text-[11px] bg-card rounded px-2 py-0.5"
                               >
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className="text-[#d6e4f9] truncate">
+                                  <span className="text-foreground truncate">
                                     {p.name}
                                   </span>
-                                  <span className="text-[#849585] shrink-0">
+                                  <span className="text-muted-foreground shrink-0">
                                     {p.team}
                                   </span>
                                 </div>
-                                <span className="font-mono text-[#b9cbb9] shrink-0 ml-1">
+                                <span className="font-mono text-muted-foreground shrink-0 ml-1">
                                   &pound;{p.price}m
                                 </span>
                               </div>
@@ -1550,7 +1550,7 @@ function AuctionEventDisplay({
 
   const borderColor =
     event.type === "sold"
-      ? "border-[#00e478]"
+      ? "border-primary"
       : event.type === "unsold"
         ? "border-yellow-500/50"
         : "border-red-500/50";
@@ -1564,34 +1564,34 @@ function AuctionEventDisplay({
 
   const badgeColor =
     event.type === "sold"
-      ? "text-[#00e478]"
+      ? "text-primary"
       : event.type === "unsold"
         ? "text-yellow-400"
         : "text-red-400";
 
   return (
     <div
-      className={`rounded-lg border-2 ${borderColor} bg-[#0f1c2c] p-6 min-h-[300px] flex flex-col items-center justify-center text-center space-y-3`}
+      className={`rounded-lg border-2 ${borderColor} bg-card p-6 min-h-[300px] flex flex-col items-center justify-center text-center space-y-3`}
     >
       <div className={`text-4xl font-bold leading-none ${badgeColor}`}>
         {badgeLabel}
       </div>
-      <h2 className="text-2xl font-bold text-[#d6e4f9]">
+      <h2 className="text-2xl font-bold text-foreground">
         {event.fullName}
       </h2>
       <p className="text-sm">
         {event.type === "sold" && isWinner ? (
-          <span className="text-[#00e478] font-semibold">
+          <span className="text-primary font-semibold">
             Won by your team for &pound;{event.price}m
           </span>
         ) : event.type === "sold" ? (
-          <span className="text-[#b9cbb9]">
+          <span className="text-muted-foreground">
             Sold to{" "}
-            <span className="font-semibold text-[#d6e4f9]">
+            <span className="font-semibold text-foreground">
               {event.winnerName}
             </span>{" "}
             for{" "}
-            <span className="font-mono text-[#00e478] font-bold">
+            <span className="font-mono text-primary font-bold">
               &pound;{event.price}m
             </span>
           </span>
@@ -1601,7 +1601,7 @@ function AuctionEventDisplay({
           <span className="text-red-400">Nomination was cancelled</span>
         )}
       </p>
-      <p className="text-xs text-[#849585] pt-2">
+      <p className="text-xs text-muted-foreground pt-2">
         Waiting for next nomination...
       </p>
     </div>

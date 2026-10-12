@@ -33,10 +33,10 @@ interface FixtureBreakdownModalProps {
 }
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-sky-500/20 text-sky-400 border-sky-500/40",
-  DEF: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-  MID: "bg-amber-500/20 text-amber-400 border-amber-500/40",
-  FWD: "bg-rose-500/20 text-rose-400 border-rose-500/40",
+  GKP: "bg-sky-500/15 text-sky-800 dark:text-sky-400 border-sky-500/30",
+  DEF: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border-emerald-500/30",
+  MID: "bg-amber-500/15 text-amber-800 dark:text-amber-400 border-amber-500/30",
+  FWD: "bg-rose-500/15 text-rose-800 dark:text-rose-400 border-rose-500/30",
 };
 
 export function FixtureBreakdownModal({
@@ -101,7 +101,7 @@ export function FixtureBreakdownModal({
       <div
         key={`${p.id}-${p.elementPosition}`}
         className={`flex items-center justify-between gap-2 py-1 px-2.5 rounded transition-colors text-xs ${
-          isBench ? "hover:bg-[#1a293b]/60 opacity-90" : "hover:bg-[#1e2b3b] bg-[#101b28]/40"
+          isBench ? "hover:bg-muted/70 opacity-90" : "hover:bg-muted/60 bg-muted/30"
         }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -116,23 +116,23 @@ export function FixtureBreakdownModal({
 
           {/* Player Name and Badges */}
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <span className="font-semibold text-[#d6e4f9] text-xs truncate max-w-[130px] sm:max-w-[170px]">
+            <span className="font-semibold text-foreground text-xs truncate max-w-[130px] sm:max-w-[170px]">
               {p.webName}
             </span>
 
             {/* Captaincy Flags */}
             {!isBench && isTripleCaptain && (
-              <span className="px-1 py-0.2 rounded text-[8px] font-extrabold bg-[#00e478] text-[#003919]">
+              <span className="px-1 py-0.2 rounded text-[8px] font-extrabold bg-primary text-primary-foreground">
                 TC
               </span>
             )}
             {!isBench && isCaptain && !isTripleCaptain && (
-              <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-[#00e478]/20 text-[#00e478] border border-[#00e478]/40">
+              <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-primary/20 text-primary border border-primary/40">
                 C
               </span>
             )}
             {!isBench && isVice && (
-              <span className="px-1 py-0.2 rounded text-[8px] font-medium bg-[#1e2b3b] text-[#849585] border border-[#3b4b3d]/50">
+              <span className="px-1 py-0.2 rounded text-[8px] font-medium bg-muted text-muted-foreground border border-border">
                 VC
               </span>
             )}
@@ -157,7 +157,7 @@ export function FixtureBreakdownModal({
               {p.keyStats.map((stat, i) => (
                 <span
                   key={i}
-                  className="px-1 py-0.2 rounded text-[9px] font-medium bg-[#1e2b3b] text-[#849585] border border-[#3b4b3d]/60"
+                  className="px-1 py-0.2 rounded text-[9px] font-medium bg-muted text-muted-foreground border border-border"
                 >
                   {stat}
                 </span>
@@ -167,16 +167,16 @@ export function FixtureBreakdownModal({
 
           <div className="text-right min-w-[36px]">
             {!isBench && p.multiplier > 1 ? (
-              <span className="font-bold text-[#00e478] tabular-nums text-xs sm:text-sm">
+              <span className="font-bold text-primary tabular-nums text-xs sm:text-sm">
                 {p.totalPoints}
-                <span className="text-[9px] text-[#849585] ml-0.5 font-normal">
+                <span className="text-[9px] text-muted-foreground ml-0.5 font-normal">
                   ({p.rawPoints}x{p.multiplier})
                 </span>
               </span>
             ) : (
               <span
                 className={`font-bold tabular-nums text-xs sm:text-sm ${
-                  displayPoints > 0 ? "text-[#d6e4f9]" : "text-[#849585]"
+                  displayPoints > 0 ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {displayPoints}
@@ -191,7 +191,7 @@ export function FixtureBreakdownModal({
   const renderTeamRoster = (team: TeamBreakdown | null, side: "Home" | "Away") => {
     if (!team) {
       return (
-        <div className="p-6 text-center text-xs text-[#849585] bg-[#132030]/30 rounded-lg border border-[#3b4b3d]/40">
+        <div className="p-6 text-center text-xs text-muted-foreground bg-muted/40 rounded-lg border border-border">
           Team data not available.
         </div>
       );
@@ -199,27 +199,27 @@ export function FixtureBreakdownModal({
 
     if (!team.managerId) {
       return (
-        <div className="p-6 rounded-lg border border-[#3b4b3d]/60 bg-[#132030]/40 text-center space-y-1.5">
-          <p className="text-sm font-bold text-[#d6e4f9]">{team.teamName}</p>
-          <p className="text-xs text-[#849585]">No FPL Manager ID linked for this team.</p>
+        <div className="p-6 rounded-lg border border-border bg-muted/40 text-center space-y-1.5">
+          <p className="text-sm font-bold text-foreground">{team.teamName}</p>
+          <p className="text-xs text-muted-foreground">No FPL Manager ID linked for this team.</p>
         </div>
       );
     }
 
     return (
-      <div className="rounded-lg border border-[#3b4b3d] bg-[#132030]/60 p-3 space-y-2.5">
+      <div className="rounded-lg border border-border bg-card p-3 space-y-2.5 shadow-xs">
         {/* Team Header */}
-        <div className="flex items-center justify-between gap-2 border-b border-[#3b4b3d]/60 pb-2">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
           <div>
-            <span className="text-[10px] text-[#849585] uppercase tracking-wider font-semibold block">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">
               {side}
             </span>
-            <h3 className="text-sm sm:text-base font-bold text-[#d6e4f9] truncate">{team.teamName}</h3>
+            <h3 className="text-sm sm:text-base font-bold text-foreground truncate">{team.teamName}</h3>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {team.chip && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/15 text-primary border border-primary/30">
                 {team.chip}
               </span>
             )}
@@ -233,7 +233,7 @@ export function FixtureBreakdownModal({
 
         {/* Starting 11 Section */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-[10px] font-semibold text-[#849585] px-1 pb-0.5">
+          <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground px-1 pb-0.5">
             <span>Playing 11 ({team.statsSummary.formation})</span>
             <span>Pts</span>
           </div>
@@ -242,15 +242,15 @@ export function FixtureBreakdownModal({
 
         {/* Bench Section: Readable 2-Column Grid */}
         {team.bench.length > 0 && (
-          <div className="space-y-1.5 border-t border-[#3b4b3d]/50 pt-2">
-            <div className="flex items-center justify-between text-[10px] font-semibold text-[#849585] px-1">
+          <div className="space-y-1.5 border-t border-border/50 pt-2">
+            <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground px-1">
               <span>Bench ({team.benchPoints} pts)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {team.bench.map((p) => (
                 <div
                   key={`${p.id}-${p.elementPosition}`}
-                  className="flex items-center justify-between gap-1.5 px-2.5 py-1 rounded bg-[#101b28]/80 border border-[#3b4b3d]/40 text-xs hover:bg-[#1e2b3b]/50 transition-colors"
+                  className="flex items-center justify-between gap-1.5 px-2.5 py-1 rounded bg-muted/60 border border-border/40 text-xs hover:bg-muted transition-colors"
                 >
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span
@@ -261,7 +261,7 @@ export function FixtureBreakdownModal({
                       {p.position}
                     </span>
                     <span
-                      className="text-[#d6e4f9] font-medium text-xs truncate"
+                      className="text-foreground font-medium text-xs truncate"
                       title={p.fullName || p.webName}
                     >
                       {p.webName}
@@ -269,11 +269,11 @@ export function FixtureBreakdownModal({
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {p.keyStats.length > 0 && (
-                      <span className="px-1 py-0.2 rounded text-[9px] font-medium bg-[#1e2b3b] text-[#849585] border border-[#3b4b3d]/60">
+                      <span className="px-1 py-0.2 rounded text-[9px] font-medium bg-muted text-muted-foreground border border-border">
                         {p.keyStats[0]}
                       </span>
                     )}
-                    <span className="text-xs font-bold text-[#849585] tabular-nums min-w-[14px] text-right">
+                    <span className="text-xs font-bold text-muted-foreground tabular-nums min-w-[14px] text-right">
                       {p.rawPoints}
                     </span>
                   </div>
@@ -284,16 +284,16 @@ export function FixtureBreakdownModal({
         )}
 
         {/* Team Total Footer */}
-        <div className="border-t border-[#3b4b3d] pt-2 flex items-center justify-between">
+        <div className="border-t border-border pt-2 flex items-center justify-between">
           <div className="space-y-0.5">
-            <span className="text-xs text-[#849585] block">Match Total</span>
+            <span className="text-xs text-muted-foreground block">Match Total</span>
             {team.transferCost > 0 && (
-              <span className="text-[10px] text-[#849585]">
+              <span className="text-[10px] text-muted-foreground">
                 Gross: {team.grossPoints} pts · Hits: -{team.transferCost}
               </span>
             )}
           </div>
-          <span className="text-base font-bold text-[#00e478] tabular-nums">
+          <span className="text-base font-bold text-primary tabular-nums">
             {team.netPoints} pts
           </span>
         </div>
@@ -304,7 +304,7 @@ export function FixtureBreakdownModal({
   const renderStatsComparison = (home: TeamBreakdown | null, away: TeamBreakdown | null) => {
     if (!home || !away) {
       return (
-        <div className="p-8 text-center text-xs text-[#849585]">
+        <div className="p-8 text-center text-xs text-muted-foreground">
           Stats comparison unavailable.
         </div>
       );
@@ -339,29 +339,29 @@ export function FixtureBreakdownModal({
     ];
 
     return (
-      <div className="rounded-lg border border-[#3b4b3d] bg-[#132030]/60 p-3 sm:p-4 space-y-3">
+      <div className="rounded-lg border border-border bg-card p-3 sm:p-4 space-y-3 shadow-xs">
         {/* Teams Header Row */}
-        <div className="grid grid-cols-3 items-center text-center pb-2.5 border-b border-[#3b4b3d]">
+        <div className="grid grid-cols-3 items-center text-center pb-2.5 border-b border-border">
           <div className="text-left space-y-0.5">
-            <span className="text-[10px] text-[#849585] uppercase tracking-wider font-semibold">Home</span>
-            <p className="text-xs sm:text-sm font-bold text-[#d6e4f9] truncate">{home.teamName}</p>
-            <span className="text-base sm:text-lg font-extrabold text-[#00e478]">{home.netPoints}</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Home</span>
+            <p className="text-xs sm:text-sm font-bold text-foreground truncate">{home.teamName}</p>
+            <span className="text-base sm:text-lg font-extrabold text-primary">{home.netPoints}</span>
           </div>
 
           <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#849585]">VS</span>
-            <div className="text-[10px] text-[#849585]">GW {gw}</div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">VS</span>
+            <div className="text-[10px] text-muted-foreground">GW {gw}</div>
           </div>
 
           <div className="text-right space-y-0.5">
-            <span className="text-[10px] text-[#849585] uppercase tracking-wider font-semibold">Away</span>
-            <p className="text-xs sm:text-sm font-bold text-[#d6e4f9] truncate">{away.teamName}</p>
-            <span className="text-base sm:text-lg font-extrabold text-[#00e478]">{away.netPoints}</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Away</span>
+            <p className="text-xs sm:text-sm font-bold text-foreground truncate">{away.teamName}</p>
+            <span className="text-base sm:text-lg font-extrabold text-primary">{away.netPoints}</span>
           </div>
         </div>
 
         {/* Stats Table */}
-        <div className="divide-y divide-[#3b4b3d]/40">
+        <div className="divide-y divide-border/40">
           {statsList.map((s, idx) => {
             const hNum = typeof s.homeVal === "number" ? s.homeVal : null;
             const aNum = typeof s.awayVal === "number" ? s.awayVal : null;
@@ -375,23 +375,23 @@ export function FixtureBreakdownModal({
             return (
               <div
                 key={idx}
-                className="grid grid-cols-3 items-center py-1.5 px-2 hover:bg-[#1e2b3b]/30 rounded transition-colors text-xs"
+                className="grid grid-cols-3 items-center py-1.5 px-2 hover:bg-muted/40 rounded transition-colors text-xs"
               >
                 <div
                   className={`text-left font-semibold truncate ${
-                    isHomeBest ? "text-[#00e478]" : "text-[#d6e4f9]"
+                    isHomeBest ? "text-primary font-bold" : "text-foreground"
                   }`}
                 >
                   {s.homeVal}
                 </div>
 
-                <div className="text-center text-[11px] text-[#849585] font-medium">
+                <div className="text-center text-[11px] text-muted-foreground font-medium">
                   {s.label}
                 </div>
 
                 <div
                   className={`text-right font-semibold truncate ${
-                    isAwayBest ? "text-[#00e478]" : "text-[#d6e4f9]"
+                    isAwayBest ? "text-primary font-bold" : "text-foreground"
                   }`}
                 >
                   {s.awayVal}
@@ -410,41 +410,41 @@ export function FixtureBreakdownModal({
         {[0, 1].map((sideIdx) => (
           <div
             key={sideIdx}
-            className="rounded-lg border border-[#3b4b3d] bg-[#132030]/60 p-3 space-y-2.5"
+            className="rounded-lg border border-border bg-card p-3 space-y-2.5"
           >
             {/* Team Header Skeleton */}
-            <div className="flex items-center justify-between gap-2 border-b border-[#3b4b3d]/60 pb-2">
+            <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
               <div className="space-y-1">
-                <div className="h-2.5 w-12 rounded bg-[#1e2b3b] animate-pulse" />
-                <div className="h-4 w-32 rounded bg-[#1e2b3b] animate-pulse" />
+                <div className="h-2.5 w-12 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
               </div>
-              <div className="h-4 w-16 rounded bg-[#1e2b3b] animate-pulse" />
+              <div className="h-4 w-16 rounded bg-muted animate-pulse" />
             </div>
 
             {/* Starting 11 Skeleton */}
             <div className="space-y-1">
               <div className="flex items-center justify-between px-1 pb-0.5">
-                <div className="h-3 w-24 rounded bg-[#1e2b3b] animate-pulse" />
-                <div className="h-3 w-6 rounded bg-[#1e2b3b] animate-pulse" />
+                <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-6 rounded bg-muted animate-pulse" />
               </div>
               <div className="space-y-1">
                 {Array.from({ length: 11 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between gap-2 py-1 px-2.5 rounded bg-[#101b28]/40 border border-transparent"
+                    className="flex items-center justify-between gap-2 py-1 px-2.5 rounded bg-muted/40 border border-transparent"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-7 rounded bg-[#1e2b3b] animate-pulse shrink-0" />
+                      <div className="h-4 w-7 rounded bg-muted animate-pulse shrink-0" />
                       <div
-                        className="h-3.5 rounded bg-[#1e2b3b] animate-pulse"
+                        className="h-3.5 rounded bg-muted animate-pulse"
                         style={{ width: `${65 + ((idx * 19) % 45)}px` }}
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       {idx % 3 === 0 && (
-                        <div className="h-3.5 w-8 rounded bg-[#1e2b3b] animate-pulse" />
+                        <div className="h-3.5 w-8 rounded bg-muted animate-pulse" />
                       )}
-                      <div className="h-3.5 w-5 rounded bg-[#1e2b3b] animate-pulse" />
+                      <div className="h-3.5 w-5 rounded bg-muted animate-pulse" />
                     </div>
                   </div>
                 ))}
@@ -452,31 +452,31 @@ export function FixtureBreakdownModal({
             </div>
 
             {/* Bench Skeleton */}
-            <div className="space-y-1.5 border-t border-[#3b4b3d]/50 pt-2">
-              <div className="h-3 w-20 rounded bg-[#1e2b3b] animate-pulse px-1" />
+            <div className="space-y-1.5 border-t border-border/50 pt-2">
+              <div className="h-3 w-20 rounded bg-muted animate-pulse px-1" />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {Array.from({ length: 4 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between gap-1.5 px-2.5 py-1 rounded bg-[#101b28]/80 border border-[#3b4b3d]/40"
+                    className="flex items-center justify-between gap-1.5 px-2.5 py-1 rounded bg-muted/60 border border-border/40"
                   >
                     <div className="flex items-center gap-1.5">
-                      <div className="h-3.5 w-6 rounded bg-[#1e2b3b] animate-pulse shrink-0" />
+                      <div className="h-3.5 w-6 rounded bg-muted animate-pulse shrink-0" />
                       <div
-                        className="h-3 rounded bg-[#1e2b3b] animate-pulse"
+                        className="h-3 rounded bg-muted animate-pulse"
                         style={{ width: `${55 + ((idx * 13) % 35)}px` }}
                       />
                     </div>
-                    <div className="h-3 w-4 rounded bg-[#1e2b3b] animate-pulse" />
+                    <div className="h-3 w-4 rounded bg-muted animate-pulse" />
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Total Footer Skeleton */}
-            <div className="border-t border-[#3b4b3d] pt-2 flex items-center justify-between">
-              <div className="h-3.5 w-20 rounded bg-[#1e2b3b] animate-pulse" />
-              <div className="h-5 w-16 rounded bg-[#1e2b3b] animate-pulse" />
+            <div className="border-t border-border pt-2 flex items-center justify-between">
+              <div className="h-3.5 w-20 rounded bg-muted animate-pulse" />
+              <div className="h-5 w-16 rounded bg-muted animate-pulse" />
             </div>
           </div>
         ))}
@@ -486,25 +486,25 @@ export function FixtureBreakdownModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto bg-[#0f1c2c] border border-[#3b4b3d] text-[#d6e4f9] p-3 sm:p-4">
-        <DialogHeader className="border-b border-[#3b4b3d] pb-2.5 space-y-2">
+      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto bg-card border border-border text-foreground p-3 sm:p-4">
+        <DialogHeader className="border-b border-border pb-2.5 space-y-2">
           <div className="flex items-center justify-between gap-3 pr-8">
             <div>
-              <DialogTitle className="text-base sm:text-lg font-bold text-[#d6e4f9]">
+              <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
                 {homeTeamName ?? "Home"} vs {awayTeamName ?? "Away"}
               </DialogTitle>
-              <DialogDescription className="text-xs text-[#849585]">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Gameweek {gw} Match Breakdown · Official FPL Data
               </DialogDescription>
             </div>
 
             {isScored && (
-              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#132030] border border-[#3b4b3d] shrink-0">
-                <span className="text-sm sm:text-base font-extrabold text-[#00e478] tabular-nums">
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-muted border border-border shrink-0">
+                <span className="text-sm sm:text-base font-extrabold text-primary tabular-nums">
                   {homeScore ?? 0}
                 </span>
-                <span className="text-xs text-[#849585]">-</span>
-                <span className="text-sm sm:text-base font-extrabold text-[#00e478] tabular-nums">
+                <span className="text-xs text-muted-foreground">-</span>
+                <span className="text-sm sm:text-base font-extrabold text-primary tabular-nums">
                   {awayScore ?? 0}
                 </span>
               </div>
@@ -518,8 +518,8 @@ export function FixtureBreakdownModal({
               onClick={() => setActiveTab("players")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                 activeTab === "players"
-                  ? "bg-[#00e478] text-[#003919] shadow-[0_0_10px_rgba(0,228,120,0.2)]"
-                  : "bg-[#132030] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d]"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "bg-muted text-muted-foreground hover:text-foreground border border-border"
               }`}
             >
               <Users className="h-3.5 w-3.5" />
@@ -531,8 +531,8 @@ export function FixtureBreakdownModal({
               onClick={() => setActiveTab("stats")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
                 activeTab === "stats"
-                  ? "bg-[#00e478] text-[#003919] shadow-[0_0_10px_rgba(0,228,120,0.2)]"
-                  : "bg-[#132030] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d]"
+                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  : "bg-muted text-muted-foreground hover:text-foreground border border-border"
               }`}
             >
               <BarChart3 className="h-3.5 w-3.5" />
@@ -546,7 +546,7 @@ export function FixtureBreakdownModal({
           {loading ? (
             renderSkeleton()
           ) : activeError || !activeData ? (
-            <div className="flex items-center gap-3 rounded-lg bg-[#132030] p-4 text-xs text-amber-400 border border-amber-500/30 my-6">
+            <div className="flex items-center gap-3 rounded-lg bg-muted p-4 text-xs text-amber-600 dark:text-amber-400 border border-amber-500/30 my-6">
               <AlertCircle className="h-5 w-5 shrink-0" />
               <span>{activeError ?? "Match breakdown is not available for this gameweek."}</span>
             </div>

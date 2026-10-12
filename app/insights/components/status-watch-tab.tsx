@@ -16,7 +16,7 @@ function getPositionBadgeClass(pos: string): string {
     case "FWD":
       return "bg-rose-500/15 text-rose-400 border-rose-500/30";
     default:
-      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -61,7 +61,7 @@ export function StatusWatchTab({
   const getChanceBadge = (chance: number | null) => {
     if (chance === null) {
       return (
-        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#1e2b3b] text-[#869ab8]">
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-muted text-muted-foreground">
           Unknown
         </span>
       );
@@ -82,20 +82,20 @@ export function StatusWatchTab({
     }
     if (chance === 50) {
       return (
-        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
           50% Touch & Go
         </span>
       );
     }
     if (chance === 75) {
       return (
-        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-[#00e478] border border-emerald-500/30">
+        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-primary border border-emerald-500/30">
           75% Likely Available
         </span>
       );
     }
     return (
-      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-[#00e478]">
+      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-primary">
         {chance}%
       </span>
     );
@@ -109,117 +109,117 @@ export function StatusWatchTab({
           onClick={() => setFilter("allFlagged")}
           className={`text-left p-3.5 rounded-xl border transition-all ${
             filter === "allFlagged"
-              ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
-              : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+              ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
+              : "border-border bg-card hover:bg-muted"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               All Flagged
             </span>
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <AlertTriangle className="w-4 h-4 text-amber-700 dark:text-amber-400" />
           </div>
-          <div className="mt-2 text-2xl font-black text-amber-400">
+          <div className="mt-2 text-2xl font-black text-amber-700 dark:text-amber-400">
             {flaggedPlayers.length}
           </div>
-          <p className="text-[11px] text-[#869ab8] mt-0.5">Injuries, doubts, suspensions</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Injuries, doubts, suspensions</p>
         </button>
 
         <button
           onClick={() => setFilter("injured")}
           className={`text-left p-3.5 rounded-xl border transition-all ${
             filter === "injured"
-              ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
-              : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+              ? "border-rose-500 bg-rose-500/10 ring-1 ring-rose-500"
+              : "border-border bg-card hover:bg-muted"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Injured
             </span>
-            <HeartPulse className="w-4 h-4 text-rose-400" />
+            <HeartPulse className="w-4 h-4 text-rose-700 dark:text-rose-400" />
           </div>
-          <div className="mt-2 text-2xl font-black text-rose-400">
+          <div className="mt-2 text-2xl font-black text-rose-700 dark:text-rose-400">
             {flaggedPlayers.filter((p) => p.status === "i").length}
           </div>
-          <p className="text-[11px] text-[#869ab8] mt-0.5">Ruled out with injuries</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Ruled out with injuries</p>
         </button>
 
         <button
           onClick={() => setFilter("doubtful")}
           className={`text-left p-3.5 rounded-xl border transition-all ${
             filter === "doubtful"
-              ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
-              : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+              ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
+              : "border-border bg-card hover:bg-muted"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Doubtful
             </span>
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <AlertTriangle className="w-4 h-4 text-amber-700 dark:text-amber-400" />
           </div>
-          <div className="mt-2 text-2xl font-black text-amber-400">
+          <div className="mt-2 text-2xl font-black text-amber-700 dark:text-amber-400">
             {flaggedPlayers.filter((p) => p.status === "d").length}
           </div>
-          <p className="text-[11px] text-[#869ab8] mt-0.5">25% - 75% playing chance</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">25% - 75% playing chance</p>
         </button>
 
         <button
           onClick={() => setFilter("yellowCards")}
           className={`text-left p-3.5 rounded-xl border transition-all ${
             filter === "yellowCards"
-              ? "border-yellow-400 bg-yellow-500/10 ring-1 ring-yellow-400"
-              : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+              ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
+              : "border-border bg-card hover:bg-muted"
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Yellow Card Alert
             </span>
-            <ShieldAlert className="w-4 h-4 text-yellow-400" />
+            <ShieldAlert className="w-4 h-4 text-amber-700 dark:text-yellow-400" />
           </div>
-          <div className="mt-2 text-2xl font-black text-yellow-400">
+          <div className="mt-2 text-2xl font-black text-amber-700 dark:text-yellow-400">
             {yellowCardAlerts.length}
           </div>
-          <p className="text-[11px] text-[#869ab8] mt-0.5">1 card away from 1-match ban</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">1 card away from 1-match ban</p>
         </button>
       </div>
 
       {/* Search and count */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0f1c2c] p-3 rounded-xl border border-[#3b4b3d]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#869ab8]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search flagged players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478] focus:ring-1 focus:ring-[#00e478]"
+            className="w-full pl-9 pr-8 py-1.5 bg-muted border border-border rounded-lg text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#869ab8] hover:text-[#d6e4f9] p-0.5 rounded transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
               aria-label="Clear search"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-        <div className="text-xs text-[#869ab8] self-center sm:self-auto">
-          Showing <span className="font-mono font-semibold text-[#d6e4f9]">{filteredList.length}</span> player{filteredList.length === 1 ? "" : "s"}
+        <div className="text-xs text-muted-foreground self-center sm:self-auto">
+          Showing <span className="font-mono font-semibold text-foreground">{filteredList.length}</span> player{filteredList.length === 1 ? "" : "s"}
         </div>
       </div>
 
       {/* Flagged Cards Grid */}
       {filteredList.length === 0 ? (
-        <div className="py-12 text-center text-[#869ab8] bg-[#0f1c2c] rounded-xl border border-[#3b4b3d]">
+        <div className="py-12 text-center text-muted-foreground bg-card rounded-xl border border-border">
           <p className="text-sm">No players matching the selected status filter.</p>
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#003919] bg-[#00e478] hover:bg-[#00c868] transition-colors"
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-primary-foreground bg-primary hover:bg-primary transition-colors"
             >
               Clear search query
             </button>
@@ -230,12 +230,12 @@ export function StatusWatchTab({
           {filteredList.map(({ player, news, chanceThisRound, chanceNextRound, yellowCards, isYellowCardRisk }) => (
             <div
               key={player.id}
-              className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col justify-between hover:border-[#00e478]/40 transition-colors"
+              className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between hover:border-primary/40 transition-colors"
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0">
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                       {player.image_url ? (
                         <Image
                           src={player.image_url}
@@ -247,10 +247,10 @@ export function StatusWatchTab({
                       ) : null}
                     </div>
                     <div>
-                      <div className="font-bold text-sm text-[#d6e4f9]">
+                      <div className="font-bold text-sm text-foreground">
                         {player.web_name}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#869ab8] mt-0.5">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                         <span>{player.team_name}</span>
                         <span>·</span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${getPositionBadgeClass(player.position)}`}>
@@ -266,18 +266,18 @@ export function StatusWatchTab({
                 </div>
 
                 {/* News / Medical Notes */}
-                <div className="mt-3 p-2.5 rounded-lg bg-[#020f1e] border border-[#3b4b3d]/60 text-xs text-[#b9cbb9] leading-relaxed">
+                <div className="mt-3 p-2.5 rounded-lg bg-muted border border-border/60 text-xs text-muted-foreground leading-relaxed">
                   {news || "Status flagged by FPL medical update."}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 mt-3 border-t border-[#3b4b3d]/40 text-xs">
-                <div className="text-[#869ab8]">
-                  Total Pts: <strong className="font-mono text-[#d6e4f9]">{player.total_points}</strong> · Owned:{" "}
-                  <strong className="font-mono text-[#d6e4f9]">{player.selected_by_percent}%</strong>
+              <div className="flex items-center justify-between pt-3 mt-3 border-t border-border/40 text-xs">
+                <div className="text-muted-foreground">
+                  Total Pts: <strong className="text-foreground">{player.total_points}</strong> · Owned:{" "}
+                  <strong className="text-foreground">{player.selected_by_percent}%</strong>
                 </div>
                 {isYellowCardRisk && (
-                  <div className="flex items-center gap-1 font-mono font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded text-[11px] border border-yellow-500/20">
+                  <div className="flex items-center gap-1 font-semibold text-amber-700 dark:text-yellow-400 bg-amber-500/10 px-2 py-0.5 rounded text-[11px] border border-amber-500/20">
                     <ShieldAlert className="w-3 h-3" />
                     {yellowCards} Yellows (Risk)
                   </div>

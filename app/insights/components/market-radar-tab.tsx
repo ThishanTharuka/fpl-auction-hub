@@ -27,7 +27,7 @@ function getPositionBadgeClass(pos: string): string {
     case "FWD":
       return "bg-rose-500/15 text-rose-400 border-rose-500/30";
     default:
-      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -216,27 +216,21 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
   return (
     <div className="space-y-4">
       {/* Timeframe Scope Selector */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#0f1c2c] p-2.5 rounded-xl border border-[#3b4b3d]">
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#061423] border border-[#3b4b3d]/60">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card p-2.5 rounded-xl border border-border">
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/80 border border-border/80">
           <button
             type="button"
             onClick={() => handleTimeframeChange("today")}
             className={`flex items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               timeframe === "today"
-                ? "bg-[#00e478] text-[#003919] shadow-sm font-bold ring-1 ring-[#00e478]"
-                : "text-[#869ab8] hover:text-[#d6e4f9]"
+                ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
             <span>{isToday ? "Daily & Predictions" : `Daily (${selectedDateLabel})`}</span>
             {selectedDateRisers.length > 0 && (
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  timeframe === "today"
-                    ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
-                    : "bg-[#1e2b3b] text-[#869ab8] border border-[#3b4b3d]/50"
-                }`}
-              >
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-primary-foreground/20 text-primary-foreground">
                 +{selectedDateRisers.length}
               </span>
             )}
@@ -247,37 +241,31 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             onClick={() => handleTimeframeChange("gameweek")}
             className={`flex items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               timeframe === "gameweek"
-                ? "bg-[#00e478] text-[#003919] shadow-sm font-bold ring-1 ring-[#00e478]"
-                : "text-[#869ab8] hover:text-[#d6e4f9]"
+                ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Gameweek Overview</span>
             {data.totalRisersCount > 0 && (
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  timeframe === "gameweek"
-                    ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
-                    : "bg-[#1e2b3b] text-[#869ab8] border border-[#3b4b3d]/50"
-                }`}
-              >
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-primary-foreground/20 text-primary-foreground">
                 +{data.totalRisersCount}
               </span>
             )}
           </button>
         </div>
 
-        <div className="text-[11px] text-[#869ab8] px-2 flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#00e478] animate-pulse" />
+        <div className="text-[11px] text-muted-foreground px-2 flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
           <span>FPL price updates run once daily at 00:00 - 01:30 UK time</span>
         </div>
       </div>
 
       {/* Date Selector Strip (shown in Daily mode) */}
       {timeframe === "today" && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-[#0f1c2c] p-2 rounded-xl border border-[#3b4b3d]/80">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-card p-2 rounded-xl border border-border">
           <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 max-w-full scrollbar-none">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#869ab8] px-2 shrink-0">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-2 shrink-0">
               Date:
             </span>
             {pillDates.map((dStr) => {
@@ -291,8 +279,8 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   onClick={() => handleDateChange(dStr)}
                   className={`flex items-center gap-1.5 min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
                     isSelected
-                      ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
-                      : "bg-[#061423] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]/50 hover:border-[#3b4b3d]"
+                      ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                      : "bg-muted text-muted-foreground hover:text-foreground border border-border/70 hover:border-border"
                   }`}
                 >
                   <span>{pillLabel}</span>
@@ -300,8 +288,8 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                         isSelected
-                          ? "bg-[#003919]/15 text-[#003919] border border-[#003919]/25"
-                          : "bg-[#132030] text-[#00e478] border border-emerald-500/20"
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-primary/15 text-primary"
                       }`}
                     >
                       {dayMovers}
@@ -313,9 +301,9 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
           </div>
 
           {/* Inline Date Picker */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#061423] border border-[#3b4b3d]/70 text-xs shrink-0 self-start sm:self-auto">
-            <Calendar className="w-3.5 h-3.5 text-[#869ab8]" />
-            <span className="text-[11px] text-[#869ab8]">Pick date:</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted border border-border text-xs shrink-0 self-start sm:self-auto">
+            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground">Pick date:</span>
             <input
               type="date"
               value={selectedDate}
@@ -326,7 +314,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   handleDateChange(e.target.value);
                 }
               }}
-              className="bg-transparent text-xs text-[#d6e4f9] focus:outline-none cursor-pointer [color-scheme:dark]"
+              className="bg-transparent text-xs text-foreground focus:outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
         </div>
@@ -342,20 +330,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 onClick={() => setActiveView("dailyRisers")}
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "dailyRisers"
-                    ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    ? "border-primary bg-primary/10 ring-1 ring-primary"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Risen Today
                   </span>
-                  <TrendingUp className="w-4 h-4 text-[#00e478]" />
+                  <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-primary" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#00e478]">
+                <div className="mt-2 text-2xl font-black text-emerald-700 dark:text-primary">
                   {selectedDateRisers.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Price rise today (+£0.1m)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Price rise today (+£0.1m)</p>
               </button>
 
               <button
@@ -364,11 +352,11 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "dailyFallers"
                     ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Fallen Today
                   </span>
                   <TrendingDown className="w-4 h-4 text-rose-400" />
@@ -376,7 +364,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 <div className="mt-2 text-2xl font-black text-rose-400">
                   {selectedDateFallers.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Price drop today (-£0.1m)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Price drop today (-£0.1m)</p>
               </button>
 
               <button
@@ -385,19 +373,19 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "predictedRisers"
                     ? "border-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Imminent Rise
                   </span>
-                  <Zap className="w-4 h-4 text-[#00e478]" />
+                  <Zap className="w-4 h-4 text-primary" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                <div className="mt-2 text-2xl font-black text-foreground">
                   {data.predictedRisersTonight.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≥ 60%</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Target progress ≥ 60%</p>
               </button>
 
               <button
@@ -406,19 +394,19 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "predictedFallers"
                     ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Imminent Fall
                   </span>
                   <AlertTriangle className="w-4 h-4 text-amber-400" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                <div className="mt-2 text-2xl font-black text-foreground">
                   {data.predictedFallersTonight.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Target progress ≤ -60%</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Target progress ≤ -60%</p>
               </button>
             </>
           ) : (
@@ -428,20 +416,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 onClick={() => setActiveView("dailyRisers")}
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "dailyRisers"
-                    ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    ? "border-primary bg-primary/10 ring-1 ring-primary"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Risen ({selectedDateLabel})
                   </span>
-                  <TrendingUp className="w-4 h-4 text-[#00e478]" />
+                  <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-primary" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#00e478]">
+                <div className="mt-2 text-2xl font-black text-emerald-700 dark:text-primary">
                   {selectedDateRisers.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Price rise on date (+£0.1m)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Price rise on date (+£0.1m)</p>
               </button>
 
               <button
@@ -449,20 +437,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 onClick={() => setActiveView("dailyFallers")}
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "dailyFallers"
-                    ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    ? "border-rose-500 bg-rose-500/10 ring-1 ring-rose-500"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Fallen ({selectedDateLabel})
                   </span>
-                  <TrendingDown className="w-4 h-4 text-rose-400" />
+                  <TrendingDown className="w-4 h-4 text-rose-700 dark:text-rose-400" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-rose-400">
+                <div className="mt-2 text-2xl font-black text-rose-700 dark:text-rose-400">
                   {selectedDateFallers.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Price drop on date (-£0.1m)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Price drop on date (-£0.1m)</p>
               </button>
 
               <button
@@ -470,20 +458,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 onClick={() => setActiveView("allMovers")}
                 className={`text-left p-3.5 rounded-xl border transition-all ${
                   activeView === "allMovers"
-                    ? "border-sky-400 bg-sky-500/10 ring-1 ring-sky-400"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                    ? "border-sky-500 bg-sky-500/10 ring-1 ring-sky-500"
+                    : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     All Movers ({selectedDateLabel})
                   </span>
-                  <History className="w-4 h-4 text-sky-400" />
+                  <History className="w-4 h-4 text-sky-700 dark:text-sky-400" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+                <div className="mt-2 text-2xl font-black text-foreground">
                   {selectedDateRisers.length + selectedDateFallers.length}
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Total price changes</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Total price changes</p>
               </button>
 
               <button
@@ -492,21 +480,21 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   setSelectedDate(todayStr);
                   setActiveView("predictedRisers");
                 }}
-                className="text-left p-3.5 rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030] transition-all group"
+                className="text-left p-3.5 rounded-xl border border-border bg-card hover:bg-muted transition-all group"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8] group-hover:text-[#d6e4f9]">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-foreground">
                     Predictions Tonight
                   </span>
-                  <Zap className="w-4 h-4 text-[#00e478]" />
+                  <Zap className="w-4 h-4 text-emerald-700 dark:text-primary" />
                 </div>
-                <div className="mt-2 text-2xl font-black text-[#d6e4f9] flex items-center gap-2">
+                <div className="mt-2 text-2xl font-black text-foreground flex items-center gap-2">
                   <span>{data.predictedRisersTonight.length + data.predictedFallersTonight.length}</span>
-                  <span className="text-xs font-normal text-[#00e478] bg-[#00e478]/10 px-1.5 py-0.5 rounded border border-[#00e478]/20">
+                  <span className="text-xs font-normal text-emerald-700 dark:text-primary bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                     Live Today
                   </span>
                 </div>
-                <p className="text-[11px] text-[#869ab8] mt-0.5">Switch to Today&apos;s radar</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Switch to Today&apos;s radar</p>
               </button>
             </>
           )
@@ -517,20 +505,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
               onClick={() => setActiveView("risers")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "risers"
-                  ? "border-[#00e478] bg-[#00e478]/10 ring-1 ring-[#00e478]"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                  ? "border-primary bg-primary/10 ring-1 ring-primary"
+                  : "border-border bg-card hover:bg-muted"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Price Risers (GW)
                 </span>
-                <TrendingUp className="w-4 h-4 text-[#00e478]" />
+                <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-primary" />
               </div>
-              <div className="mt-2 text-2xl font-black text-[#00e478]">
+              <div className="mt-2 text-2xl font-black text-emerald-700 dark:text-primary">
                 {data.totalRisersCount}
               </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Risen this Gameweek</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Risen this Gameweek</p>
             </button>
 
             <button
@@ -538,20 +526,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
               onClick={() => setActiveView("fallers")}
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "fallers"
-                  ? "border-rose-400 bg-rose-500/10 ring-1 ring-rose-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                  ? "border-rose-500 bg-rose-500/10 ring-1 ring-rose-500"
+                  : "border-border bg-card hover:bg-muted"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Price Fallers (GW)
                 </span>
-                <TrendingDown className="w-4 h-4 text-rose-400" />
+                <TrendingDown className="w-4 h-4 text-rose-700 dark:text-rose-400" />
               </div>
-              <div className="mt-2 text-2xl font-black text-rose-400">
+              <div className="mt-2 text-2xl font-black text-rose-700 dark:text-rose-400">
                 {data.totalFallersCount}
               </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Fallen this Gameweek</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Fallen this Gameweek</p>
             </button>
 
             <button
@@ -560,19 +548,19 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "netIn"
                   ? "border-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                  : "border-border bg-card hover:bg-muted"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   High Net In
                 </span>
                 <ArrowUpRight className="w-4 h-4 text-emerald-400" />
               </div>
-              <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+              <div className="mt-2 text-2xl font-black text-foreground">
                 {data.topNetTransfersIn.length}
               </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Top buy velocity</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Top buy velocity</p>
             </button>
 
             <button
@@ -581,63 +569,63 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
               className={`text-left p-3.5 rounded-xl border transition-all ${
                 activeView === "netOut"
                   ? "border-amber-400 bg-amber-500/10 ring-1 ring-amber-400"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:bg-[#132030]"
+                  : "border-border bg-card hover:bg-muted"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#869ab8]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   High Net Out
                 </span>
                 <ArrowDownRight className="w-4 h-4 text-amber-400" />
               </div>
-              <div className="mt-2 text-2xl font-black text-[#d6e4f9]">
+              <div className="mt-2 text-2xl font-black text-foreground">
                 {data.topNetTransfersOut.length}
               </div>
-              <p className="text-[11px] text-[#869ab8] mt-0.5">Top sell velocity</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Top sell velocity</p>
             </button>
           </>
         )}
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0f1c2c] p-3 rounded-xl border border-[#3b4b3d]">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#869ab8]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search by player or team..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-1.5 bg-[#020f1e] border border-[#3b4b3d] rounded-lg text-xs sm:text-sm text-[#d6e4f9] placeholder-[#869ab8] focus:outline-none focus:border-[#00e478] focus:ring-1 focus:ring-[#00e478]"
+            className="w-full pl-9 pr-8 py-1.5 bg-muted border border-border rounded-lg text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#869ab8] hover:text-[#d6e4f9] rounded transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
               aria-label="Clear search"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-        <div className="text-xs text-[#869ab8] self-center sm:self-auto">
+        <div className="text-xs text-muted-foreground self-center sm:self-auto">
           Showing {currentList.length} player{currentList.length === 1 ? "" : "s"}
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
         {currentList.length === 0 ? (
           timeframe === "today" && !isToday && selectedDateRisers.length === 0 && selectedDateFallers.length === 0 && !search.trim() ? (
             <div className="p-8 text-center space-y-3">
-              <div className="inline-flex p-3 rounded-full bg-[#061423] border border-[#3b4b3d] text-[#869ab8]">
-                <Calendar className="w-5 h-5 text-[#869ab8]" />
+              <div className="inline-flex p-3 rounded-full bg-background border border-border text-muted-foreground">
+                <Calendar className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="text-sm font-semibold text-[#d6e4f9]">
+              <div className="text-sm font-semibold text-foreground">
                 No price changes recorded on {formatDateFull(selectedDate)}
               </div>
-              <p className="text-xs text-[#869ab8] max-w-md mx-auto">
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
                 FPL price changes only occur overnight (00:00 - 01:30 UK time) when player net transfer velocity reaches the required threshold.
               </p>
               <button
@@ -646,14 +634,14 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   setSelectedDate(todayStr);
                   setActiveView(data.totalDailyRisersCount > 0 ? "dailyRisers" : "predictedRisers");
                 }}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00e478] text-[#003919] hover:bg-[#00c868] transition-colors shadow-sm"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <Zap className="w-3.5 h-3.5" />
                 View Today&apos;s Price Changes
               </button>
             </div>
           ) : (
-            <div className="p-8 text-center text-[#869ab8] text-sm">
+            <div className="p-8 text-center text-muted-foreground text-sm">
               {search.trim() ? `No players found matching "${search}".` : "No players found matching your criteria."}
             </div>
           )
@@ -662,7 +650,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-[#020f1e] text-[#869ab8] text-xs uppercase border-b border-[#3b4b3d]">
+                <thead className="bg-muted text-muted-foreground text-xs uppercase border-b border-border">
                   {timeframe === "today" ? (
                     <tr>
                       <th className="py-3 px-4">Player</th>
@@ -688,7 +676,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                     </tr>
                   )}
                 </thead>
-                <tbody className="divide-y divide-[#3b4b3d]/40">
+                <tbody className="divide-y divide-border/40">
                   {currentList.map(
                     ({
                       player,
@@ -701,11 +689,11 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                     }) => (
                       <tr
                         key={player.id}
-                        className="hover:bg-[#132030]/80 transition-colors"
+                        className="hover:bg-muted/80 transition-colors"
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0">
+                            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-muted border border-border shrink-0">
                               {player.image_url ? (
                                 <Image
                                   src={player.image_url}
@@ -717,10 +705,10 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                               ) : null}
                             </div>
                             <div>
-                              <div className="font-semibold text-[#d6e4f9]">
+                              <div className="font-semibold text-foreground">
                                 {player.web_name}
                               </div>
-                              <div className="text-xs text-[#869ab8]">
+                              <div className="text-xs text-muted-foreground">
                                 {player.team_name} · {ownershipPercent}% owned
                               </div>
                             </div>
@@ -731,24 +719,24 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                             {player.position}
                           </span>
                         </td>
-                        <td className="py-3 px-3 font-semibold text-[#d6e4f9]">
+                        <td className="py-3 px-3 font-semibold text-foreground">
                           £{player.price.toFixed(1)}m
                         </td>
                         {timeframe === "today" ? (
                           <>
                             <td className="py-3 px-3">
                               {costChangeDay > 0 ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-[#00e478] bg-emerald-500/10 px-2 py-0.5 rounded text-xs border border-[#00e478]/30">
+                                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-primary bg-emerald-500/10 px-2 py-0.5 rounded text-xs border border-emerald-500/30">
                                   <TrendingUp className="w-3 h-3" />
                                   +£{(costChangeDay / 10).toFixed(1)}m
                                 </span>
                               ) : costChangeDay < 0 ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded text-xs border border-rose-500/30">
+                                <span className="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded text-xs border border-rose-500/30">
                                   <TrendingDown className="w-3 h-3" />
                                   -£{Math.abs(costChangeDay / 10).toFixed(1)}m
                                 </span>
                               ) : (
-                                <span className="text-[#869ab8] text-xs">£0.0m</span>
+                                <span className="text-muted-foreground text-xs">£0.0m</span>
                               )}
                             </td>
                             <td className="py-3 px-3">
@@ -757,10 +745,10 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                   <span
                                     className={`font-mono font-semibold ${
                                       targetProgressPercent > 0
-                                        ? "text-[#00e478]"
+                                        ? "text-emerald-700 dark:text-primary"
                                         : targetProgressPercent < 0
-                                          ? "text-rose-400"
-                                          : "text-[#869ab8]"
+                                          ? "text-rose-700 dark:text-rose-400"
+                                          : "text-muted-foreground"
                                     }`}
                                   >
                                     {targetProgressPercent > 0
@@ -768,19 +756,19 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                       : `${targetProgressPercent.toFixed(1)}%`}
                                   </span>
                                   {targetProgressPercent >= 90 ? (
-                                    <span className="text-[10px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1.5 py-0.5 rounded border border-[#00e478]/30 animate-pulse">
+                                    <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-primary bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30 animate-pulse">
                                       Imminent
                                     </span>
                                   ) : targetProgressPercent <= -90 ? (
-                                    <span className="text-[10px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/30 animate-pulse">
+                                    <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/30 animate-pulse">
                                       Imminent
                                     </span>
                                   ) : null}
                                 </div>
-                                <div className="w-full bg-[#061423] h-1.5 rounded-full overflow-hidden border border-[#3b4b3d]/60">
+                                <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden border border-border/60">
                                   <div
                                     className={`h-full rounded-full transition-all ${
-                                      targetProgressPercent >= 0 ? "bg-[#00e478]" : "bg-rose-400"
+                                      targetProgressPercent >= 0 ? "bg-emerald-600 dark:bg-primary" : "bg-rose-500"
                                     }`}
                                     style={{
                                       width: `${Math.min(100, Math.max(0, Math.abs(targetProgressPercent)))}%`,
@@ -791,15 +779,15 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                             </td>
                             <td className="py-3 px-3">
                               {costChangeEvent > 0 ? (
-                                <span className="text-xs font-semibold text-[#00e478]">
+                                <span className="text-xs font-semibold text-emerald-700 dark:text-primary">
                                   +£{(costChangeEvent / 10).toFixed(1)}m
                                 </span>
                               ) : costChangeEvent < 0 ? (
-                                <span className="text-xs font-semibold text-rose-400">
+                                <span className="text-xs font-semibold text-rose-700 dark:text-rose-400">
                                   -£{Math.abs(costChangeEvent / 10).toFixed(1)}m
                                 </span>
                               ) : (
-                                <span className="text-[#869ab8] text-xs">£0.0m</span>
+                                <span className="text-muted-foreground text-xs">£0.0m</span>
                               )}
                             </td>
                           </>
@@ -807,36 +795,36 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           <>
                             <td className="py-3 px-3">
                               {costChangeEvent > 0 ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-[#00e478] bg-emerald-500/10 px-2 py-0.5 rounded text-xs">
+                                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-primary bg-emerald-500/10 px-2 py-0.5 rounded text-xs">
                                   <TrendingUp className="w-3 h-3" />
                                   +£{(costChangeEvent / 10).toFixed(1)}m
                                 </span>
                               ) : costChangeEvent < 0 ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded text-xs">
+                                <span className="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded text-xs">
                                   <TrendingDown className="w-3 h-3" />
                                   -£{Math.abs(costChangeEvent / 10).toFixed(1)}m
                                 </span>
                               ) : (
-                                <span className="text-[#869ab8] text-xs">£0.0m</span>
+                                <span className="text-muted-foreground text-xs">£0.0m</span>
                               )}
                             </td>
                             <td className="py-3 px-3">
                               {costChangeStart > 0 ? (
-                                <span className="text-xs font-semibold text-[#00e478]">
+                                <span className="text-xs font-semibold text-emerald-700 dark:text-primary">
                                   +£{(costChangeStart / 10).toFixed(1)}m
                                 </span>
                               ) : costChangeStart < 0 ? (
-                                <span className="text-xs font-semibold text-rose-400">
+                                <span className="text-xs font-semibold text-rose-700 dark:text-rose-400">
                                   -£{Math.abs(costChangeStart / 10).toFixed(1)}m
                                 </span>
                               ) : (
-                                <span className="text-[#869ab8] text-xs">£0.0m</span>
+                                <span className="text-muted-foreground text-xs">£0.0m</span>
                               )}
                             </td>
-                            <td className="py-3 px-3 text-xs text-[#00e478] font-medium">
+                            <td className="py-3 px-3 text-xs text-emerald-700 dark:text-primary font-medium">
                               +{(player.transfers_in_event || 0).toLocaleString()}
                             </td>
-                            <td className="py-3 px-3 text-xs text-rose-400 font-medium">
+                            <td className="py-3 px-3 text-xs text-rose-700 dark:text-rose-400 font-medium">
                               -{(player.transfers_out_event || 0).toLocaleString()}
                             </td>
                           </>
@@ -845,10 +833,10 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           <span
                             className={`inline-block font-mono font-bold text-xs px-2.5 py-1 rounded-md ${
                               netTransfersEvent > 0
-                                ? "bg-emerald-500/15 text-[#00e478] border border-emerald-500/30"
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-primary border border-emerald-500/30"
                                 : netTransfersEvent < 0
-                                  ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                                  : "bg-[#1e2b3b] text-[#869ab8]"
+                                  ? "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30"
+                                  : "bg-muted text-muted-foreground"
                             }`}
                           >
                             {netTransfersEvent > 0
@@ -864,7 +852,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
             </div>
 
             {/* Mobile Card List View */}
-            <div className="md:hidden divide-y divide-[#3b4b3d]/40">
+            <div className="md:hidden divide-y divide-border/40">
               {currentList.map(
                 ({
                   player,
@@ -878,7 +866,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   <div key={player.id} className="p-3.5 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0">
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-muted border border-border shrink-0">
                           {player.image_url ? (
                             <Image
                               src={player.image_url}
@@ -890,10 +878,10 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           ) : null}
                         </div>
                         <div>
-                          <div className="font-semibold text-sm text-[#d6e4f9]">
+                          <div className="font-semibold text-sm text-foreground">
                             {player.web_name}
                           </div>
-                          <div className="text-[11px] text-[#869ab8] flex items-center gap-1.5 mt-0.5">
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                             <span>{player.team_short}</span>
                             <span>·</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getPositionBadgeClass(player.position)}`}>
@@ -903,33 +891,33 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-sm text-[#d6e4f9]">
+                        <div className="font-semibold text-sm text-foreground">
                           £{player.price.toFixed(1)}m
                         </div>
-                        <div className="text-[11px] text-[#869ab8]">
+                        <div className="text-[11px] text-muted-foreground">
                           {ownershipPercent}% owned
                         </div>
                       </div>
                     </div>
 
                     {timeframe === "today" ? (
-                      <div className="pt-1.5 space-y-2 border-t border-[#3b4b3d]/30">
+                      <div className="pt-1.5 space-y-2 border-t border-border/30">
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
-                            <span className="text-[#869ab8]">{selectedDateLabel}:</span>
+                            <span className="text-muted-foreground">{selectedDateLabel}:</span>
                             {costChangeDay > 0 ? (
-                              <span className="font-bold text-[#00e478]">
+                              <span className="font-bold text-emerald-700 dark:text-primary">
                                 +£{(costChangeDay / 10).toFixed(1)}m
                               </span>
                             ) : costChangeDay < 0 ? (
-                              <span className="font-bold text-rose-400">
+                              <span className="font-bold text-rose-700 dark:text-rose-400">
                                 -£{Math.abs(costChangeDay / 10).toFixed(1)}m
                               </span>
                             ) : (
-                              <span className="text-[#869ab8]">£0.0m</span>
+                              <span className="text-muted-foreground">£0.0m</span>
                             )}
-                            <span className="text-[#869ab8] ml-1">GW:</span>
-                            <span className={costChangeEvent >= 0 ? "text-[#00e478]" : "text-rose-400"}>
+                            <span className="text-muted-foreground ml-1">GW:</span>
+                            <span className={costChangeEvent >= 0 ? "text-emerald-700 dark:text-primary" : "text-rose-700 dark:text-rose-400"}>
                               {costChangeEvent >= 0
                                 ? `+£${(costChangeEvent / 10).toFixed(1)}m`
                                 : `-£${Math.abs(costChangeEvent / 10).toFixed(1)}m`}
@@ -938,8 +926,8 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           <span
                             className={`font-mono text-xs px-2 py-0.5 rounded font-medium ${
                               netTransfersEvent > 0
-                                ? "bg-emerald-500/15 text-[#00e478]"
-                                : "bg-rose-500/15 text-rose-400"
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-primary"
+                                : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
                             }`}
                           >
                             {netTransfersEvent > 0
@@ -951,15 +939,15 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                         {/* Target Progress Bar */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-[#869ab8]">Target Tonight</span>
+                            <span className="text-muted-foreground">Target Tonight</span>
                             <div className="flex items-center gap-1.5">
                               <span
                                 className={`font-mono font-semibold ${
                                   targetProgressPercent > 0
-                                    ? "text-[#00e478]"
+                                    ? "text-emerald-700 dark:text-primary"
                                     : targetProgressPercent < 0
-                                      ? "text-rose-400"
-                                      : "text-[#869ab8]"
+                                      ? "text-rose-700 dark:text-rose-400"
+                                      : "text-muted-foreground"
                                 }`}
                               >
                                 {targetProgressPercent > 0
@@ -967,20 +955,20 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                   : `${targetProgressPercent.toFixed(1)}%`}
                               </span>
                               {targetProgressPercent >= 90 ? (
-                                <span className="text-[9px] uppercase font-bold text-[#00e478] bg-emerald-500/15 px-1.5 py-0.5 rounded border border-[#00e478]/30">
+                                <span className="text-[9px] uppercase font-bold text-emerald-700 dark:text-primary bg-emerald-500/15 px-1 py-0.2 rounded border border-emerald-500/30">
                                   Imminent
                                 </span>
                               ) : targetProgressPercent <= -90 ? (
-                                <span className="text-[9px] uppercase font-bold text-rose-400 bg-rose-500/15 px-1.5 py-0.5 rounded border border-rose-500/30">
+                                <span className="text-[9px] uppercase font-bold text-rose-700 dark:text-rose-400 bg-rose-500/15 px-1 py-0.2 rounded border border-rose-500/30">
                                   Imminent
                                 </span>
                               ) : null}
                             </div>
                           </div>
-                          <div className="w-full bg-[#061423] h-1.5 rounded-full overflow-hidden border border-[#3b4b3d]/60">
+                          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden border border-border/60">
                             <div
                               className={`h-full rounded-full transition-all ${
-                                targetProgressPercent >= 0 ? "bg-[#00e478]" : "bg-rose-400"
+                                targetProgressPercent >= 0 ? "bg-emerald-600 dark:bg-primary" : "bg-rose-500"
                               }`}
                               style={{
                                 width: `${Math.min(100, Math.max(0, Math.abs(targetProgressPercent)))}%`,
@@ -990,22 +978,22 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between pt-1 text-xs border-t border-[#3b4b3d]/30">
+                      <div className="flex items-center justify-between pt-1 text-xs border-t border-border/30">
                         <div className="flex items-center gap-2">
-                          <span className="text-[#869ab8]">GW:</span>
+                          <span className="text-muted-foreground">GW:</span>
                           {costChangeEvent > 0 ? (
-                            <span className="font-bold text-[#00e478]">
+                            <span className="font-bold text-emerald-700 dark:text-primary">
                               +£{(costChangeEvent / 10).toFixed(1)}m
                             </span>
                           ) : costChangeEvent < 0 ? (
-                            <span className="font-bold text-rose-400">
+                            <span className="font-bold text-rose-700 dark:text-rose-400">
                               -£{Math.abs(costChangeEvent / 10).toFixed(1)}m
                             </span>
                           ) : (
-                            <span className="text-[#869ab8]">£0.0m</span>
+                            <span className="text-muted-foreground">£0.0m</span>
                           )}
-                          <span className="text-[#869ab8] ml-1">Season:</span>
-                          <span className={costChangeStart >= 0 ? "text-[#00e478]" : "text-rose-400"}>
+                          <span className="text-muted-foreground ml-1">Season:</span>
+                          <span className={costChangeStart >= 0 ? "text-emerald-700 dark:text-primary" : "text-rose-700 dark:text-rose-400"}>
                             {costChangeStart >= 0
                               ? `+£${(costChangeStart / 10).toFixed(1)}m`
                               : `-£${Math.abs(costChangeStart / 10).toFixed(1)}m`}
@@ -1016,8 +1004,8 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                           <span
                             className={`font-mono text-xs px-2 py-0.5 rounded font-medium ${
                               netTransfersEvent > 0
-                                ? "bg-emerald-500/15 text-[#00e478]"
-                                : "bg-rose-500/15 text-rose-400"
+                                ? "bg-emerald-500/15 text-emerald-700 dark:text-primary"
+                                : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
                             }`}
                           >
                             Net: {netTransfersEvent > 0 ? `+${netTransfersEvent.toLocaleString()}` : netTransfersEvent.toLocaleString()}

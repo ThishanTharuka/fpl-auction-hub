@@ -21,9 +21,9 @@ import type {
 type PublicTab = "standings" | "bracket" | "fixtures";
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  setup: { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  active: { label: "Live", cls: "bg-[#00e478]/15 text-[#00e478] border-[#00e478]/30" },
-  complete: { label: "Complete", cls: "bg-[#3b4b3d]/40 text-[#849585] border-[#3b4b3d]" },
+  setup: { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  active: { label: "Live", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  complete: { label: "Complete", cls: "bg-muted text-muted-foreground border-border" },
 };
 
 interface PublicTournamentClientProps {

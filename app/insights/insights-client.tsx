@@ -91,10 +91,10 @@ export function InsightsClient({
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-[#d6e4f9] tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
           FPL Insights
         </h1>
-        <p className="text-sm text-[#869ab8] mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Market trends, expected stats (xG/xA), value radar, fixture runs, and differential scouting.
         </p>
       </div>
@@ -108,7 +108,7 @@ export function InsightsClient({
       />
 
       {/* Main Tabs Navigation */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#3b4b3d] mb-6 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-border mb-6 scrollbar-none">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
           return (
@@ -117,11 +117,11 @@ export function InsightsClient({
               onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 min-h-[40px] px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 group ${
                 isActive
-                  ? "bg-[#00e478] text-[#003919] font-bold shadow-md shadow-[#00e478]/15 ring-1 ring-[#00e478]"
-                  : "bg-[#0f1c2c] text-[#869ab8] hover:text-[#d6e4f9] hover:bg-[#132030] border border-[#3b4b3d]"
+                  ? "bg-primary text-primary-foreground shadow-sm font-bold"
+                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border"
               }`}
             >
-              <Icon className={`w-4 h-4 transition-colors ${isActive ? "text-[#003919]" : "text-[#869ab8] group-hover:text-[#d6e4f9]"}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
               <span>{label}</span>
             </button>
           );

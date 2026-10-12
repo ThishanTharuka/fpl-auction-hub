@@ -101,7 +101,7 @@ export async function ChatLoader({
 
 function AccessDenied() {
   return (
-    <div className="flex items-center justify-center h-64 text-[#849585] text-sm">
+    <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
       You don&apos;t have access to this chat.
     </div>
   );

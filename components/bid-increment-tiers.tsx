@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import type { BidIncrementTier } from "@/lib/bid-increment";
 
 const inputClass =
-  "h-10 px-3 rounded-lg bg-[#1a2b3d] border border-[#3b4b3d] text-[#d6e4f9] font-mono text-sm text-center outline-none focus:ring-2 focus:ring-[#00e478]/40 focus:border-[#00e478] transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+  "h-10 px-3 rounded-lg bg-card border border-border text-foreground font-mono text-sm text-center outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 export function BidIncrementTierEditor({
   tiers,
@@ -45,8 +45,8 @@ export function BidIncrementTierEditor({
     <div className="space-y-3">
       {/* Title + tier count badge */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-[#849585]">Bid Increment Tiers</span>
-        <span className="text-[10px] font-medium text-[#00e478] bg-[#00e478]/10 px-1.5 py-0.5 rounded">
+        <span className="text-xs text-muted-foreground">Bid Increment Tiers</span>
+        <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
           {tiers.length} {tiers.length === 1 ? "tier" : "tiers"}
         </span>
       </div>
@@ -54,13 +54,13 @@ export function BidIncrementTierEditor({
       {/* Column headers */}
       <div className="grid grid-cols-[1fr_1fr_32px] gap-3 items-center">
         <span
-          className="text-[11px] text-[#849585] uppercase"
+          className="text-[11px] text-muted-foreground uppercase"
           style={{ letterSpacing: "0.06em" }}
         >
           Threshold
         </span>
         <span
-          className="text-[11px] text-[#849585] uppercase"
+          className="text-[11px] text-muted-foreground uppercase"
           style={{ letterSpacing: "0.06em" }}
         >
           Increment
@@ -95,7 +95,7 @@ export function BidIncrementTierEditor({
           <button
             onClick={() => remove(i)}
             disabled={!canRemove}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-[#849585] bg-transparent transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#849585]"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-sm text-muted-foreground bg-transparent transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
             aria-label="Remove tier"
           >
             &times;
@@ -104,12 +104,12 @@ export function BidIncrementTierEditor({
       ))}
 
       {/* Divider */}
-      <hr className="border-0 h-px bg-[#3b4b3d]/50" />
+      <hr className="border-0 h-px bg-border" />
 
       {/* Add button */}
       <button
         onClick={add}
-        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-dashed border-[#3b4b3d] text-xs text-[#849585] bg-transparent transition-colors hover:border-[#00e478]/50 hover:text-[#00e478]"
+        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-dashed border-border text-xs text-muted-foreground bg-transparent transition-colors hover:border-primary/50 hover:text-primary"
       >
         <svg
           width="14"

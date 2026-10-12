@@ -22,9 +22,9 @@ interface CompetitionRow {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  setup: { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  active: { label: "Live", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
-  complete: { label: "Complete", cls: "bg-[#3b4b3d] text-[#849585] border-[#3b4b3d]" },
+  setup: { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  active: { label: "Live", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  complete: { label: "Complete", cls: "bg-muted text-muted-foreground border-border" },
 };
 
 export default function TournamentsPage() {
@@ -99,13 +99,13 @@ export default function TournamentsPage() {
     <div className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#d6e4f9]">Tournaments</h1>
-          <p className="text-sm text-[#849585] mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Tournaments</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Combine two leagues into a season-long competition with real FPL scoring.
           </p>
         </div>
         <Link href="/tournaments/new">
-          <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
             + New Tournament
           </Button>
         </Link>
@@ -116,20 +116,20 @@ export default function TournamentsPage() {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] px-5 py-4 animate-pulse"
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 animate-pulse shadow-sm"
             >
-              <div className="h-5 w-48 rounded bg-[#1e2b3b]" />
-              <div className="h-8 w-16 rounded bg-[#1e2b3b]" />
+              <div className="h-5 w-48 rounded bg-muted" />
+              <div className="h-8 w-16 rounded bg-muted" />
             </div>
           ))}
         </div>
       )}
 
       {!loading && competitions.length === 0 && (
-        <div className="text-center py-16 text-[#849585]">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg mb-2">No tournaments yet.</p>
           <p className="text-sm">
-            <Link href="/tournaments/new" className="text-[#00e478] hover:underline">
+            <Link href="/tournaments/new" className="text-primary hover:underline font-medium">
               Create the first one
             </Link>
           </p>
@@ -139,22 +139,22 @@ export default function TournamentsPage() {
       <div className="space-y-3">
         {competitions.map((c) => {
           const statusInfo =
-            STATUS_LABELS[c.status] ?? { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+            STATUS_LABELS[c.status] ?? { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" };
           return (
             <div
               key={c.id}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] px-5 py-4"
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 shadow-sm"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-semibold text-[#d6e4f9] truncate">
+                  <span className="text-base font-semibold text-foreground truncate">
                     {c.name}
                   </span>
                   <Badge className={`text-xs border ${statusInfo.cls}`}>
                     {statusInfo.label}
                   </Badge>
                 </div>
-                <p className="text-xs text-[#849585] truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {leagueNames[c.league_a_id] ?? "League A"} vs{" "}
                   {leagueNames[c.league_b_id] ?? "League B"} · starts GW{c.start_gw}
                 </p>
@@ -162,14 +162,15 @@ export default function TournamentsPage() {
 
               <div className="flex items-center gap-2 shrink-0 ml-4">
                 <Link href={`/tournaments/${c.id}/public`}>
-                  <Button size="sm" className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]">
+                  <Button size="sm" variant="outline" className="border-primary/40 text-primary hover:bg-primary/10">
                     {c.created_by === user?.id ? "Public" : "View"}
                   </Button>
                 </Link>
                 {c.created_by === user?.id && (
                   <Button
                     size="sm"
-                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                    variant="outline"
+                    className="border-border text-foreground hover:bg-muted"
                     onClick={() => router.push(`/tournaments/${c.id}`)}
                   >
                     Manage

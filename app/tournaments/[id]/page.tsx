@@ -29,12 +29,12 @@ import type {
 
 const supabase = createSupabaseBrowserClient();
 
-const DEFAULT_STATUS = { label: "Scheduled", cls: "bg-[#1e2b3b] text-[#849585] border-[#3b4b3d]" };
+const DEFAULT_STATUS = { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border" };
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  scheduled: { label: "Scheduled", cls: "bg-[#1e2b3b] text-[#849585] border-[#3b4b3d]" },
-  scored: { label: "Scored", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
-  manual: { label: "Manual", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  scheduled: { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border" },
+  scored: { label: "Scored", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  manual: { label: "Manual", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
 };
 
 function statusInfo(status: string) {

@@ -9,10 +9,10 @@ import { DEFAULT_TIERS } from "@/lib/bid-increment";
 import type { BidIncrementTier } from "@/lib/bid-increment";
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-yellow-500/20 text-yellow-400",
-  DEF: "bg-green-500/20 text-green-400",
-  MID: "bg-blue-500/20 text-blue-400",
-  FWD: "bg-red-500/20 text-red-400",
+  GKP: "bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-400",
+  DEF: "bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-400",
+  MID: "bg-blue-500/15 border border-blue-500/25 text-blue-700 dark:text-blue-400",
+  FWD: "bg-red-500/15 border border-red-500/25 text-red-700 dark:text-red-400",
 };
 
 interface LeagueSettings {
@@ -184,7 +184,7 @@ export function LeagueSettingsPanel({
               placeholder="e.g. FPL Auction 2025/26"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </Field>
           <Field label="Room Password (optional)">
@@ -192,7 +192,7 @@ export function LeagueSettingsPanel({
               placeholder="Managers must enter this to join"
               value={roomPassword}
               onChange={(e) => setRoomPassword(e.target.value)}
-              className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </Field>
           <label className="flex items-start gap-3 cursor-pointer pt-1">
@@ -200,9 +200,9 @@ export function LeagueSettingsPanel({
               type="checkbox"
               checked={allowSpectatorChat}
               onChange={(e) => setAllowSpectatorChat(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-[#3b4b3d] bg-[#132030] accent-[#00e478]"
+              className="mt-0.5 h-4 w-4 rounded border-border bg-background accent-primary"
             />
-            <span className="text-xs text-[#d6e4f9] leading-snug">
+            <span className="text-xs text-foreground leading-snug">
               Allow spectators to chat
             </span>
           </label>
@@ -211,7 +211,7 @@ export function LeagueSettingsPanel({
 
       {/* Rules */}
       <div>
-        <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Rules
         </h3>
         <div className="grid grid-cols-3 gap-x-5 gap-y-3 mb-3">
@@ -248,7 +248,7 @@ export function LeagueSettingsPanel({
 
       {/* Starting Prices */}
       <div>
-        <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Starting Prices (£m)
         </h3>
         <div className="grid grid-cols-4 gap-x-4 gap-y-3">
@@ -276,7 +276,7 @@ export function LeagueSettingsPanel({
 
       {/* Squad Limits */}
       <div>
-        <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Squad Limits
         </h3>
         <div className="grid grid-cols-3 gap-x-5 gap-y-3">
@@ -329,7 +329,7 @@ export function LeagueSettingsPanel({
       </div>
 
       {error && (
-        <p className="text-sm text-red-400 bg-red-950/30 rounded p-2">
+        <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded p-2">
           {error}
         </p>
       )}
@@ -337,7 +337,7 @@ export function LeagueSettingsPanel({
       <Button
         onClick={save}
         disabled={saving || !name.trim()}
-        className="w-full bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
       >
         {saving ? "Saving…" : "Save Changes"}
       </Button>
@@ -347,8 +347,8 @@ export function LeagueSettingsPanel({
   return (
     <>
       {/* Desktop: inline sidebar */}
-      <div className="hidden lg:block rounded-2xl border border-[#3b4b3d] bg-[#0f1c2c] p-5 overflow-y-auto max-h-[calc(100vh-5rem)] sticky top-20">
-        <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-5">
+      <div className="hidden lg:block rounded-2xl border border-border bg-card p-5 overflow-y-auto max-h-[calc(100vh-5rem)] sticky top-20 shadow-sm">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-5">
           League Settings
         </h2>
         {formContent}
@@ -358,17 +358,17 @@ export function LeagueSettingsPanel({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/50"
             onClick={() => onMobileOpenChange(false)}
           />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#3b4b3d] shrink-0">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+          <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-card rounded-t-xl border-t border-border flex flex-col overflow-hidden animate-slide-up shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 League Settings
               </h2>
               <button
                 onClick={() => onMobileOpenChange(false)}
-                className="text-[#849585] hover:text-[#d6e4f9]"
+                className="text-muted-foreground hover:text-foreground"
                 aria-label="Close"
               >
                 ✕
@@ -393,7 +393,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs text-[#849585] mb-1.5">{label}</label>
+      <label className="block text-xs text-muted-foreground mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -418,16 +418,16 @@ function NumberInput({
     <div className="flex items-center gap-1">
       <button
         onClick={() => onChange(Math.max(min, Number((value - step).toFixed(decimals))))}
-        className="w-7 h-8 rounded bg-[#132030] border border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-sm"
+        className="w-7 h-8 rounded bg-muted border border-border text-foreground hover:bg-secondary text-sm transition-colors"
       >
         −
       </button>
-      <span className="flex-1 text-center text-sm font-mono text-[#d6e4f9] bg-[#132030] border border-[#3b4b3d] rounded h-8 flex items-center justify-center min-w-[3.5rem]">
+      <span className="flex-1 text-center text-sm font-mono text-foreground bg-muted/40 border border-border rounded h-8 flex items-center justify-center min-w-[3.5rem]">
         {decimals > 0 ? value.toFixed(decimals) : value}
       </span>
       <button
         onClick={() => onChange(Math.min(max, Number((value + step).toFixed(decimals))))}
-        className="w-7 h-8 rounded bg-[#132030] border border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-sm"
+        className="w-7 h-8 rounded bg-muted border border-border text-foreground hover:bg-secondary text-sm transition-colors"
       >
         +
       </button>

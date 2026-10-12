@@ -26,7 +26,7 @@ export function BentoGrid({ items }: BentoGridProps) {
           )}
           edgeSensitivity={30}
           glowColor="152 100 45"
-          backgroundColor="#0a1828"
+          backgroundColor="var(--card)"
           borderRadius={12}
           glowRadius={28}
           glowIntensity={1.0}
@@ -41,28 +41,28 @@ export function BentoGrid({ items }: BentoGridProps) {
                 className="absolute inset-0"
                 style={{
                   backgroundImage:
-                    "radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                    "radial-gradient(circle at center, rgba(120,120,120,0.06) 1px, transparent 1px)",
                   backgroundSize: "4px 4px",
                 }}
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 transition-all duration-300 group-hover:bg-white/10">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-foreground transition-all duration-300 group-hover:bg-muted/80">
                 {item.icon}
               </div>
               {item.status && (
-                <span className="rounded-lg bg-white/5 px-2 py-1 text-xs font-medium text-[#b9cbb9] backdrop-blur-sm transition-colors duration-300 group-hover:bg-white/10">
+                <span className="rounded-lg bg-muted px-2 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-colors duration-300 group-hover:bg-muted/80">
                   {item.status}
                 </span>
               )}
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-base font-semibold tracking-tight text-[#d6e4f9]">
+              <h3 className="text-base font-semibold tracking-tight text-foreground">
                 {item.title}
               </h3>
-              <p className="text-sm leading-snug text-[#b9cbb9]">
+              <p className="text-sm leading-snug text-muted-foreground">
                 {item.description}
               </p>
             </div>

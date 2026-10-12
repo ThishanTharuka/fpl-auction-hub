@@ -93,7 +93,7 @@ Replaces `next: { revalidate }` (Vercel free tier drops >2MB; FPL bootstrap ~2.6
 - **Tailwind CSS v4**: `@import "tailwindcss"`, `@theme inline`, `postcss.config.mjs` uses `@tailwindcss/postcss`
 - **Animations**: `tw-animate-css` (NOT `tailwindcss-animate`)
 - **shadcn/ui**: style `"base-nova"`, aliases `@/components/ui/`
-- **Dark-only theme**: only `:root` block in `globals.css` (no light mode). Page `#061423`, primary `#00e478`, card `#0f1c2c`, border `#3b4b3d` (full spec in `DESIGN.md`)
+- **Theme system**: Dual theme (Dark + Light mode) with system preference detection via `ThemeProvider`. Dark mode: page `#061423`, primary `#00e478`, card `#0f1c2c`, border `#3b4b3d`. Light mode: daylight canvas `#f6f8fa`, card `#ffffff`, primary `#00874e` (WCAG AA calibrated), border `#d0d7de`.
 - **Icons**: `lucide-react` | **Charts**: `recharts` | **DnD**: `@dnd-kit/core` + `@dnd-kit/sortable`
 - **Drawers**: `vaul` | **Toasts**: `sonner` | **Animations**: `framer-motion`
 - **Navigation feedback**: NProgress (no `loading.tsx` — do not create one)

@@ -262,7 +262,7 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
         }}
         onMouseLeave={() => setCoords(null)}
       >
-        <Info className="w-3 h-3 text-[#849585] hover:text-[#b9cbb9] cursor-default shrink-0" />
+        <Info className="w-3 h-3 text-muted-foreground hover:text-foreground cursor-default shrink-0" />
       </span>
       {coords &&
         createPortal(
@@ -274,7 +274,7 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
               transform: "translate(-50%, -100%)",
               zIndex: 9999,
             }}
-            className="w-52 rounded bg-[#1e2b3b] border border-[#3b4b3d] px-2 py-1.5 text-[11px] text-[#d6e4f9] whitespace-normal text-center shadow-lg pointer-events-none"
+            className="w-52 rounded bg-popover border border-border px-2 py-1.5 text-[11px] text-popover-foreground whitespace-normal text-center shadow-lg pointer-events-none"
           >
             {text}
           </div>,
@@ -285,10 +285,10 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
 }
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-yellow-500/20 text-yellow-400",
-  DEF: "bg-green-500/20 text-green-400",
-  MID: "bg-blue-500/20 text-blue-400",
-  FWD: "bg-red-500/20 text-red-400",
+  GKP: "bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-400",
+  DEF: "bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 dark:text-emerald-400",
+  MID: "bg-blue-500/15 border border-blue-500/25 text-blue-700 dark:text-blue-400",
+  FWD: "bg-red-500/15 border border-red-500/25 text-red-700 dark:text-red-400",
 };
 
 export function IndexBuilderClient({
@@ -399,10 +399,10 @@ export function IndexBuilderClient({
     <>
       {/* Header row */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-[#d6e4f9]">Stat Weighting</h2>
+        <h2 className="font-semibold text-foreground">Stat Weighting</h2>
         <button
           onClick={resetAll}
-          className="text-xs text-[#849585] hover:text-[#00e478] transition-colors"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           Reset
         </button>
@@ -410,7 +410,7 @@ export function IndexBuilderClient({
 
       {/* Presets */}
       <div className="mb-4">
-        <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-2">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
           Presets
         </div>
         <div className="flex gap-1 flex-wrap">
@@ -420,8 +420,8 @@ export function IndexBuilderClient({
               onClick={() => applyPreset(preset)}
               className={`text-xs px-2.5 py-1 rounded border transition-colors ${
                 activePreset === preset.label
-                  ? "bg-[#00e478] text-[#003919] border-[#00e478]"
-                  : "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                  ? "bg-primary text-primary-foreground border-primary font-medium"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               {preset.label}
@@ -434,36 +434,36 @@ export function IndexBuilderClient({
       <div ref={pickerRef} className="mb-4">
         <button
           onClick={() => setMetricPickerOpen((o) => !o)}
-          className="w-full flex items-center justify-between text-xs border border-[#3b4b3d] rounded px-3 py-2 text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b] transition-colors"
+          className="w-full flex items-center justify-between text-xs border border-border rounded px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
           <span>Metrics ({activeStats.size} active)</span>
-          <span className="text-[#849585]">{metricPickerOpen ? "▴" : "▾"}</span>
+          <span className="text-muted-foreground">{metricPickerOpen ? "▴" : "▾"}</span>
         </button>
 
         {metricPickerOpen && (
-          <div className="mt-2 border border-[#3b4b3d] rounded-lg bg-[#0a1828] p-3">
+          <div className="mt-2 border border-border rounded-lg bg-card p-3 shadow-md">
             <div className="grid grid-cols-2 gap-x-4 gap-y-0">
               {STAT_GROUPS.map(({ group, stats }) => (
                 <div key={group} className="mb-3">
-                  <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1.5 pb-0.5 border-b border-[#3b4b3d]">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 pb-0.5 border-b border-border">
                     {group}
                   </div>
                   <div className="space-y-1">
                     {stats.map(({ key, label, inverted }) => (
                       <label
                         key={key}
-                        className="flex items-center gap-2 cursor-pointer text-xs text-[#d6e4f9] hover:text-[#00e478]"
+                        className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-primary"
                       >
                         <input
                           type="checkbox"
-                          className="accent-[#00e478] shrink-0"
+                          className="accent-primary shrink-0"
                           checked={activeStats.has(key)}
                           onChange={() => toggleStat(key)}
                         />
                         <span className="leading-tight flex items-center gap-1">
                           {label}
                           {inverted && (
-                            <span className="text-[10px] text-[#849585]">
+                            <span className="text-[10px] text-muted-foreground">
                               ↓
                             </span>
                           )}
@@ -487,13 +487,13 @@ export function IndexBuilderClient({
           ({ key, label }) => (
             <div key={key}>
               <div className="flex justify-between mb-1.5">
-                <span className="text-xs text-[#b9cbb9] flex items-center gap-1">
+                <span className="text-xs text-foreground flex items-center gap-1">
                   {label}
                   {METRIC_TOOLTIPS[key] && (
                     <InfoTip text={METRIC_TOOLTIPS[key]} />
                   )}
                 </span>
-                <span className="text-xs font-mono text-[#00e478]">
+                <span className="text-xs font-mono text-primary font-semibold">
                   {weights[key]}
                 </span>
               </div>
@@ -505,7 +505,7 @@ export function IndexBuilderClient({
                 onValueChange={(v) =>
                   setWeight(key, typeof v === "number" ? v : (v[0] ?? 1))
                 }
-                className="[&_[role=slider]]:bg-[#00e478] [&_[role=slider]]:border-[#00e478]"
+                className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
               />
             </div>
           ),
@@ -517,10 +517,10 @@ export function IndexBuilderClient({
   return (
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 pb-14 lg:pb-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#d6e4f9]">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           Index Builder
         </h1>
-        <p className="text-xs sm:text-sm text-[#849585] mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Select metrics and adjust weights (1–10) to generate a custom
           performance index for auction valuation.
         </p>
@@ -528,21 +528,21 @@ export function IndexBuilderClient({
 
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 sm:gap-6">
         {/* Left: Weight sliders — desktop */}
-        <aside className="hidden lg:block rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 sm:p-5 h-fit">
+        <aside className="hidden lg:block rounded-lg border border-border bg-card p-4 sm:p-5 h-fit shadow-sm">
           {sidebarContent}
         </aside>
 
         {/* Right: Rankings */}
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-[#3b4b3d]">
-            <h2 className="font-semibold text-sm sm:text-base text-[#d6e4f9]">
+        <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-border">
+            <h2 className="font-semibold text-sm sm:text-base text-foreground">
               Rankings
             </h2>
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-[11px] sm:text-xs text-[#849585]">
+              <span className="text-[11px] sm:text-xs text-muted-foreground">
                 {ranked.length} players
               </span>
-              <span className="text-[11px] sm:text-xs text-[#00e478] font-mono">
+              <span className="text-[11px] sm:text-xs text-primary font-mono font-semibold">
                 Live
               </span>
             </div>
@@ -551,24 +551,24 @@ export function IndexBuilderClient({
           {/* Desktop table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-[#0a1828]">
+              <thead className="bg-muted/80 text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-10">
+                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-10">
                     #
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
+                  <th className="px-4 py-2.5 text-left text-[10px] uppercase">
                     Player
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-14">
+                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-14">
                     Pos
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase w-16">
+                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-16">
                     Pts
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] text-[#849585] uppercase">
+                  <th className="px-4 py-2.5 text-left text-[10px] uppercase">
                     Key Stats
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] text-[#849585] uppercase w-20">
+                  <th className="px-4 py-2.5 text-right text-[10px] uppercase w-20">
                     Score
                   </th>
                 </tr>
@@ -577,16 +577,16 @@ export function IndexBuilderClient({
                 {displayed.map((p, i) => (
                   <tr
                     key={p.id}
-                    className={`border-b border-[#3b4b3d]/40 hover:bg-[#132030] transition-colors ${i % 2 === 0 ? "" : "bg-[#0a1828]/50"}`}
+                    className={`border-b border-border/40 hover:bg-muted/50 transition-colors ${i % 2 === 0 ? "bg-card" : "bg-muted/30"}`}
                   >
-                    <td className="px-4 py-3 text-xs font-mono text-[#849585]">
+                    <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
                       {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-[#d6e4f9]">
+                      <div className="font-medium text-foreground">
                         {p.web_name}
                       </div>
-                      <div className="text-[11px] text-[#849585]">
+                      <div className="text-[11px] text-muted-foreground">
                         {p.team_short}
                       </div>
                     </td>
@@ -597,10 +597,10 @@ export function IndexBuilderClient({
                         {p.position}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-[#d6e4f9]">
+                    <td className="px-4 py-3 font-mono text-xs text-foreground">
                       {p.total_points}
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#849585]">
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       xGI:{" "}
                       {Number.parseFloat(
                         p.expected_goal_involvements,
@@ -609,7 +609,7 @@ export function IndexBuilderClient({
                       {Number.parseFloat(p.ict_index).toFixed(1)}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="font-mono font-bold text-[#00e478] tabular-nums">
+                      <span className="font-mono font-bold text-primary tabular-nums">
                         {(p.index_score * 100).toFixed(1)}
                       </span>
                     </td>
@@ -624,16 +624,16 @@ export function IndexBuilderClient({
             {displayed.map((p, i) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-[#3b4b3d]/40"
+                className="flex items-center gap-3 px-4 py-3 border-b border-border/40"
               >
-                <span className="text-xs font-mono text-[#849585] w-6 shrink-0">
+                <span className="text-xs font-mono text-muted-foreground w-6 shrink-0">
                   {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-[#d6e4f9] text-sm truncate">
+                  <div className="font-medium text-foreground text-sm truncate">
                     {p.web_name}
                   </div>
-                  <div className="text-[11px] text-[#b9cbb9]">
+                  <div className="text-[11px] text-muted-foreground">
                     {p.team_short} · {p.total_points} pts
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export function IndexBuilderClient({
                 >
                   {p.position}
                 </Badge>
-                <span className="font-mono font-bold text-[#00e478] text-sm tabular-nums w-14 text-right shrink-0">
+                <span className="font-mono font-bold text-primary text-sm tabular-nums w-14 text-right shrink-0">
                   {(p.index_score * 100).toFixed(1)}
                 </span>
               </div>
@@ -650,7 +650,7 @@ export function IndexBuilderClient({
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 text-sm text-[#849585]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 text-sm text-muted-foreground border-t border-border">
             <span className="text-xs sm:text-sm">
               Showing {pageIndex * PAGE_SIZE + 1}–
               {Math.min((pageIndex + 1) * PAGE_SIZE, ranked.length)} of{" "}
@@ -660,7 +660,7 @@ export function IndexBuilderClient({
               <Button
                 size="sm"
                 variant="outline"
-                className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+                className="border-border text-foreground hover:bg-muted text-xs sm:text-sm"
                 disabled={pageIndex === 0}
                 onClick={() => setPageIndex((p) => p - 1)}
               >
@@ -669,7 +669,7 @@ export function IndexBuilderClient({
               <Button
                 size="sm"
                 variant="outline"
-                className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] text-xs sm:text-sm"
+                className="border-border text-foreground hover:bg-muted text-xs sm:text-sm"
                 disabled={pageIndex >= pageCount - 1}
                 onClick={() => setPageIndex((p) => p + 1)}
               >
@@ -682,33 +682,33 @@ export function IndexBuilderClient({
 
       {/* Mobile weight sliders trigger */}
       <button
-        className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-[#0f1c2c] border border-[#00e478]/60 rounded-full px-4 py-2.5 text-xs text-[#d6e4f9] hover:text-[#00e478] hover:border-[#00e478] shadow-[0_0_12px_rgba(0,228,120,0.25)] transition-all"
+        className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-card border border-primary/60 rounded-full px-4 py-2.5 text-xs text-foreground hover:text-primary hover:border-primary shadow-lg transition-all"
         onClick={() => setDrawerOpen(true)}
       >
-        <SlidersHorizontal className="w-3.5 h-3.5 text-[#00e478]" />
+        <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
         <span>Sliders ({activeStats.size})</span>
-        <span className="text-[#00e478]">▴</span>
+        <span className="text-primary">▴</span>
       </button>
 
       {/* Mobile weight sliders drawer */}
       {drawerOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 z-50 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-[#0f1c2c] rounded-t-xl border border-[#3b4b3d] max-h-[75vh] overflow-y-auto overscroll-contain shadow-2xl">
-            <div className="sticky top-0 bg-[#0f1c2c] z-10 rounded-t-xl">
-              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-[#3b4b3d]">
+          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card rounded-t-xl border border-border max-h-[75vh] overflow-y-auto overscroll-contain shadow-2xl">
+            <div className="sticky top-0 bg-card z-10 rounded-t-xl">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-1 rounded-full bg-[#3b4b3d] mx-auto" />
-                  <h3 className="text-sm font-semibold text-[#d6e4f9]">
+                  <div className="w-8 h-1 rounded-full bg-muted-foreground/40 mx-auto" />
+                  <h3 className="text-sm font-semibold text-foreground">
                     Stat Weighting
                   </h3>
                 </div>
                 <button
                   onClick={() => setDrawerOpen(false)}
-                  className="p-1 text-[#849585] hover:text-[#d6e4f9]"
+                  className="p-1 text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>

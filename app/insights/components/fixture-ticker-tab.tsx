@@ -32,39 +32,39 @@ export function FixtureTickerTab({
   const getFdrStyle = (difficulty: number) => {
     switch (difficulty) {
       case 1:
-        return "bg-emerald-950 text-[#00e478] border-emerald-700/50";
+        return "bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-primary dark:border-emerald-700/50";
       case 2:
-        return "bg-emerald-900/60 text-emerald-300 border-emerald-600/40";
+        return "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-600/40";
       case 3:
-        return "bg-slate-800 text-slate-200 border-slate-600/40";
+        return "bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600/40";
       case 4:
-        return "bg-amber-950/80 text-amber-400 border-amber-600/50";
+        return "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-400 dark:border-amber-600/50";
       case 5:
-        return "bg-rose-950 text-rose-400 border-rose-600/50";
+        return "bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950 dark:text-rose-400 dark:border-rose-600/50";
       default:
-        return "bg-[#1e2b3b] text-[#869ab8] border-[#3b4b3d]";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   return (
     <div className="space-y-4">
       {/* Controls and Legend */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[#0f1c2c] p-3.5 rounded-xl border border-[#3b4b3d]">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3.5 rounded-xl border border-border">
         {/* Horizon selector */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#869ab8] flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-[#00e478]" />
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-primary" />
             Gameweeks:
           </span>
-          <div className="flex bg-[#020f1e] p-0.5 rounded-lg border border-[#3b4b3d]">
+          <div className="flex bg-muted p-0.5 rounded-lg border border-border">
             {[4, 6, 8].map((h) => (
               <button
                 key={h}
                 onClick={() => setHorizon(h)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                   horizon === h
-                    ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
-                    : "text-[#869ab8] hover:text-[#d6e4f9]"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Next {h} GWs
@@ -76,9 +76,9 @@ export function FixtureTickerTab({
         {/* Sort Toggle */}
         <button
           onClick={() => setSortAscending((prev) => !prev)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#020f1e] border border-[#3b4b3d] text-xs font-medium text-[#d6e4f9] hover:border-[#00e478]/50 transition-colors self-start md:self-auto"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted border border-border text-xs font-medium text-foreground hover:border-primary/50 transition-colors self-start md:self-auto cursor-pointer"
         >
-          <ArrowUpDown className="w-3.5 h-3.5 text-[#00e478]" />
+          <ArrowUpDown className="w-3.5 h-3.5 text-primary" />
           <span>
             {sortAscending ? "Easiest Runs First" : "Hardest Runs First"}
           </span>
@@ -86,30 +86,30 @@ export function FixtureTickerTab({
 
         {/* FDR Legend */}
         <div className="flex items-center gap-1.5 text-[11px] self-start md:self-auto flex-wrap">
-          <span className="text-[#869ab8] mr-1">FDR:</span>
-          <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-[#00e478] font-bold border border-emerald-700/50">
+          <span className="text-muted-foreground mr-1">FDR:</span>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold border border-emerald-300 dark:bg-emerald-950 dark:text-primary dark:border-emerald-700/50">
             1 (Easy)
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-bold border border-emerald-600/40">
+          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 dark:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-600/40">
             2
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-bold border border-slate-600/40">
+          <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-bold border border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600/40">
             3
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-400 font-bold border border-amber-600/50">
+          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold border border-amber-300 dark:bg-amber-950/80 dark:text-amber-400 dark:border-amber-600/50">
             4
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-400 font-bold border border-rose-600/50">
+          <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-900 font-bold border border-rose-300 dark:bg-rose-950 dark:text-rose-400 dark:border-rose-600/50">
             5 (Tough)
           </span>
         </div>
       </div>
 
       {/* Fixture Table Matrix */}
-      <div className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
-            <thead className="bg-[#020f1e] text-[#869ab8] text-xs uppercase border-b border-[#3b4b3d]">
+            <thead className="bg-muted text-muted-foreground text-xs uppercase border-b border-border">
               <tr>
                 <th className="py-3 px-4 min-w-[160px]">Team</th>
                 <th className="py-3 px-3 text-center w-20">Avg FDR</th>
@@ -123,13 +123,13 @@ export function FixtureTickerTab({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#3b4b3d]/40">
+            <tbody className="divide-y divide-border/40">
               {rows.map(({ team, fixtures: teamFixtures, avgDifficulty }) => (
                 <tr
                   key={team.id}
-                  className="hover:bg-[#132030]/80 transition-colors"
+                  className="hover:bg-muted/80 transition-colors"
                 >
-                  <td className="py-2.5 px-4 font-semibold text-[#d6e4f9]">
+                  <td className="py-2.5 px-4 font-semibold text-foreground">
                     <div className="flex items-center gap-2.5">
                       <div className="relative w-6 h-6 shrink-0">
                         <Image
@@ -148,10 +148,10 @@ export function FixtureTickerTab({
                     <span
                       className={`inline-block font-mono font-bold text-xs px-2 py-0.5 rounded ${
                         avgDifficulty <= 2.5
-                          ? "bg-emerald-500/15 text-[#00e478] border border-emerald-500/30"
+                          ? "bg-emerald-500/15 text-primary border border-emerald-500/30"
                           : avgDifficulty >= 3.6
                             ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                            : "bg-[#1e2b3b] text-[#d6e4f9]"
+                            : "bg-muted text-foreground"
                       }`}
                     >
                       {avgDifficulty.toFixed(1)}
@@ -175,7 +175,7 @@ export function FixtureTickerTab({
                           </span>
                         </div>
                       ) : (
-                        <div className="py-1.5 px-1 rounded text-[10px] font-medium bg-[#020f1e] text-[#869ab8] border border-[#3b4b3d]/30">
+                        <div className="py-1.5 px-1 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border/30">
                           BLANK
                         </div>
                       )}

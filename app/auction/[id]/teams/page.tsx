@@ -152,7 +152,7 @@ export default function TeamsHubPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#849585]">
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
         Loading…
       </div>
     );
@@ -160,9 +160,9 @@ export default function TeamsHubPage() {
 
   return (
     <div className="px-6 py-8">
-      <h1 className="text-2xl font-bold text-[#d6e4f9] mb-6 flex items-baseline gap-2">
+      <h1 className="text-2xl font-bold text-foreground mb-6 flex items-baseline gap-2">
         <span>Team Squads</span>
-        <span className="text-sm font-normal text-[#849585]">
+        <span className="text-sm font-normal text-muted-foreground">
           {teams.reduce((s, t) => s + t.squad.length, 0)} players sold
         </span>
       </h1>
@@ -175,7 +175,7 @@ export default function TeamsHubPage() {
             return (
               <div
                 key={team.id}
-                className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4"
+                className="rounded-lg border border-border bg-card p-4"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-3">
@@ -184,16 +184,16 @@ export default function TeamsHubPage() {
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: team.color ?? "#888" }}
                     />
-                    <h2 className="font-semibold text-[#d6e4f9] text-sm">{team.name}</h2>
+                    <h2 className="font-semibold text-foreground text-sm">{team.name}</h2>
                   </div>
-                    <span className="text-xs text-[#849585]">
+                    <span className="text-xs text-muted-foreground">
                       {team.squad.length}/{squadSize}
                     </span>
                     {myTeamIds.has(team.id) && (
                       <Link href={`/auction/${id}/teams/${team.id}/edit`}>
                         <Button
                           size="sm"
-                          className="h-6 px-2 text-[10px] bg-[#1e2b3b] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#28394a]"
+                          className="h-6 px-2 text-[10px] bg-secondary border border-border text-foreground hover:bg-muted"
                         >
                           Edit
                         </Button>
@@ -204,10 +204,10 @@ export default function TeamsHubPage() {
                 {/* Budget bar */}
                 <div className="mb-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-[#849585]">£{team.spent}m spent</span>
-                    <span className="text-[#00e478] font-mono">£{team.remaining}m left</span>
+                    <span className="text-muted-foreground">£{team.spent}m spent</span>
+                    <span className="text-primary font-mono">£{team.remaining}m left</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -220,7 +220,7 @@ export default function TeamsHubPage() {
 
                 {/* Squad grouped by position */}
                 {team.squad.length === 0 ? (
-                  <p className="text-xs text-[#849585] italic text-center py-3">
+                  <p className="text-xs text-muted-foreground italic text-center py-3">
                     No players yet
                   </p>
                 ) : (
@@ -231,7 +231,7 @@ export default function TeamsHubPage() {
                       return players.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                          className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1.5"
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
                             <Badge
@@ -240,10 +240,10 @@ export default function TeamsHubPage() {
                             >
                               {pos}
                             </Badge>
-                            <span className="text-[#d6e4f9] truncate">{p.name}</span>
-                            <span className="text-[#849585] shrink-0">{p.team}</span>
+                            <span className="text-foreground truncate">{p.name}</span>
+                            <span className="text-muted-foreground shrink-0">{p.team}</span>
                           </div>
-                          <span className="font-mono text-[#b9cbb9] shrink-0 ml-2">
+                          <span className="font-mono text-muted-foreground shrink-0 ml-2">
                             £{p.price}m
                           </span>
                         </div>

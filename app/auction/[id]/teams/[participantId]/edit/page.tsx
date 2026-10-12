@@ -226,7 +226,7 @@ export default function TeamEditPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-[#8b97aa]">
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
         Loading...
       </div>
     );
@@ -235,11 +235,11 @@ export default function TeamEditPage() {
   if (!isManager) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-sm text-[#8b97aa] mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           You must be an approved manager of this team to edit its settings.
         </p>
         <Link href={`/auction/${leagueId}/teams`}>
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#4ade80] text-[#06281a] font-semibold text-sm hover:brightness-110 transition-all active:scale-[0.98]">
+          <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all active:scale-[0.98]">
             Back to Teams
           </button>
         </Link>
@@ -266,29 +266,29 @@ export default function TeamEditPage() {
       <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
         <Link
           href={`/auction/${leagueId}/teams`}
-          className="inline-flex items-center gap-1.5 text-sm text-[#8b97aa] font-medium hover:text-[#edf1f7] transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground font-medium hover:text-foreground transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Back to Teams
         </Link>
 
         <header className="mt-5 mb-8">
-          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#4ade80] block mb-2">
+          <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-primary block mb-2">
             Squad Identity
           </span>
-          <h1 className="text-[32px] font-bold tracking-[-0.01em] text-[#edf1f7] leading-tight">
+          <h1 className="text-[32px] font-bold tracking-[-0.01em] text-foreground leading-tight">
             Team Settings
           </h1>
-          <p className="mt-2 text-sm text-[#8b97aa] max-w-[520px] leading-relaxed">
+          <p className="mt-2 text-sm text-muted-foreground max-w-[520px] leading-relaxed">
             Set your crest, name, and colors &mdash; and link your official FPL squad to pull live matchday points.
           </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
           <div className="flex flex-col gap-[18px]">
-            <section className="bg-[#121826] border border-[#1a2333] rounded-[18px] p-[22px_24px]">
+            <section className="bg-card border border-border rounded-[18px] p-[22px_24px]">
               <div className="flex items-baseline justify-between mb-[14px]">
-                <span className="text-[#8b97aa] text-[12.5px] tracking-[0.08em] uppercase font-semibold">
+                <span className="text-muted-foreground text-[12.5px] tracking-[0.08em] uppercase font-semibold">
                   Team Avatar
                 </span>
               </div>
@@ -314,14 +314,14 @@ export default function TeamEditPage() {
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={safeAvatarPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-[#586278] text-[10.5px] font-medium text-center tracking-[0.02em]">
+                    <span className="text-muted-foreground text-[10.5px] font-medium text-center tracking-[0.02em]">
                       No<br />image
                     </span>
                   )}
                 </div>
                 <div className="flex-1">
                   <label
-                    className="inline-flex items-center gap-2 px-4 py-[9px] rounded-lg bg-[#161f30] border border-[#222c3e] text-sm font-medium text-[#edf1f7] cursor-pointer hover:border-[#4ade80] hover:bg-[#121826] transition-[border-color,background] duration-150"
+                    className="inline-flex items-center gap-2 px-4 py-[9px] rounded-lg bg-muted border border-border text-sm font-medium text-foreground cursor-pointer hover:border-primary hover:bg-card transition-[border-color,background] duration-150"
                   >
                     Upload image
                     <input
@@ -337,41 +337,41 @@ export default function TeamEditPage() {
                     />
                   </label>
                   {uploadError && (
-                    <p className="mt-1.5 text-xs text-[#f87171]">{uploadError}</p>
+                    <p className="mt-1.5 text-xs text-red-400">{uploadError}</p>
                   )}
-                  <p className="mt-[9px] text-[12.5px] text-[#586278] leading-relaxed">
+                  <p className="mt-[9px] text-[12.5px] text-muted-foreground leading-relaxed">
                     PNG, JPEG, or WebP. Max 2MB.
                   </p>
                 </div>
               </div>
             </section>
 
-            <section className="bg-[#121826] border border-[#1a2333] rounded-[18px] p-[22px_24px]">
+            <section className="bg-card border border-border rounded-[18px] p-[22px_24px]">
               <div className="flex items-baseline justify-between mb-[14px]">
-                <span className="text-[#8b97aa] text-[12.5px] tracking-[0.08em] uppercase font-semibold">
+                <span className="text-muted-foreground text-[12.5px] tracking-[0.08em] uppercase font-semibold">
                   Team Name
                 </span>
               </div>
               <input
-                className="w-full bg-[#161f30] border border-[#222c3e] text-[#edf1f7] font-sans text-sm px-[14px] py-[11px] rounded-lg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#586278] focus:border-[#4ade80] focus:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]"
+                className="w-full bg-muted border border-border text-foreground font-sans text-sm px-[14px] py-[11px] rounded-lg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Salah's Saviours"
               />
             </section>
 
-            <section className="bg-[#121826] border border-[#1a2333] rounded-[18px] p-[22px_24px]">
+            <section className="bg-card border border-border rounded-[18px] p-[22px_24px]">
               <div className="flex items-baseline justify-between mb-[14px]">
-                <span className="text-[#8b97aa] text-[12.5px] tracking-[0.08em] uppercase font-semibold">
+                <span className="text-muted-foreground text-[12.5px] tracking-[0.08em] uppercase font-semibold">
                   FPL Manager ID
                 </span>
-                <span className="text-[11.5px] font-medium text-[#586278]">optional</span>
+                <span className="text-[11.5px] font-medium text-muted-foreground">optional</span>
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 flex items-center bg-[#161f30] border border-[#222c3e] rounded-lg overflow-hidden transition-[border-color,box-shadow] duration-150 focus-within:border-[#4ade80] focus-within:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]">
-                  <span className="pl-[14px] text-[#586278] font-mono text-sm">#</span>
+                <div className="flex-1 flex items-center bg-muted border border-border rounded-lg overflow-hidden transition-[border-color,box-shadow] duration-150 focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]">
+                  <span className="pl-[14px] text-muted-foreground font-mono text-sm">#</span>
                   <input
-                    className="flex-1 bg-transparent border-none outline-none text-[#edf1f7] font-mono text-sm px-[6px] py-[11px]"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground font-mono text-sm px-[6px] py-[11px]"
                     type="text"
                     inputMode="numeric"
                     value={fplManagerId}
@@ -387,33 +387,33 @@ export default function TeamEditPage() {
                   type="button"
                   disabled={fplVerifying || !fplManagerId.trim()}
                   onClick={handleVerifyFpl}
-                  className="px-4 py-[11px] rounded-lg bg-[#161f30] border border-[#222c3e] text-sm font-medium text-[#8b97aa] cursor-pointer disabled:opacity-40 hover:border-[#8b97aa] hover:text-[#edf1f7] transition-all active:scale-[0.98] shrink-0"
+                  className="px-4 py-[11px] rounded-lg bg-muted border border-border text-sm font-medium text-muted-foreground cursor-pointer disabled:opacity-40 hover:border-muted-foreground hover:text-foreground transition-all active:scale-[0.98] shrink-0"
                 >
                   {fplVerifying ? "Verifying..." : "Verify"}
                 </button>
               </div>
               {fplVerifiedName && (
-                <p className="mt-1.5 text-xs text-[#4ade80]">
+                <p className="mt-1.5 text-xs text-primary">
                   Confirmed: {fplVerifiedName}
                 </p>
               )}
               {fplError && (
-                <p className="mt-1.5 text-xs text-[#f87171]">{fplError}</p>
+                <p className="mt-1.5 text-xs text-red-400">{fplError}</p>
               )}
-              <p className="mt-[9px] text-[12.5px] text-[#586278] leading-relaxed">
+              <p className="mt-[9px] text-[12.5px] text-muted-foreground leading-relaxed">
                 Connect your official FPL team to track live matchday points.
               </p>
             </section>
 
             {error && (
-              <p className="text-sm text-[#f87171] bg-red-900/20 rounded-lg px-4 py-2.5">{error}</p>
+              <p className="text-sm text-red-400 bg-red-900/20 rounded-lg px-4 py-2.5">{error}</p>
             )}
 
           </div>
 
           <aside className="lg:sticky lg:top-10">
-            <div className="bg-[#121826] border border-[#1a2333] rounded-[18px] p-[26px_22px] flex flex-col items-center text-center">
-              <span className="font-mono text-[10.5px] tracking-[0.12em] uppercase text-[#586278] mb-[18px]">
+            <div className="bg-card border border-border rounded-[18px] p-[26px_22px] flex flex-col items-center text-center">
+              <span className="font-mono text-[10.5px] tracking-[0.12em] uppercase text-muted-foreground mb-[18px]">
                 Live Preview
               </span>
 
@@ -427,26 +427,26 @@ export default function TeamEditPage() {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={safeAvatarPreview} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-bold text-[30px] text-[#06281a]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <span className="font-bold text-[30px] text-primary-foreground" style={{ fontFamily: "Inter, sans-serif" }}>
                     {crestInitial}
                   </span>
                 )}
               </div>
 
               <div
-                className="font-bold text-[19px] text-[#edf1f7] mb-1.5 break-words"
+                className="font-bold text-[19px] text-foreground mb-1.5 break-words"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {name.trim() || "Team"}
               </div>
 
-              <div className="font-mono text-xs text-[#586278] mb-[18px]">
+              <div className="font-mono text-xs text-muted-foreground mb-[18px]">
                 {hexInput}
               </div>
 
-              <div className="w-full h-px bg-[#1a2333] mb-4" />
+              <div className="w-full h-px bg-border mb-4" />
 
-              <div className="flex items-center gap-2 text-[12.5px] text-[#8b97aa] bg-[#161f30] rounded-full px-[13px] py-[7px]">
+              <div className="flex items-center gap-2 text-[12.5px] text-muted-foreground bg-muted rounded-full px-[13px] py-[7px]">
                 <span
                   className="w-[6px] h-[6px] rounded-full"
                   style={{
@@ -462,9 +462,9 @@ export default function TeamEditPage() {
               </div>
             </div>
 
-            <section className="bg-[#121826] border border-[#1a2333] rounded-[18px] p-[22px_24px]">
+            <section className="bg-card border border-border rounded-[18px] p-[22px_24px]">
               <div className="flex items-baseline justify-between mb-[14px]">
-                <span className="text-[#8b97aa] text-[12.5px] tracking-[0.08em] uppercase font-semibold">
+                <span className="text-muted-foreground text-[12.5px] tracking-[0.08em] uppercase font-semibold">
                   Team Color
                 </span>
               </div>
@@ -488,7 +488,7 @@ export default function TeamEditPage() {
               </div>
               <div className="flex items-center gap-3">
                 <div
-                  className="w-[42px] h-[42px] rounded-lg border border-[#222c3e] shrink-0 relative cursor-pointer"
+                  className="w-[42px] h-[42px] rounded-lg border border-border shrink-0 relative cursor-pointer"
                 >
                   <input
                     type="color"
@@ -502,7 +502,7 @@ export default function TeamEditPage() {
                   />
                 </div>
                 <input
-                  className="flex-1 bg-[#161f30] border border-[#222c3e] text-[#edf1f7] font-mono text-sm px-[14px] py-[11px] rounded-lg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#586278] focus:border-[#4ade80] focus:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]"
+                  className="flex-1 bg-muted border border-border text-foreground font-mono text-sm px-[14px] py-[11px] rounded-lg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground focus:border-primary focus:shadow-[0_0_0_3px_rgba(74,222,128,0.12)]"
                   value={hexInput}
                   maxLength={7}
                   onChange={(e) => {
@@ -521,7 +521,7 @@ export default function TeamEditPage() {
               <Link href={`/auction/${leagueId}/teams`}>
                 <button
                   type="button"
-                  className="font-sans text-sm font-semibold px-[22px] py-[11px] rounded-lg bg-transparent border border-[#222c3e] text-[#8b97aa] cursor-pointer hover:border-[#586278] hover:text-[#edf1f7] transition-all active:scale-[0.98]"
+                  className="font-sans text-sm font-semibold px-[22px] py-[11px] rounded-lg bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-muted-foreground hover:text-foreground transition-all active:scale-[0.98]"
                 >
                   Cancel
                 </button>
@@ -530,7 +530,7 @@ export default function TeamEditPage() {
                 type="button"
                 disabled={saving}
                 onClick={() => handleSave().catch(() => {})}
-                className="font-sans text-sm font-semibold px-[22px] py-[11px] rounded-lg bg-[#4ade80] text-[#06281a] cursor-pointer disabled:opacity-50 hover:brightness-110 transition-all active:scale-[0.98]"
+                className="font-sans text-sm font-semibold px-[22px] py-[11px] rounded-lg bg-primary text-primary-foreground cursor-pointer disabled:opacity-50 hover:brightness-110 transition-all active:scale-[0.98]"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>

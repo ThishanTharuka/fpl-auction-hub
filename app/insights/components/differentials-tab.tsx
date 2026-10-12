@@ -16,7 +16,7 @@ function getPositionBadgeClass(pos: string): string {
     case "FWD":
       return "bg-rose-500/15 text-rose-400 border-rose-500/30";
     default:
-      return "bg-[#1e2b3b] text-[#b9cbb9] border-[#3b4b3d]";
+      return "bg-muted text-muted-foreground border-border";
   }
 }
 
@@ -51,20 +51,20 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
   return (
     <div className="space-y-4">
       {/* Control Strip */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-[#0f1c2c] p-3.5 rounded-xl border border-[#3b4b3d]">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card p-3.5 rounded-xl border border-border">
         {/* Ownership Threshold Toggle */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#869ab8] flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5 text-[#00e478]" />
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Compass className="w-3.5 h-3.5 text-primary" />
             Cap:
           </span>
-          <div className="flex bg-[#020f1e] p-0.5 rounded-lg border border-[#3b4b3d]">
+          <div className="flex bg-muted p-0.5 rounded-lg border border-border">
             <button
               onClick={() => setThreshold(10)}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 threshold === 10
-                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
-                  : "text-[#869ab8] hover:text-[#d6e4f9]"
+                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               &lt; 10% Owned
@@ -73,8 +73,8 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
               onClick={() => setThreshold(5)}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                 threshold === 5
-                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
-                  : "text-[#869ab8] hover:text-[#d6e4f9]"
+                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               &lt; 5% Ultra-Diff
@@ -90,8 +90,8 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
               onClick={() => setPosition(pos)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                 position === pos
-                  ? "bg-[#00e478] text-[#003919] font-bold shadow-sm ring-1 ring-[#00e478]"
-                  : "bg-[#020f1e] text-[#869ab8] hover:text-[#d6e4f9] border border-[#3b4b3d]"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground border border-border"
               }`}
             >
               {pos}
@@ -101,11 +101,11 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
 
         {/* Sorting */}
         <div className="flex items-center gap-1.5 self-end lg:self-auto">
-          <Filter className="w-3.5 h-3.5 text-[#869ab8]" />
+          <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            className="bg-[#020f1e] border border-[#3b4b3d] text-xs text-[#d6e4f9] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#00e478]"
+            className="bg-card border border-border text-xs text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
           >
             <option value="form">Sort: Recent Form</option>
             <option value="totalPoints">Sort: Total Points</option>
@@ -116,9 +116,9 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
       </div>
 
       {/* Narrative hint */}
-      <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-3.5 text-xs text-[#b9cbb9] flex items-center justify-between">
+      <div className="bg-card border border-border rounded-xl p-3.5 text-xs text-muted-foreground flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#00e478] shrink-0" />
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
           <span>
             <strong>Differential Strategy:</strong> Owning in-form players with &lt; 10% global ownership allows you to gain maximum rank on the field whenever they return points.
           </span>
@@ -130,11 +130,11 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
         {filtered.map(({ player, ownership, form, totalPoints, xgi }) => (
           <div
             key={player.id}
-            className="rounded-xl border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col justify-between hover:border-[#00e478]/60 transition-all group"
+            className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between hover:border-primary/60 transition-all group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#1e2b3b] border border-[#3b4b3d] shrink-0 group-hover:border-[#00e478]/50 transition-colors">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-muted border border-border shrink-0 group-hover:border-primary/50 transition-colors">
                   {player.image_url ? (
                     <Image
                       src={player.image_url}
@@ -146,51 +146,51 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
                   ) : null}
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-[#d6e4f9] group-hover:text-[#00e478] transition-colors">
+                  <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
                     {player.web_name}
                   </div>
-                  <div className="text-xs text-[#869ab8] flex items-center gap-1.5 mt-0.5">
+                  <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
                     <span>{player.team_name}</span>
                     <span>·</span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${getPositionBadgeClass(player.position)}`}>
                       {player.position}
                     </span>
                   </div>
-                  <div className="text-xs font-mono font-semibold text-[#d6e4f9] mt-1">
+                  <div className="text-xs font-mono font-semibold text-foreground mt-1">
                     £{player.price.toFixed(1)}m
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#1e2b3b] text-sky-400 border border-sky-500/30">
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30">
                   {ownership.toFixed(1)}% owned
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-[#3b4b3d]/40 text-center text-xs">
-              <div className="bg-[#020f1e] rounded-lg p-1.5">
-                <div className="text-[10px] text-[#869ab8]">Form</div>
-                <div className="font-mono font-bold text-[#00e478]">{form.toFixed(1)}</div>
+            <div className="grid grid-cols-4 gap-1.5 mt-3 pt-3 border-t border-border/40 text-center text-xs">
+              <div className="bg-muted rounded-lg p-1.5">
+                <div className="text-[10px] text-muted-foreground">Form</div>
+                <div className="font-bold text-emerald-700 dark:text-primary">{form.toFixed(1)}</div>
               </div>
-              <div className="bg-[#020f1e] rounded-lg p-1.5">
-                <div className="text-[10px] text-[#869ab8]">Total Pts</div>
-                <div className="font-mono font-bold text-[#d6e4f9]">{totalPoints}</div>
+              <div className="bg-muted rounded-lg p-1.5">
+                <div className="text-[10px] text-muted-foreground">Total Pts</div>
+                <div className="font-mono font-bold text-foreground">{totalPoints}</div>
               </div>
-              <div className="bg-[#020f1e] rounded-lg p-1.5">
-                <div className="text-[10px] text-[#869ab8]">xGI</div>
-                <div className="font-mono font-bold text-amber-400">{xgi.toFixed(2)}</div>
+              <div className="bg-muted rounded-lg p-1.5">
+                <div className="text-[10px] text-muted-foreground">xGI</div>
+                <div className="font-bold text-amber-700 dark:text-amber-400">{xgi.toFixed(2)}</div>
               </div>
-              <div className="bg-[#020f1e] rounded-lg p-1.5">
-                <div className="text-[10px] text-[#869ab8]">Next 5 FDR</div>
+              <div className="bg-muted rounded-lg p-1.5">
+                <div className="text-[10px] text-muted-foreground">Next 5 FDR</div>
                 <div
                   className={`font-mono font-bold ${
                     player.avg_fdr_next5 <= 2.5
-                      ? "text-[#00e478]"
+                      ? "text-emerald-700 dark:text-primary"
                       : player.avg_fdr_next5 >= 3.5
-                        ? "text-rose-400"
-                        : "text-[#d6e4f9]"
+                        ? "text-rose-700 dark:text-rose-400"
+                        : "text-foreground"
                   }`}
                 >
                   {player.avg_fdr_next5?.toFixed(1) ?? "3.0"}

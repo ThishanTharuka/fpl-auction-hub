@@ -757,7 +757,7 @@ export function AuctioneerContent({
 
   let timerColor = "text-red-400";
   let timerHexColor = "#f87171";
-  if (secondsLeft > 15) { timerColor = "text-[#00e478]"; timerHexColor = "#00e478"; }
+  if (secondsLeft > 15) { timerColor = "text-primary"; timerHexColor = "#00e478"; }
   else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
   let timerDisplayValue: number | string = "—";
   if (nomination) {
@@ -774,10 +774,10 @@ export function AuctioneerContent({
       <div className="mx-auto max-w-[1440px] flex flex-col lg:flex-row gap-4 h-full px-4 py-4">
         {/* ── Left: Player search (always) + sold log (desktop) ─────────────── */}
         <aside className="w-full lg:w-72 flex flex-col gap-4 overflow-hidden">
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex flex-col gap-3">
+          <div className="rounded-lg border border-border bg-card p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Nominate Player
                 </h2>
                 {user ? (
@@ -798,7 +798,7 @@ export function AuctioneerContent({
                     setSheetTab("sold");
                     setSheetOpen(true);
                   }}
-                  className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+                  className="text-[10px] text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                 >
                   Sold ({soldIds.size})
                 </button>
@@ -807,7 +807,7 @@ export function AuctioneerContent({
                     setSheetTab("budgets");
                     setSheetOpen(true);
                   }}
-                  className="text-[10px] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+                  className="text-[10px] text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                 >
                   Budgets
                 </button>
@@ -820,8 +820,8 @@ export function AuctioneerContent({
                   onClick={() => setPosFilter(pos)}
                   className={`flex-1 text-[10px] font-bold rounded py-1 border ${
                     posFilter === pos
-                      ? "bg-[#00e478] text-[#003919] border-[#00e478]"
-                      : "border-[#3b4b3d] text-[#849585] hover:text-[#d6e4f9]"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {pos}
@@ -832,11 +832,11 @@ export function AuctioneerContent({
               placeholder="Search player or club…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585] h-8 text-xs"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-8 text-xs"
             />
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {search.length > 0 && filteredPlayers.length === 0 && (
-                <p className="text-xs text-[#849585] italic text-center py-2">
+                <p className="text-xs text-muted-foreground italic text-center py-2">
                   No players found
                 </p>
               )}
@@ -845,13 +845,13 @@ export function AuctioneerContent({
                   key={p.id}
                   disabled={!!nomination || !!stagedPlayer}
                   onClick={() => stagePlayer(p)}
-                  className="w-full flex items-center justify-between rounded bg-[#132030] hover:bg-[#1e2b3b] disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-left"
+                  className="w-full flex items-center justify-between rounded bg-muted hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed px-3 py-1.5 text-left"
                 >
                   <div>
-                    <div className="text-xs font-medium text-[#d6e4f9]">
+                    <div className="text-xs font-medium text-foreground">
                       {p.web_name}
                     </div>
-                    <div className="text-[10px] text-[#849585]">
+                    <div className="text-[10px] text-muted-foreground">
                       {p.team_short}
                     </div>
                   </div>
@@ -869,41 +869,41 @@ export function AuctioneerContent({
           {/* Unsold & available players */}
           <button
             onClick={() => setAvailableOpen(true)}
-            className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3 flex items-center justify-between hover:bg-[#1e2b3b] transition-colors"
+            className="rounded-lg border border-border bg-card p-3 flex items-center justify-between hover:bg-secondary transition-colors"
           >
-            <span className="text-xs font-semibold text-[#849585] uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Unsold & Available
             </span>
             <Badge
               variant="outline"
-              className="text-[10px] text-[#00e478] border-[#3b4b3d]"
+              className="text-[10px] text-primary border-border"
             >
               {availablePlayers.unsold.length}
             </Badge>
           </button>
 
           {/* Sold log (desktop only) */}
-          <div className="hidden lg:flex rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex-col">
-            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
+          <div className="hidden lg:flex rounded-lg border border-border bg-card p-4 flex-1 overflow-hidden flex-col">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Sold ({soldIds.size})
             </h2>
             <div className="space-y-1 overflow-y-auto flex-1">
               {(soldLog ?? []).map((s, i) => (
                 <div
                   key={`sold-${i}-${s.name}`}
-                  className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                  className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1.5"
                 >
                   <div>
-                    <span className="text-[#d6e4f9] font-medium">{s.name}</span>
-                    <span className="text-[#849585] ml-1">→ {s.team}</span>
+                    <span className="text-foreground font-medium">{s.name}</span>
+                    <span className="text-muted-foreground ml-1">→ {s.team}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-[#00e478]">
+                    <span className="font-mono text-primary">
                       £{s.price}m
                     </span>
                     <button
                       onClick={() => setConfirmRebid(s)}
-                      className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
+                      className="text-[10px] text-muted-foreground hover:text-yellow-400 border border-border rounded px-1 py-0.5"
                       title="Rebid this player"
                     >
                       ↩
@@ -912,7 +912,7 @@ export function AuctioneerContent({
                 </div>
               ))}
               {(soldLog ?? []).length === 0 && (
-                <p className="text-xs text-[#849585] italic text-center py-2">
+                <p className="text-xs text-muted-foreground italic text-center py-2">
                   No sales yet
                 </p>
               )}
@@ -934,20 +934,20 @@ export function AuctioneerContent({
                     >
                       {stagedPlayer.position}
                     </Badge>
-                    <span className="text-xs text-[#849585]">
+                    <span className="text-xs text-muted-foreground">
                       {stagedPlayer.team_name}
                     </span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                     {stagedPlayer.full_name}
                   </h2>
-                  <p className="text-sm text-[#849585] mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Ready to nominate — set timer and start
                   </p>
                 </div>
                 <button
                   onClick={() => setStagedPlayer(null)}
-                  className="text-xs text-[#849585] hover:text-red-400 border border-[#3b4b3d] rounded px-2 py-1"
+                  className="text-xs text-muted-foreground hover:text-red-400 border border-border rounded px-2 py-1"
                 >
                   ✕ Cancel
                 </button>
@@ -955,14 +955,14 @@ export function AuctioneerContent({
               <PlayerStatsBar player={stagedPlayer} wide />
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#849585] whitespace-nowrap">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     Timer
                   </span>
                   <select
                     aria-label="Timer in seconds"
                     value={startTimerInput}
                     onChange={(e) => setStartTimerInput(e.target.value)}
-                    className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] rounded-md h-9 text-sm px-2 outline-none focus:border-[#00e478] cursor-pointer"
+                    className="bg-muted border border-border text-foreground rounded-md h-9 text-sm px-2 outline-none focus:border-primary cursor-pointer"
                   >
                     {[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((s) => (
                       <option key={s} value={String(s)}>
@@ -973,7 +973,7 @@ export function AuctioneerContent({
                 </div>
                 <Button
                   onClick={() => startBidding().catch(() => {})}
-                  className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-base py-5"
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-base py-5"
                 >
                   ▶ Start Bidding
                 </Button>
@@ -983,7 +983,7 @@ export function AuctioneerContent({
           {nomination ? (
             <>
               {/* Player card */}
-              <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6">
+              <div className="rounded-lg border border-border bg-card p-6">
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
                   <div>
                     {(() => {
@@ -1003,14 +1003,14 @@ export function AuctioneerContent({
                             >
                               {nomination.position}
                             </Badge>
-                            <span className="text-xs text-[#849585]">
+                            <span className="text-xs text-muted-foreground">
                               {clubName}
                             </span>
                           </div>
-                          <h2 className="text-2xl sm:text-3xl font-bold text-[#d6e4f9]">
+                          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                             {playerName}
                           </h2>
-                          <p className="text-sm text-[#849585] mt-1">
+                          <p className="text-sm text-muted-foreground mt-1">
                             Starting price: £{nomination.starting_price}m
                           </p>
                         </>
@@ -1026,7 +1026,7 @@ export function AuctioneerContent({
                         <span className={`text-3xl sm:text-5xl ${timerColor}`}>{timerDisplayValue}</span>
                       )}
                     </div>
-                    <div className="text-xs text-[#849585] mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {timerDisplayUnit}
                     </div>
                   </div>
@@ -1043,13 +1043,13 @@ export function AuctioneerContent({
                 })()}
 
                 {/* Current bid */}
-                <div className="bg-[#132030] rounded-lg p-4 mb-4">
-                  <div className="text-xs text-[#849585] uppercase tracking-wider mb-1">
+                <div className="bg-muted rounded-lg p-4 mb-4">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                     {nomination.current_bidder_id === null
                       ? "Starting Price"
                       : "Current Bid"}
                   </div>
-                  <div className="text-3xl sm:text-4xl font-mono font-bold text-[#00e478] inline-flex items-center">
+                  <div className="text-3xl sm:text-4xl font-mono font-bold text-primary inline-flex items-center">
                     £
                     <Counter
                       value={nomination.current_bid}
@@ -1064,9 +1064,9 @@ export function AuctioneerContent({
                     m
                   </div>
                   {nomination.current_bidder_name && (
-                    <div className="text-sm text-[#b9cbb9] mt-1">
+                    <div className="text-sm text-muted-foreground mt-1">
                       by{" "}
-                      <span className="font-semibold text-[#d6e4f9]">
+                      <span className="font-semibold text-foreground">
                         {nomination.current_bidder_name}
                       </span>
                     </div>
@@ -1078,7 +1078,7 @@ export function AuctioneerContent({
                   <Button
                     onClick={gavel}
                     disabled={!nomination.current_bidder_id}
-                    className="flex-1 min-w-[200px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-bold text-lg py-6"
+                    className="flex-1 min-w-[200px] bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg py-6"
                   >
                     <span className="hidden sm:inline-flex items-center gap-2">
                       <GavelIcon className="h-5 w-5" />
@@ -1104,14 +1104,14 @@ export function AuctioneerContent({
                     <Button
                       onClick={nomination.is_paused ? resumeTimer : pauseTimer}
                       variant="outline"
-                      className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                      className="border-border text-muted-foreground hover:bg-secondary py-6 px-3 text-xs"
                     >
                       {nomination.is_paused ? "Resume" : "Pause"}
                     </Button>
                     <select
                       value={extendInput}
                       onChange={(e) => setExtendInput(e.target.value)}
-                      className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] text-xs rounded-md px-2 outline-none focus:border-[#00e478] cursor-pointer"
+                      className="bg-muted border border-border text-foreground text-xs rounded-md px-2 outline-none focus:border-primary cursor-pointer"
                     >
                       {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
                         (s) => (
@@ -1124,7 +1124,7 @@ export function AuctioneerContent({
                     <Button
                       onClick={extendTimer}
                       variant="outline"
-                      className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] py-6 px-3 text-xs"
+                      className="border-border text-muted-foreground hover:bg-secondary py-6 px-3 text-xs"
                     >
                       +s
                     </Button>
@@ -1140,26 +1140,26 @@ export function AuctioneerContent({
               </div>
 
               {/* Bid history */}
-              <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 flex-1 overflow-hidden flex flex-col">
-                <h3 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-2">
+              <div className="rounded-lg border border-border bg-card p-4 flex-1 overflow-hidden flex flex-col">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   Bid History
                 </h3>
                 <div className="space-y-1 overflow-y-auto flex-1">
                   {recentBids.map((b) => (
                     <div
                       key={b.id}
-                      className="flex items-center justify-between text-sm bg-[#132030] rounded px-3 py-2"
+                      className="flex items-center justify-between text-sm bg-muted rounded px-3 py-2"
                     >
-                      <span className="text-[#d6e4f9]">
+                      <span className="text-foreground">
                         {b.participant_name}
                       </span>
-                      <span className="font-mono text-[#00e478]">
+                      <span className="font-mono text-primary">
                         £{b.amount}m
                       </span>
                     </div>
                   ))}
                   {recentBids.length === 0 && (
-                    <p className="text-xs text-[#849585] italic text-center py-4">
+                    <p className="text-xs text-muted-foreground italic text-center py-4">
                       No bids yet
                     </p>
                   )}
@@ -1168,10 +1168,10 @@ export function AuctioneerContent({
             </>
           ) : (
             !stagedPlayer && (
-              <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c] px-4">
+              <div className="flex-1 flex items-center justify-center rounded-lg border border-dashed border-border bg-card px-4">
                 <div className="text-center">
-                  <GavelIcon className="mx-auto h-16 w-16 text-[#849585]" />
-                  <p className="text-base text-[#849585] mt-4">
+                  <GavelIcon className="mx-auto h-16 w-16 text-muted-foreground" />
+                  <p className="text-base text-muted-foreground mt-4">
                     Search and nominate a player to start
                   </p>
                 </div>
@@ -1181,8 +1181,8 @@ export function AuctioneerContent({
         </main>
 
         {/* ── Right: Teams budgets (desktop only) ─────────────────────────────── */}
-        <aside className="hidden lg:block w-full lg:w-60 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-4 overflow-y-auto">
-          <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">
+        <aside className="hidden lg:block w-full lg:w-60 rounded-lg border border-border bg-card p-4 overflow-y-auto">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Budgets
           </h2>
           <BudgetList teams={teams} budget={league?.budget_per_team ?? 200} />
@@ -1195,17 +1195,17 @@ export function AuctioneerContent({
               className="absolute inset-0 bg-black/60"
               onClick={() => setConfirmRebid(null)}
             />
-            <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-              <h3 className="text-sm font-semibold text-[#d6e4f9]">
+            <div className="relative bg-card border border-border rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+              <h3 className="text-sm font-semibold text-foreground">
                 Rebid Player?
               </h3>
-              <p className="text-sm text-[#849585]">
+              <p className="text-sm text-muted-foreground">
                 Clear{" "}
-                <span className="font-semibold text-[#d6e4f9]">
+                <span className="font-semibold text-foreground">
                   {confirmRebid.name}
                 </span>{" "}
                 (sold for{" "}
-                <span className="font-mono text-[#00e478]">
+                <span className="font-mono text-primary">
                   £{confirmRebid.price}m
                 </span>{" "}
                 to {confirmRebid.team}) and stage them for nomination?
@@ -1214,7 +1214,7 @@ export function AuctioneerContent({
                 <Button
                   onClick={() => setConfirmRebid(null)}
                   variant="outline"
-                  className="border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b]"
+                  className="border-border text-muted-foreground hover:bg-secondary"
                 >
                   Cancel
                 </Button>
@@ -1247,13 +1247,13 @@ export function AuctioneerContent({
               className="absolute inset-0 bg-black/60"
               onClick={() => setAvailableOpen(false)}
             />
-            <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
-              <div className="flex items-center justify-between gap-2 p-4 border-b border-[#3b4b3d] shrink-0">
+            <div className="relative bg-card border border-border rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+              <div className="flex items-center justify-between gap-2 p-4 border-b border-border shrink-0">
                 <div>
-                  <h3 className="text-sm font-semibold text-[#d6e4f9]">
+                  <h3 className="text-sm font-semibold text-foreground">
                     Unsold & Available Players
                   </h3>
-                  <p className="text-xs text-[#849585] mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {availablePlayers.unsold.length} unsold ·{" "}
                     {availablePlayers.notNominated.length} not nominated
                   </p>
@@ -1262,7 +1262,7 @@ export function AuctioneerContent({
                   <Button
                     onClick={copyAvailableList}
                     variant="outline"
-                    className="border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b] h-8 px-3 text-xs"
+                    className="border-border text-muted-foreground hover:bg-secondary h-8 px-3 text-xs"
                     disabled={
                       availablePlayers.unsold.length +
                         availablePlayers.notNominated.length ===
@@ -1273,7 +1273,7 @@ export function AuctioneerContent({
                   </Button>
                   <button
                     onClick={() => setAvailableOpen(false)}
-                    className="text-xs text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d] rounded px-2 py-1"
+                    className="text-xs text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                   >
                     ✕
                   </button>
@@ -1286,8 +1286,8 @@ export function AuctioneerContent({
                     onClick={() => setAvailablePosFilter(pos)}
                     className={`flex-1 text-[10px] font-bold rounded py-1 border ${
                       availablePosFilter === pos
-                        ? "bg-[#00e478] text-[#003919] border-[#00e478]"
-                        : "border-[#3b4b3d] text-[#849585] hover:text-[#d6e4f9]"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {pos}
@@ -1297,7 +1297,7 @@ export function AuctioneerContent({
               <div className="overflow-y-auto p-4 space-y-4">
                 {availablePlayers.unsold.length === 0 &&
                   availablePlayers.notNominated.length === 0 && (
-                    <p className="text-sm text-[#849585] italic text-center py-8">
+                    <p className="text-sm text-muted-foreground italic text-center py-8">
                       All players have been sold or are currently being
                       nominated.
                     </p>
@@ -1320,12 +1320,12 @@ export function AuctioneerContent({
                   return (
                     <section key={pos}>
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-xs font-bold text-[#00e478] uppercase tracking-wider">
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
                           {pos}
                         </h4>
                         <button
                           onClick={() => copyPositionList(pos)}
-                          className="text-[10px] text-[#849585] hover:text-[#b9cbb9] border border-[#3b4b3d] rounded px-1.5 py-0.5"
+                          className="text-[10px] text-muted-foreground hover:text-muted-foreground border border-border rounded px-1.5 py-0.5"
                           title={`Copy ${pos} list`}
                         >
                           Copy
@@ -1340,12 +1340,12 @@ export function AuctioneerContent({
                             {posUnsold.map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1"
+                                className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1"
                               >
-                                <span className="text-[#d6e4f9]">
+                                <span className="text-foreground">
                                   {p.web_name}
                                 </span>
-                                <span className="text-[#849585]">
+                                <span className="text-muted-foreground">
                                   {p.team_short}
                                 </span>
                               </div>
@@ -1355,19 +1355,19 @@ export function AuctioneerContent({
                       )}
                       {posNotNominated.length > 0 && (
                         <div>
-                          <div className="text-[10px] text-[#849585] uppercase tracking-wider mb-1">
+                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                             Not Nominated
                           </div>
                           <div className="space-y-0.5">
                             {posNotNominated.map((p) => (
                               <div
                                 key={p.id}
-                                className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1"
+                                className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1"
                               >
-                                <span className="text-[#d6e4f9]">
+                                <span className="text-foreground">
                                   {p.web_name}
                                 </span>
-                                <span className="text-[#849585]">
+                                <span className="text-muted-foreground">
                                   {p.team_short}
                                 </span>
                               </div>
@@ -1390,15 +1390,15 @@ export function AuctioneerContent({
               className="absolute inset-0 bg-black/60"
               onClick={() => setSheetOpen(false)}
             />
-            <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-[#0a1522] rounded-t-xl border-t border-[#3b4b3d] flex flex-col overflow-hidden animate-slide-up">
+            <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] bg-background rounded-t-xl border-t border-border flex flex-col overflow-hidden animate-slide-up">
               {/* Tab bar */}
-              <div className="flex border-b border-[#3b4b3d] shrink-0">
+              <div className="flex border-b border-border shrink-0">
                 <button
                   onClick={() => setSheetTab("sold")}
                   className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
                     sheetTab === "sold"
-                      ? "text-[#00e478] border-b-2 border-[#00e478]"
-                      : "text-[#849585]"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground"
                   }`}
                 >
                   Sold ({soldIds.size})
@@ -1407,8 +1407,8 @@ export function AuctioneerContent({
                   onClick={() => setSheetTab("budgets")}
                   className={`flex-1 text-xs font-semibold uppercase tracking-wider py-3 transition-colors ${
                     sheetTab === "budgets"
-                      ? "text-[#00e478] border-b-2 border-[#00e478]"
-                      : "text-[#849585]"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground"
                   }`}
                 >
                   Budgets
@@ -1421,18 +1421,18 @@ export function AuctioneerContent({
                     {(soldLog ?? []).map((s, i) => (
                       <div
                         key={`sold-mobile-${i}-${s.name}`}
-                        className="flex items-center justify-between text-xs bg-[#132030] rounded px-2.5 py-1.5"
+                        className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1.5"
                       >
                         <div>
-                          <span className="text-[#d6e4f9] font-medium">
+                          <span className="text-foreground font-medium">
                             {s.name}
                           </span>
-                          <span className="text-[#849585] ml-1">
+                          <span className="text-muted-foreground ml-1">
                             → {s.team}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[#00e478]">
+                          <span className="font-mono text-primary">
                             £{s.price}m
                           </span>
                           <button
@@ -1440,7 +1440,7 @@ export function AuctioneerContent({
                               setSheetOpen(false);
                               setConfirmRebid(s);
                             }}
-                            className="text-[10px] text-[#849585] hover:text-yellow-400 border border-[#3b4b3d] rounded px-1 py-0.5"
+                            className="text-[10px] text-muted-foreground hover:text-yellow-400 border border-border rounded px-1 py-0.5"
                             title="Rebid this player"
                           >
                             ↩
@@ -1449,7 +1449,7 @@ export function AuctioneerContent({
                       </div>
                     ))}
                     {(soldLog ?? []).length === 0 && (
-                      <p className="text-xs text-[#849585] italic text-center py-2">
+                      <p className="text-xs text-muted-foreground italic text-center py-2">
                         No sales yet
                       </p>
                     )}
@@ -1480,28 +1480,28 @@ function BudgetList({ teams, budget }: { teams: TeamBudget[]; budget: number }) 
           const remaining = budget - t.spent;
           const pct = Math.round((t.spent / budget) * 100);
           return (
-            <div key={t.id} className="bg-[#132030] rounded p-2.5">
+            <div key={t.id} className="bg-muted rounded p-2.5">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <TeamAvatar name={t.name} color={t.color} src={t.avatar_url} size="sm" />
                   <Tooltip>
-                    <TooltipTrigger className="text-xs text-[#d6e4f9] truncate max-w-[90px]">
+                    <TooltipTrigger className="text-xs text-foreground truncate max-w-[90px]">
                       {t.name}
                     </TooltipTrigger>
                     <TooltipContent>{t.name}</TooltipContent>
                   </Tooltip>
                 </div>
-                <span className="text-xs font-mono text-[#00e478]">
+                <span className="text-xs font-mono text-primary">
                   £{remaining}m
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
+              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[#00e478] transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <div className="text-[10px] text-[#849585] mt-1">
+              <div className="text-[10px] text-muted-foreground mt-1">
                 {t.squad} players · £{t.spent}m spent
               </div>
             </div>

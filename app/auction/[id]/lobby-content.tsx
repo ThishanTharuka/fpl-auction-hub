@@ -166,8 +166,8 @@ export function LobbyContent({
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#d6e4f9]">{league.name}</h1>
-              <p className="text-sm text-[#849585] mt-1">
+              <h1 className="text-2xl font-bold text-foreground">{league.name}</h1>
+              <p className="text-sm text-muted-foreground mt-1">
                 {isAuctioneer ? "You are the auctioneer" : "Auction Lobby"}
               </p>
             </div>
@@ -176,7 +176,7 @@ export function LobbyContent({
                 <Button
                   onClick={() => setMobileSettingsOpen(true)}
                   variant="outline"
-                  className="lg:hidden border-[#3b4b3d] text-[#849585] hover:bg-[#132030] h-7 text-xs"
+                  className="lg:hidden border-border text-muted-foreground hover:bg-muted h-7 text-xs"
                 >
                   Settings
                 </Button>
@@ -185,7 +185,7 @@ export function LobbyContent({
                 <Link href={`/auction/${id}/spectate`}>
                   <Button
                     variant="outline"
-                    className="border-[#00e478]/40 text-[#00e478] hover:bg-[#132030] h-7 text-xs"
+                    className="border-primary/40 text-primary hover:bg-muted h-7 text-xs"
                   >
                     Spectate live
                   </Button>
@@ -204,20 +204,20 @@ export function LobbyContent({
                   <Button
                     onClick={startAuction}
                     disabled={startingAuction || !canStart}
-                    className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold h-8 text-xs px-4"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-8 text-xs px-4"
                   >
                     {startingAuction ? "Starting..." : "Start Auction"}
                   </Button>
                 )}
                 {league.status === "active" && (
                   <Link href={`/auction/${id}/auctioneer`}>
-                    <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold h-8 text-xs px-4">
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-8 text-xs px-4">
                       Open Auctioneer Panel
                     </Button>
                   </Link>
                 )}
                 <Link href={`/auction/${id}/teams`}>
-                  <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030] h-8 text-xs px-4">
+                  <Button variant="outline" className="border-border text-muted-foreground hover:bg-muted h-8 text-xs px-4">
                     View Teams
                   </Button>
                 </Link>
@@ -230,7 +230,7 @@ export function LobbyContent({
                 </Button>
               </div>
               {league.status === "setup" && !canStart && (
-                <p className="text-xs text-[#849585]">
+                <p className="text-xs text-muted-foreground">
                   At least one team is required to start.
                 </p>
               )}
@@ -239,11 +239,11 @@ export function LobbyContent({
 
           {/* Manager: my status */}
           {!isAuctioneer && user && myMembership && (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider">Your Status</h2>
+            <div className="rounded-lg border border-border bg-card p-5 space-y-3">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Status</h2>
               <div className="flex items-center gap-3">
                 <TeamDot color={teams.find((t) => t.id === myMembership.participant_id)?.color ?? "#888"} />
-                <span className="text-[#d6e4f9]">
+                <span className="text-foreground">
                   {teams.find((t) => t.id === myMembership.participant_id)?.name ?? "Unknown team"}
                 </span>
                 <StatusPill status={myMembership.status} />
@@ -252,20 +252,20 @@ export function LobbyContent({
                 <div className="flex flex-wrap gap-2 mt-2">
                   {league.status === "active" && (
                     <Link href={`/auction/${id}/bid`}>
-                      <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
+                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                         Go to Live Auction →
                       </Button>
                     </Link>
                   )}
                   <Link href={`/auction/${id}/teams/${myMembership.participant_id}/edit`}>
-                    <Button variant="outline" className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]">
+                    <Button variant="outline" className="border-border text-muted-foreground hover:bg-muted">
                       Edit Team
                     </Button>
                   </Link>
                 </div>
               )}
               {myMembership.status === "pending" && (
-                <p className="text-xs text-[#849585]">Waiting for the auctioneer to approve your claim.</p>
+                <p className="text-xs text-muted-foreground">Waiting for the auctioneer to approve your claim.</p>
               )}
               {myMembership.status === "rejected" && (
                 <p className="text-xs text-red-400">Your claim was rejected. You can claim a different team.</p>
@@ -275,17 +275,17 @@ export function LobbyContent({
 
           {/* Manager: not logged in */}
           {!isAuctioneer && !user && (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
-              <p className="text-sm text-[#849585]">
-                <Link href="/login" className="text-[#00e478] hover:underline">Sign in</Link>{" "}
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground">
+                <Link href="/login" className="text-primary hover:underline">Sign in</Link>{" "}
                 to claim a team and join this auction.
               </p>
             </div>
           )}
 
           {/* Teams list */}
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
-            <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-4">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
               Teams ({teams.length})
             </h2>
             <div className="space-y-3">
@@ -303,12 +303,12 @@ export function LobbyContent({
                 return (
                   <div
                     key={team.id}
-                    className="flex items-center justify-between gap-3 rounded-md bg-[#132030] border border-[#3b4b3d] px-3 py-3"
+                    className="flex items-center justify-between gap-3 rounded-md bg-muted border border-border px-3 py-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
                       <div className="flex items-center gap-2.5">
                         <TeamDot color={team.color ?? "#888"} />
-                        <span className="text-sm text-[#d6e4f9] font-medium truncate">{team.name}</span>
+                        <span className="text-sm text-foreground font-medium truncate">{team.name}</span>
                       </div>
                       <div className="flex gap-1.5 flex-wrap pl-[18px] sm:pl-0">
                         {approvedManagers.map((m) => (
@@ -339,7 +339,7 @@ export function LobbyContent({
                           size="sm"
                           onClick={() => claimTeam(team.id).catch(() => {})}
                           disabled={claiming === team.id}
-                          className="h-7 px-3 text-xs bg-[#1e2b3b] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#28394a]"
+                          className="h-7 px-3 text-xs bg-secondary border border-border text-foreground hover:bg-muted"
                         >
                           {claiming === team.id ? "Claiming..." : "Claim"}
                         </Button>
@@ -357,8 +357,8 @@ export function LobbyContent({
 
           {/* Quick links (auctioneer view) */}
           {isAuctioneer && (
-            <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-2">
-              <h2 className="text-xs font-semibold text-[#849585] uppercase tracking-wider mb-3">Quick Links</h2>
+            <div className="rounded-lg border border-border bg-card p-5 space-y-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Links</h2>
               <CopyRow label="Lobby URL" url={`/auction/${id}`} />
               <CopyRow label="Teams View" url={`/auction/${id}/teams`} />
             </div>
@@ -383,17 +383,17 @@ export function LobbyContent({
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => !deleting && setShowDeleteConfirm(false)} />
-          <div className="relative bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 className="text-sm font-semibold text-[#d6e4f9]">Delete Auction?</h3>
-            <p className="text-sm text-[#849585]">
-              This will permanently delete <span className="font-semibold text-[#d6e4f9]">{league.name}</span> and all associated data — teams, player sales, bids, and member records. This action cannot be undone.
+          <div className="relative bg-card border border-border rounded-xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 className="text-sm font-semibold text-foreground">Delete Auction?</h3>
+            <p className="text-sm text-muted-foreground">
+              This will permanently delete <span className="font-semibold text-foreground">{league.name}</span> and all associated data — teams, player sales, bids, and member records. This action cannot be undone.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={deleting}
                 variant="outline"
-                className="border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b]"
+                className="border-border text-muted-foreground hover:bg-secondary"
               >
                 Cancel
               </Button>
@@ -443,7 +443,7 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
   const map: Record<string, string> = {
     setup: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     active: "bg-green-500/20 text-green-400 border-green-500/30",
-    complete: "bg-[#3b4b3d] text-[#849585] border-[#3b4b3d]",
+    complete: "bg-border text-muted-foreground border-border",
   };
   const label: Record<string, string> = { setup: "Setup", active: "Live", complete: "Complete" };
   const cls = map[status] ?? map["setup"];
@@ -480,12 +480,12 @@ function CopyRow({ label, url }: Readonly<{ label: string; url: string }>) {
   }
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="text-[#849585] w-24 shrink-0">{label}</span>
-      <span className="text-[#d6e4f9] font-mono truncate flex-1 min-w-0">{fullUrl}</span>
+      <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+      <span className="text-foreground font-mono truncate flex-1 min-w-0">{fullUrl}</span>
       <Button
         onClick={copy}
         size="sm"
-        className="h-6 px-2 text-xs bg-[#132030] border border-[#3b4b3d] text-[#849585] hover:bg-[#1e2b3b] shrink-0"
+        className="h-6 px-2 text-xs bg-muted border border-border text-muted-foreground hover:bg-secondary shrink-0"
       >
         {copied ? "Copied!" : "Copy"}
       </Button>

@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { PopoutHidden } from "@/components/popout-hidden";
 import { AuthProvider } from "@/components/auth-provider";
 import { NProgressProvider } from "@/components/nprogress-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -26,25 +27,48 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#061423] text-[#d6e4f9] font-sans">
-        <AuthProvider>
-          <NProgressProvider>
-          <TooltipProvider>
-            <Suspense>
-              <PopoutHidden>
-                <Nav />
-              </PopoutHidden>
-            </Suspense>
-            <main className="flex-1">{children}</main>
-            <Suspense>
-              <PopoutHidden>
-                <Footer />
-              </PopoutHidden>
-            </Suspense>
-          </TooltipProvider>
-          </NProgressProvider>
-        </AuthProvider>
+    <html lang="en" className={`${inter.variable} h-full antialiased dark`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+              try {
+                var theme = localStorage.getItem('fplah-theme') || 'dark';
+                var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) {
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('light');
+                  document.documentElement.style.colorScheme = 'dark';
+                } else {
+                  document.documentElement.classList.add('light');
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.style.colorScheme = 'light';
+                }
+              } catch (e) {}
+            })();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+        <ThemeProvider defaultTheme="dark">
+          <AuthProvider>
+            <NProgressProvider>
+              <TooltipProvider>
+                <Suspense>
+                  <PopoutHidden>
+                    <Nav />
+                  </PopoutHidden>
+                </Suspense>
+                <main className="flex-1">{children}</main>
+                <Suspense>
+                  <PopoutHidden>
+                    <Footer />
+                  </PopoutHidden>
+                </Suspense>
+              </TooltipProvider>
+            </NProgressProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <Toaster position="top-right" />
         <Analytics />
         <SpeedInsights />

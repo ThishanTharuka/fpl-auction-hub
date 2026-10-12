@@ -79,8 +79,45 @@
   to { height: 0; }
 }
 
-/* FPL Auction Hub — always-dark Stitch theme */
+/* FPL Auction Hub — Ivory Warm Daylight Theme (Default in :root) */
 :root {
+  --background: #fbf9f4; /* Soft warm ivory canvas */
+  --foreground: #1c1917; /* Deep stone ink */
+  --card: #ffffff; /* Crisp warm card */
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #007a43; /* Rich classic Premier League emerald green */
+  --primary-foreground: #ffffff;
+  --secondary: #eee9dc; /* Warm stone-ivory secondary */
+  --secondary-foreground: #1c1917;
+  --muted: #f4f0e6; /* Soft parchment tint for hover/stripes */
+  --muted-foreground: #57534e; /* Warm slate/stone */
+  --accent: #eee9dc;
+  --accent-foreground: #1c1917;
+  --destructive: #dc2626;
+  --border: #dfd9ce; /* Warm hairline border */
+  --input: #ffffff;
+  --ring: #007a43;
+  --radius: 0.375rem;
+  --chart-1: #007a43;
+  --chart-2: #1d4ed8;
+  --chart-3: #6d28d9;
+  --chart-4: #be123c;
+  --chart-5: #0369a1;
+  --sidebar: #f5f1e8; /* Warm ivory navigation & sidebar */
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #007a43;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eae4d5;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #dfd9ce;
+  --sidebar-ring: #007a43;
+  --foreground-dim: #78716c;
+}
+
+/* FPL Auction Hub — Stadium Dark Theme (.dark) */
+.dark {
   --background: #061423;
   --foreground: #d6e4f9;
   --card: #0f1c2c;
@@ -116,13 +153,13 @@
   --foreground-dim: #849585;
 }
 
-/* NProgress — match app green accent */
+/* NProgress — dynamically follows primary brand accent */
 #nprogress .bar {
-  background: #00e478 !important;
+  background: var(--primary) !important;
   height: 3px !important;
 }
 #nprogress .peg {
-  box-shadow: 0 0 10px #00e478, 0 0 5px #00e478 !important;
+  box-shadow: 0 0 10px var(--primary), 0 0 5px var(--primary) !important;
 }
 
 @layer base {
@@ -135,4 +172,101 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Light mode bridge for legacy hardcoded dark tokens */
+html:not(.dark) {
+  .bg-\[\#061423\] { background-color: var(--background) !important; }
+  .bg-\[\#0f1c2c\] { background-color: var(--card) !important; }
+  .bg-\[\#0a1828\] { background-color: var(--muted) !important; }
+  .bg-\[\#0a1828\]\/50 { background-color: rgba(244, 240, 230, 0.6) !important; }
+  .bg-\[\#020f1e\] { background-color: var(--sidebar) !important; }
+  .bg-\[\#132030\] { background-color: var(--muted) !important; }
+  .bg-\[\#132030\]\/90 { background-color: var(--card) !important; }
+  .bg-\[\#132030\]\/80 { background-color: var(--muted) !important; }
+  .bg-\[\#132030\]\/60 { background-color: var(--muted) !important; }
+  .bg-\[\#132030\]\/40 { background-color: var(--muted) !important; }
+  .bg-\[\#132030\]\/30 { background-color: var(--muted) !important; }
+  .bg-\[\#101b28\]\/80 { background-color: var(--muted) !important; }
+  .bg-\[\#101b28\]\/40 { background-color: var(--muted) !important; }
+  .bg-\[\#0d1824\] { background-color: var(--muted) !important; }
+  .bg-\[\#1a2838\] { background-color: var(--muted) !important; }
+  .bg-\[\#1e2b3b\] { background-color: var(--secondary) !important; }
+  .bg-\[\#1a2b3d\] { background-color: var(--card) !important; }
+  .bg-\[\#1a2b3d\]\/50 { background-color: var(--muted) !important; }
+  
+  .border-\[\#3b4b3d\] { border-color: var(--border) !important; }
+  .border-\[\#3b4b3d\]\/80 { border-color: var(--border) !important; }
+  .border-\[\#3b4b3d\]\/70 { border-color: var(--border) !important; }
+  .border-\[\#3b4b3d\]\/60 { border-color: rgba(223, 217, 206, 0.7) !important; }
+  .border-\[\#3b4b3d\]\/50 { border-color: rgba(223, 217, 206, 0.6) !important; }
+  .border-\[\#3b4b3d\]\/40 { border-color: rgba(223, 217, 206, 0.5) !important; }
+  .border-\[\#3b4b3d\]\/30 { border-color: rgba(223, 217, 206, 0.4) !important; }
+
+  .border-\[\#00e478\] { border-color: var(--primary) !important; }
+  .border-\[\#00e478\]\/60 { border-color: rgba(0, 122, 67, 0.6) !important; }
+  .border-\[\#00e478\]\/50 { border-color: rgba(0, 122, 67, 0.5) !important; }
+  .border-\[\#00e478\]\/40 { border-color: rgba(0, 122, 67, 0.4) !important; }
+  .border-\[\#00e478\]\/30 { border-color: rgba(0, 122, 67, 0.3) !important; }
+  .border-\[\#00e478\]\/20 { border-color: rgba(0, 122, 67, 0.2) !important; }
+  .ring-\[\#00e478\] { --tw-ring-color: var(--primary) !important; }
+  
+  .text-\[\#d6e4f9\] { color: var(--foreground) !important; }
+  .text-\[\#b9cbb9\] { color: var(--muted-foreground) !important; }
+  .text-\[\#869ab8\] { color: var(--foreground-dim) !important; }
+  .text-\[\#849585\] { color: var(--foreground-dim) !important; }
+  
+  .divide-\[\#3b4b3d\]\/40 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(223, 217, 206, 0.5) !important;
+  }
+  .divide-\[\#3b4b3d\]\/30 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(223, 217, 206, 0.4) !important;
+  }
+
+  /* Button and accent contrast bridge */
+  .bg-\[\#00e478\] {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
+  .text-\[\#00e478\] {
+    color: var(--primary) !important;
+  }
+}
+
+/* Circular radiating view transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Fallback radiating ripple for browsers without native View Transitions */
+@keyframes radiating-ripple-expand {
+  0% {
+    clip-path: circle(0px at var(--ripple-x, 50%) var(--ripple-y, 0px));
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(var(--ripple-radius, 150vmax) at var(--ripple-x, 50%) var(--ripple-y, 0px));
+    opacity: 0;
+  }
+}
+
+.radiating-theme-ripple {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99999;
+  animation: radiating-ripple-expand 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

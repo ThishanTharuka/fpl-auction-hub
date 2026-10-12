@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 
 const supabase = createSupabaseBrowserClient();
 
@@ -22,9 +23,9 @@ interface LeagueRow {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  setup: { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  active: { label: "Live", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
-  complete: { label: "Complete", cls: "bg-[#3b4b3d] text-[#849585] border-[#3b4b3d]" },
+  setup: { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  active: { label: "Live", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  complete: { label: "Complete", cls: "bg-muted text-muted-foreground border-border" },
 };
 
 export default function AuctionBrowsePage() {
@@ -139,11 +140,11 @@ export default function AuctionBrowsePage() {
     <div className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#d6e4f9]">Auctions</h1>
-          <p className="text-sm text-[#849585] mt-1">Browse and join auction rooms.</p>
+          <h1 className="text-2xl font-bold text-foreground">Auctions</h1>
+          <p className="text-sm text-muted-foreground mt-1">Browse and join auction rooms.</p>
         </div>
         <Link href="/auction/setup">
-          <Button className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer">
             + New Auction
           </Button>
         </Link>
@@ -154,26 +155,26 @@ export default function AuctionBrowsePage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] px-5 py-4 animate-pulse"
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 animate-pulse"
             >
               <div className="space-y-2 min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-48 rounded bg-[#1e2b3b]" />
-                  <div className="h-5 w-14 rounded-full bg-[#1e2b3b]" />
+                  <div className="h-5 w-48 rounded bg-muted" />
+                  <div className="h-5 w-14 rounded-full bg-muted" />
                 </div>
-                <div className="h-3 w-24 rounded bg-[#1e2b3b]" />
+                <div className="h-3 w-24 rounded bg-muted" />
               </div>
-              <div className="h-8 w-16 rounded bg-[#1e2b3b] shrink-0 ml-4" />
+              <div className="h-8 w-16 rounded bg-muted shrink-0 ml-4" />
             </div>
           ))}
         </div>
       )}
 
       {!loading && leagues.length === 0 && (
-        <div className="text-center py-16 text-[#849585]">
+        <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg mb-2">No auctions yet.</p>
           <p className="text-sm">
-            <Link href="/auction/setup" className="text-[#00e478] hover:underline">
+            <Link href="/auction/setup" className="text-primary hover:underline font-medium">
               Create the first one
             </Link>
           </p>
@@ -182,33 +183,33 @@ export default function AuctionBrowsePage() {
 
       <div className="space-y-3">
         {leagues.map((league) => {
-          const statusInfo = STATUS_LABELS[league.status ?? "setup"] ?? { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+          const statusInfo = STATUS_LABELS[league.status ?? "setup"] ?? { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" };
           const isOwner = user?.id === league.created_by;
           return (
             <div
               key={league.id}
-              className="flex items-center justify-between rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] px-5 py-4"
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 shadow-sm"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-semibold text-[#d6e4f9] truncate">
+                  <span className="text-base font-semibold text-foreground truncate">
                     {league.name}
                   </span>
                   <Badge className={`text-xs border ${statusInfo.cls}`}>
                     {statusInfo.label}
                   </Badge>
                   {isOwner && (
-                    <Badge className="text-xs border bg-purple-500/20 text-purple-400 border-purple-500/30">
+                    <Badge className="text-xs border bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30">
                       Your auction
                     </Badge>
                   )}
                   {league.room_password && !isOwner && (
-                    <Badge className="text-xs border bg-[#1e2b3b] text-[#849585] border-[#3b4b3d]">
-                      🔒 Password
+                    <Badge className="text-xs border bg-muted text-muted-foreground border-border inline-flex items-center gap-1">
+                      <Lock className="w-3 h-3" /> Password
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-[#849585]">
+                <p className="text-xs text-muted-foreground">
                   {league.participant_count} team{league.participant_count === 1 ? "" : "s"}
                 </p>
               </div>
@@ -218,7 +219,8 @@ export default function AuctionBrowsePage() {
                   <Button
                     onClick={() => handleSpectate(league)}
                     size="sm"
-                    className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]"
+                    variant="outline"
+                    className="border-primary/40 text-primary hover:bg-primary/10 cursor-pointer"
                   >
                     Spectate
                   </Button>
@@ -226,7 +228,8 @@ export default function AuctionBrowsePage() {
                 <Button
                   onClick={() => handleEnter(league)}
                   size="sm"
-                  className="bg-[#132030] border border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                  variant="outline"
+                  className="border-border text-foreground hover:bg-muted font-medium cursor-pointer"
                 >
                   {isOwner ? "Manage" : "Enter"}
                 </Button>
@@ -238,10 +241,10 @@ export default function AuctionBrowsePage() {
 
       {pendingLeague && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0f1c2c] border border-[#3b4b3d] rounded-xl p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-lg font-semibold text-[#d6e4f9]">Room Password</h2>
-            <p className="text-sm text-[#849585]">
-              <span className="text-[#d6e4f9]">{pendingLeague.name}</span>{" "}
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm space-y-4 shadow-xl">
+            <h2 className="text-lg font-semibold text-foreground">Room Password</h2>
+            <p className="text-sm text-muted-foreground">
+              <span className="text-foreground font-medium">{pendingLeague.name}</span>{" "}
               {pendingAction === "spectate"
                 ? "requires a password to watch."
                 : "requires a password to join."}
@@ -256,23 +259,23 @@ export default function AuctionBrowsePage() {
                 setPasswordError("");
               }}
               onKeyDown={(e) => e.key === "Enter" && submitPassword()}
-              className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
             {passwordError && (
-              <p className="text-xs text-red-400">{passwordError}</p>
+              <p className="text-xs text-destructive">{passwordError}</p>
             )}
             <div className="flex gap-2">
               <Button
                 onClick={() => setPendingLeague(null)}
                 variant="outline"
-                className="flex-1 border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
+                className="flex-1 border-border text-foreground hover:bg-muted cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={submitPassword}
                 disabled={!passwordInput.trim()}
-                className="flex-1 bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer"
               >
                 {pendingAction === "spectate" ? "Watch" : "Enter"}
               </Button>

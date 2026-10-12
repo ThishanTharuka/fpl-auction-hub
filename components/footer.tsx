@@ -5,15 +5,15 @@ const REPO = "https://github.com/ThishanTharuka/fpl-auction-hub";
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-[#3b4b3d]/50">
-      <nav className="mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-xs text-[#849585]">
-        <span>FPL Auction Hub</span>
+    <footer className="relative border-t border-border bg-sidebar/50 backdrop-blur-xs">
+      <nav className="mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground/80">FPL Auction Hub</span>
         <span aria-hidden="true">&middot;</span>
         <Link
           href={`${REPO}/releases`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-[#d6e4f9] transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           Release Notes
         </Link>
@@ -22,21 +22,21 @@ export function Footer() {
           href={`${REPO}/issues/new/choose`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-[#d6e4f9] transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           Report an Issue
         </Link>
         <span aria-hidden="true">&middot;</span>
         <Link
           href="/privacy"
-          className="hover:text-[#d6e4f9] transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           Privacy
         </Link>
         <span aria-hidden="true">&middot;</span>
         <Link
           href="/terms"
-          className="hover:text-[#d6e4f9] transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           Terms
         </Link>
@@ -45,7 +45,7 @@ export function Footer() {
           href={REPO}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-[#d6e4f9] transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           GitHub
         </Link>

@@ -104,15 +104,13 @@ export function calculateMarketRadar(
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const combinedHistory = { ...(dailyPriceHistory || {}) };
-  if (!combinedHistory[todayStr]) {
-    const todayMap: Record<string, number> = {};
-    for (const s of summaries) {
-      if (s.costChangeDay !== 0) {
-        todayMap[s.player.id.toString()] = s.costChangeDay;
-      }
+  const todayMap: Record<string, number> = {};
+  for (const s of summaries) {
+    if (s.costChangeDay !== 0) {
+      todayMap[s.player.id.toString()] = s.costChangeDay;
     }
-    combinedHistory[todayStr] = todayMap;
   }
+  combinedHistory[todayStr] = todayMap;
   const availableDates = Object.keys(combinedHistory).sort().reverse();
 
   return {

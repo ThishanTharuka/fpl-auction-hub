@@ -126,18 +126,18 @@ export function TournamentFixtures({
   return (
     <div className="space-y-4">
       {/* Control bar: Gameweek Quick Switcher & Group Filters */}
-      <div className="flex flex-col gap-3 rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-3 sm:p-4">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:p-4 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Group Filter Tabs (if tournament has Group A & B) */}
           {hasGroups ? (
-            <div className="flex items-center rounded-md border border-[#3b4b3d] bg-[#132030] p-0.5 text-xs font-medium">
+            <div className="flex items-center rounded-md border border-border bg-muted p-0.5 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setGroupFilter("all")}
                 className={`rounded px-2.5 py-1 transition-colors ${
                   groupFilter === "all"
-                    ? "bg-[#00e478] text-[#003919] font-semibold"
-                    : "text-[#849585] hover:text-[#d6e4f9]"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 All Groups
@@ -147,8 +147,8 @@ export function TournamentFixtures({
                 onClick={() => setGroupFilter("A")}
                 className={`rounded px-2.5 py-1 transition-colors ${
                   groupFilter === "A"
-                    ? "bg-[#00e478] text-[#003919] font-semibold"
-                    : "text-[#849585] hover:text-[#d6e4f9]"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Group A
@@ -158,16 +158,16 @@ export function TournamentFixtures({
                 onClick={() => setGroupFilter("B")}
                 className={`rounded px-2.5 py-1 transition-colors ${
                   groupFilter === "B"
-                    ? "bg-[#00e478] text-[#003919] font-semibold"
-                    : "text-[#849585] hover:text-[#d6e4f9]"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Group B
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-xs text-[#849585]">
-              <Layers className="h-3.5 w-3.5 text-[#00e478]" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Layers className="h-3.5 w-3.5 text-primary" />
               <span>Matchday Schedule</span>
             </div>
           )}
@@ -178,15 +178,15 @@ export function TournamentFixtures({
               <button
                 type="button"
                 onClick={expandAll}
-                className="text-[#849585] hover:text-[#00e478] transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
                 Expand all
               </button>
-              <span className="text-[#3b4b3d]">|</span>
+              <span className="text-border">|</span>
               <button
                 type="button"
                 onClick={collapseAll}
-                className="text-[#849585] hover:text-[#00e478] transition-colors"
+                className="text-muted-foreground hover:text-primary transition-colors"
               >
                 Collapse all
               </button>
@@ -202,8 +202,8 @@ export function TournamentFixtures({
               onClick={() => setUserSelectedGwFilter("all")}
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                 selectedGwFilter === "all"
-                  ? "bg-[#00e478] text-[#003919] font-semibold shadow-[0_0_10px_rgba(0,228,120,0.2)]"
-                  : "bg-[#132030] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d]"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-muted text-muted-foreground hover:text-foreground border border-border"
               }`}
             >
               All GWs
@@ -221,10 +221,10 @@ export function TournamentFixtures({
                   }}
                   className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                     isSelected
-                      ? "bg-[#00e478] text-[#003919] font-semibold shadow-[0_0_10px_rgba(0,228,120,0.2)]"
+                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                       : isLive
-                      ? "bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/40 hover:bg-[#00e478]/25"
-                      : "bg-[#132030] text-[#849585] hover:text-[#d6e4f9] border border-[#3b4b3d]"
+                      ? "bg-primary/15 text-primary border border-primary/40 hover:bg-primary/25"
+                      : "bg-muted text-muted-foreground hover:text-foreground border border-border"
                   }`}
                 >
                   <span>GW {gw}</span>
@@ -232,8 +232,8 @@ export function TournamentFixtures({
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
                         isSelected
-                          ? "bg-[#003919]"
-                          : "bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]"
+                          ? "bg-primary-foreground"
+                          : "bg-primary animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]"
                       }`}
                     />
                   )}
@@ -269,36 +269,36 @@ export function TournamentFixtures({
               key={gw}
               className={`rounded-lg border transition-all duration-200 overflow-hidden ${
                 isLiveGw
-                  ? "border-[#00e478]/40 bg-[#0f1c2c] shadow-[0_0_20px_rgba(0,228,120,0.05)]"
+                  ? "border-primary/40 bg-card shadow-[0_0_20px_rgba(0,122,67,0.08)] dark:shadow-[0_0_20px_rgba(0,228,120,0.05)]"
                   : isAdminSelected
-                  ? "border-[#00e478]/30 bg-[#0f1c2c]"
-                  : "border-[#3b4b3d] bg-[#0f1c2c]"
+                  ? "border-primary/30 bg-card"
+                  : "border-border bg-card"
               }`}
             >
               {/* Gameweek Accordion Header */}
               <button
                 type="button"
                 onClick={() => toggleGw(gw)}
-                className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition-colors hover:bg-[#132030]/60"
+                className="w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition-colors hover:bg-muted/50"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-sm sm:text-base font-bold text-[#d6e4f9]">
+                  <span className="text-sm sm:text-base font-bold text-foreground">
                     Gameweek {gw}
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#132030] text-[#849585] border border-[#3b4b3d]">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground border border-border">
                     {isLiveGw ? "In Progress" : isComplete ? "Finished" : `${scoredCount}/${totalCount} Scored`}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
                   {isLiveGw && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
-                      <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_8px_rgba(0,228,120,0.8)]" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-primary/15 text-primary border border-primary/30 shadow-[0_0_10px_rgba(0,228,120,0.15)]">
+                      <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary animate-pulse-slow shadow-[0_0_8px_rgba(0,228,120,0.8)]" />
                       Live
                     </span>
                   )}
                   {selectedGwFilter === "all" && (
-                    <span className="text-[#849585]">
+                    <span className="text-muted-foreground">
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </span>
                   )}
@@ -307,9 +307,9 @@ export function TournamentFixtures({
 
               {/* Fixtures Body Grid */}
               {isExpanded && (
-                <div className="p-3 sm:p-4 pt-2 border-t border-[#3b4b3d]/40">
+                <div className="p-3 sm:p-4 pt-2 border-t border-border/40">
                   {rows.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-[#849585]">
+                    <p className="py-6 text-center text-xs text-muted-foreground">
                       No fixtures matching this filter in Gameweek {gw}.
                     </p>
                   ) : (() => {
@@ -355,28 +355,28 @@ export function TournamentFixtures({
                       return (
                         <div
                           key={f.id}
-                          className={`rounded-lg border transition-all duration-150 p-3 space-y-2.5 ${
+                          className={`rounded-lg border transition-all duration-150 p-3 space-y-2.5 shadow-xs ${
                             isLiveGw
-                              ? "border-[#3b4b3d] bg-[#132030]/90 hover:border-[#00e478]/40 hover:bg-[#132030]"
-                              : "border-[#3b4b3d]/80 bg-[#132030]/60 hover:border-[#3b4b3d] hover:bg-[#132030]"
+                              ? "border-primary/40 bg-card hover:border-primary/60 hover:bg-muted/20"
+                              : "border-border bg-card hover:border-primary/30 hover:bg-muted/15"
                           }`}
                         >
                           {/* Card Top Pill: Group/Phase and Match Status */}
                           <div className="flex items-center justify-between text-[10px] sm:text-[11px]">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded font-medium bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]/60">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded font-medium bg-muted text-muted-foreground border border-border">
                               {fixtureGroupLabel(f)}
                             </span>
                             {isLiveGw ? (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30">
-                                <span className="h-1 w-1 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-semibold bg-primary/15 text-primary border border-primary/30">
+                                <span className="h-1 w-1 rounded-full bg-primary animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
                                 Live
                               </span>
                             ) : isScored ? (
-                              <span className="font-semibold text-[#849585] uppercase tracking-wider">
+                              <span className="font-semibold text-muted-foreground uppercase tracking-wider">
                                 Final
                               </span>
                             ) : (
-                              <span className="text-[#849585] uppercase tracking-wider">
+                              <span className="text-muted-foreground uppercase tracking-wider">
                                 Scheduled
                               </span>
                             )}
@@ -396,10 +396,10 @@ export function TournamentFixtures({
                                 <span
                                   className={`text-xs sm:text-sm truncate ${
                                     isScored && isHomeWinner
-                                      ? "font-semibold text-[#d6e4f9]"
+                                      ? "font-semibold text-foreground"
                                       : isScored && isAwayWinner
-                                      ? "text-[#849585]"
-                                      : "text-[#d6e4f9]"
+                                      ? "text-muted-foreground"
+                                      : "text-foreground"
                                   }`}
                                   title={homeName}
                                 >
@@ -410,23 +410,23 @@ export function TournamentFixtures({
                                 <span
                                   className={`text-xs sm:text-sm font-bold tabular-nums shrink-0 px-2 py-0.5 rounded ${
                                     isHomeWinner
-                                      ? "text-[#00e478] bg-[#00e478]/10"
+                                      ? "text-primary bg-primary/10"
                                       : isDraw
-                                      ? "text-[#d6e4f9] bg-[#1e2b3b]"
-                                      : "text-[#849585]"
+                                      ? "text-foreground bg-muted"
+                                      : "text-muted-foreground"
                                   }`}
                                 >
                                   {f.home_points}
                                 </span>
                               ) : (
-                                <span className="text-xs text-[#849585] tabular-nums shrink-0 px-1">
+                                <span className="text-xs text-muted-foreground tabular-nums shrink-0 px-1">
                                   -
                                 </span>
                               )}
                             </div>
 
                             {/* Subtle Hairline Divider */}
-                            <div className="h-px bg-[#3b4b3d]/30" />
+                            <div className="h-px bg-border/40" />
 
                             {/* Away Team */}
                             <div className="flex items-center justify-between gap-2.5">
@@ -440,10 +440,10 @@ export function TournamentFixtures({
                                 <span
                                   className={`text-xs sm:text-sm truncate ${
                                     isScored && isAwayWinner
-                                      ? "font-semibold text-[#d6e4f9]"
+                                      ? "font-semibold text-foreground"
                                       : isScored && isHomeWinner
-                                      ? "text-[#849585]"
-                                      : "text-[#d6e4f9]"
+                                      ? "text-muted-foreground"
+                                      : "text-foreground"
                                   }`}
                                   title={awayName}
                                 >
@@ -454,38 +454,38 @@ export function TournamentFixtures({
                                 <span
                                   className={`text-xs sm:text-sm font-bold tabular-nums shrink-0 px-2 py-0.5 rounded ${
                                     isAwayWinner
-                                      ? "text-[#00e478] bg-[#00e478]/10"
+                                      ? "text-primary bg-primary/10"
                                       : isDraw
-                                      ? "text-[#d6e4f9] bg-[#1e2b3b]"
-                                      : "text-[#849585]"
+                                      ? "text-foreground bg-muted"
+                                      : "text-muted-foreground"
                                   }`}
                                 >
                                   {f.away_points}
                                 </span>
                               ) : (
-                                <span className="text-xs text-[#849585] tabular-nums shrink-0 px-1">
+                                <span className="text-xs text-muted-foreground tabular-nums shrink-0 px-1">
                                   -
                                 </span>
                               )}
                             </div>
 
                             {/* Fixture Card Footer: Subtle Breakdown Trigger */}
-                            <div className="pt-2 flex items-center justify-between border-t border-[#3b4b3d]/30 text-[11px]">
+                            <div className="pt-2 flex items-center justify-between border-t border-border/40 text-[11px]">
                               {isFutureGw && !isScored ? (
-                                <span className="text-[10px] text-[#849585]/70 italic">
+                                <span className="text-[10px] text-muted-foreground/70 italic">
                                   Lineups revealed at deadline
                                 </span>
                               ) : (
                                 <>
-                                  <span className="text-[10px] text-[#849585]/70">
+                                  <span className="text-[10px] text-muted-foreground/70">
                                     {isScored ? "Final match points" : "Live match details"}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => setSelectedModalFixture(f)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-[#d6e4f9] bg-[#1a2838] border border-[#3b4b3d] hover:border-[#00e478]/50 hover:bg-[#00e478]/15 hover:text-[#00e478] transition-all duration-150 active:scale-[0.98] shadow-xs cursor-pointer"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold text-foreground bg-muted border border-border hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all duration-150 active:scale-[0.98] shadow-xs cursor-pointer"
                                   >
-                                    <Users className="h-3 w-3 text-[#00e478]" />
+                                    <Users className="h-3 w-3 text-primary" />
                                     <span>Breakdown</span>
                                   </button>
                                 </>
@@ -502,14 +502,14 @@ export function TournamentFixtures({
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {/* Left Side: Group A */}
                             <div className="space-y-2.5">
-                              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-[#3b4b3d]/60">
+                              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-border/60">
                                 <div className="flex items-center gap-2">
-                                  <span className="inline-block h-2 w-2 rounded-full bg-[#00e478]" />
-                                  <span className="text-xs font-bold text-[#d6e4f9] uppercase tracking-wider">
+                                  <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                                     Group A
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-[#849585] font-medium">
+                                <span className="text-[11px] text-muted-foreground font-medium">
                                   {groupAFixtures.filter((f) => f.status === "scored").length}/{groupAFixtures.length} Scored
                                 </span>
                               </div>
@@ -520,14 +520,14 @@ export function TournamentFixtures({
 
                             {/* Right Side: Group B */}
                             <div className="space-y-2.5">
-                              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-[#3b4b3d]/60">
+                              <div className="flex items-center justify-between px-1 pb-1.5 border-b border-border/60">
                                 <div className="flex items-center gap-2">
-                                  <span className="inline-block h-2 w-2 rounded-full bg-[#00e478]" />
-                                  <span className="text-xs font-bold text-[#d6e4f9] uppercase tracking-wider">
+                                  <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                                     Group B
                                   </span>
                                 </div>
-                                <span className="text-[11px] text-[#849585] font-medium">
+                                <span className="text-[11px] text-muted-foreground font-medium">
                                   {groupBFixtures.filter((f) => f.status === "scored").length}/{groupBFixtures.length} Scored
                                 </span>
                               </div>
@@ -539,7 +539,7 @@ export function TournamentFixtures({
 
                           {/* Additional / Knockout fixtures if any */}
                           {otherFixtures.length > 0 && (
-                            <div className="space-y-2.5 pt-2 border-t border-[#3b4b3d]/40">
+                            <div className="space-y-2.5 pt-2 border-t border-border/40">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {otherFixtures.map(renderCard)}
                               </div>
@@ -562,7 +562,7 @@ export function TournamentFixtures({
         })}
 
         {displayedGws.length === 0 && (
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-8 text-center text-sm text-[#849585]">
+          <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
             No fixtures found.
           </div>
         )}

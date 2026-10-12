@@ -279,7 +279,10 @@ export function getCurrentTtl(fixtures: FPLFixture[]): number {
   return TTL.DEFAULT;
 }
 
-async function fetchFromUpstream(): Promise<{
+async function fetchFromUpstream(precomputed?: {
+  changesMap: Map<number, number>;
+  history: Record<string, Record<string, number>>;
+}): Promise<{
   data: FplDataResult;
   ttl: number;
 }> {
@@ -314,7 +317,7 @@ async function fetchFromUpstream(): Promise<{
   );
 
   const { changesMap: dailyChangesMap, history: dailyPriceHistory } =
-    await getDailyPriceChanges(bootstrap.elements);
+    precomputed ?? await getDailyPriceChanges(bootstrap.elements);
 
   const players: EnrichedPlayer[] = bootstrap.elements.map((p) => {
     const team = teamMap.get(p.team);
@@ -350,8 +353,11 @@ async function fetchFromUpstream(): Promise<{
   };
 }
 
-export async function fetchAndCacheFplData(): Promise<FplDataResult> {
-  const { data: fresh, ttl } = await fetchFromUpstream();
+export async function fetchAndCacheFplData(precomputed?: {
+  changesMap: Map<number, number>;
+  history: Record<string, Record<string, number>>;
+}): Promise<FplDataResult> {
+  const { data: fresh, ttl } = await fetchFromUpstream(precomputed);
   await supabase
     .from("fpl_cache")
     .upsert(
@@ -394,7 +400,7 @@ export async function getFplData(): Promise<FplDataResult> {
 }
 
 export async function syncDailyPrices(
-  force = false,
+  _force = false,
 ): Promise<DailyPriceSyncResult> {
   const bootstrapRes = await fetch(FPL_BOOTSTRAP_URL, { headers: HEADERS });
   if (!bootstrapRes.ok) {
@@ -403,7 +409,7 @@ export async function syncDailyPrices(
     );
   }
   const bootstrap: FPLBootstrapResponse = await bootstrapRes.json();
-  const { changesMap } = await getDailyPriceChanges(bootstrap.elements);
+  const { changesMap, history } = await getDailyPriceChanges(bootstrap.elements);
 
   const risers: DailyPriceSyncPlayer[] = [];
   const fallers: DailyPriceSyncPlayer[] = [];
@@ -423,9 +429,7 @@ export async function syncDailyPrices(
     else if (change < 0) fallers.push(item);
   }
 
-  if (force || risers.length > 0 || fallers.length > 0) {
-    await fetchAndCacheFplData();
-  }
+  await fetchAndCacheFplData({ changesMap, history });
 
   return {
     success: true,
