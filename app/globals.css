@@ -182,6 +182,7 @@ html:not(.dark) {
   .bg-\[\#0a1828\]\/50 { background-color: rgba(244, 240, 230, 0.6) !important; }
   .bg-\[\#020f1e\] { background-color: var(--sidebar) !important; }
   .bg-\[\#132030\] { background-color: var(--muted) !important; }
+  .bg-\[\#142030\] { background-color: var(--muted) !important; }
   .bg-\[\#132030\]\/90 { background-color: var(--card) !important; }
   .bg-\[\#132030\]\/80 { background-color: var(--muted) !important; }
   .bg-\[\#132030\]\/60 { background-color: var(--muted) !important; }

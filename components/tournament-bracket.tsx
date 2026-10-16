@@ -97,7 +97,7 @@ function getDeciderMatchInfo(tieIndex: number) {
 // ── SVG Bracket Forks & Routing Connectors ───────────────────────────────────
 
 function BracketFork({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   width = 32,
   topPercent = 25,
   bottomPercent = 75,
@@ -150,7 +150,7 @@ function BracketFork({
 
 // Connector between Opening Round [E1, E4, E2, E3] and Eliminators R1 & R2 [E6, E7, E5, E8]
 function EliminatorsConnectorR1ToR2({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -203,7 +203,7 @@ function EliminatorsConnectorR1ToR2({
 
 // Connector between Eliminators R1 & R2 [E6, E7, E5, E8] and Eliminators R3 & R4 [E9, E11, E10]
 function EliminatorsConnectorR2ToR3({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -243,7 +243,7 @@ function EliminatorsConnectorR2ToR3({
 
 // Connector between Eliminators R3 & R4 [E9, E11, E10] and Triangular Decider
 function EliminatorsConnectorR3ToDecider({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   width = 72,
 }: {
   color?: string;
@@ -264,7 +264,7 @@ function EliminatorsConnectorR3ToDecider({
 
 // Connector between Triangular Decider and Eliminators Final [E13]
 function EliminatorsConnectorDeciderToE13({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -293,7 +293,7 @@ function EliminatorsConnectorDeciderToE13({
         <polygon points="26,45 28,50 30,45" fill={dropColor} />
       </svg>
 
-      <span className="absolute top-[16%] left-1 text-[9px] font-medium text-blue-400 bg-[#0a1828] border border-blue-500/40 px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm">
+      <span className="absolute top-[16%] left-1 text-[9px] font-medium text-blue-600 dark:text-blue-400 bg-card border border-blue-500/40 px-1.5 py-0.5 rounded whitespace-nowrap shadow-xs">
         Q7L Drop
       </span>
     </div>
@@ -302,7 +302,7 @@ function EliminatorsConnectorDeciderToE13({
 
 // Connector between Eliminators Final [E13] and Grand Final
 function EliminatorsConnectorE13ToFinal({
-  color = "#00e478",
+  color = "var(--primary, #00e478)",
   width = 64,
 }: {
   color?: string;
@@ -322,7 +322,7 @@ function EliminatorsConnectorE13ToFinal({
 
 // Spacer 1 (width=80)
 function FullBracketSpacer1Upper({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -373,7 +373,7 @@ function FullBracketSpacer1Mid({
 }
 
 function FullBracketSpacer1Lower({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -426,7 +426,7 @@ function FullBracketSpacer1Lower({
 
 // Spacer 2 (width=96)
 function FullBracketSpacer2Upper({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -463,7 +463,7 @@ function FullBracketSpacer2Mid({
 }
 
 function FullBracketSpacer2Lower({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -503,7 +503,7 @@ function FullBracketSpacer2Lower({
 
 // Spacer 3 (width=72)
 function FullBracketSpacer3Upper({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   width = 72,
 }: {
   color?: string;
@@ -521,7 +521,7 @@ function FullBracketSpacer3Upper({
 }
 
 function FullBracketSpacer3Lower({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   width = 72,
 }: {
   color?: string;
@@ -542,7 +542,7 @@ function FullBracketSpacer3Lower({
 
 // Spacer 4 (width=64)
 function FullBracketSpacer4Upper({
-  color = "#00e478",
+  color = "var(--primary, #00e478)",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -574,7 +574,7 @@ function FullBracketSpacer4Mid({
       <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 64 80" preserveAspectRatio="none">
         <path d="M 28 0 V 80" fill="none" stroke={dropColor} strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
       </svg>
-      <span className="relative z-10 text-[9px] font-medium text-blue-400 bg-[#0a1828] border border-blue-500/40 px-1.5 py-0.5 rounded whitespace-nowrap shadow-sm">
+      <span className="relative z-10 text-[9px] font-medium text-blue-600 dark:text-blue-400 bg-card border border-blue-500/40 px-1.5 py-0.5 rounded whitespace-nowrap shadow-xs">
         Q7L Drop
       </span>
     </div>
@@ -582,7 +582,7 @@ function FullBracketSpacer4Mid({
 }
 
 function FullBracketSpacer4Lower({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -616,7 +616,7 @@ function FullBracketSpacer4Lower({
 
 // Spacer 5 (width=64) - Grand Final Convergence
 function FullBracketSpacer5Upper({
-  color = "#00e478",
+  color = "var(--primary, #00e478)",
   width = 64,
 }: {
   color?: string;
@@ -641,7 +641,7 @@ function FullBracketSpacer5Upper({
 }
 
 function FullBracketSpacer5Mid({
-  color = "#00e478",
+  color = "var(--primary, #00e478)",
   width = 64,
 }: {
   color?: string;
@@ -678,7 +678,7 @@ function FullBracketSpacer5Mid({
 }
 
 function FullBracketSpacer5Lower({
-  color = "#00e478",
+  color = "var(--primary, #00e478)",
   width = 64,
 }: {
   color?: string;
@@ -703,7 +703,7 @@ function FullBracketSpacer5Lower({
 }
 
 function DirectStem({
-  color = "#3b4b3d",
+  color = "var(--bracket-line, #3b4b3d)",
   width = 36,
   label,
 }: {
@@ -717,7 +717,7 @@ function DirectStem({
       style={{ width }}
     >
       {label && (
-        <span className="text-[9px] font-medium text-[#849585] mb-1 tracking-tight">{label}</span>
+        <span className="text-[9px] font-medium text-muted-foreground mb-1 tracking-tight">{label}</span>
       )}
       <svg className="w-full h-5 overflow-visible" viewBox="0 0 36 20">
         <path
@@ -981,58 +981,58 @@ export function TournamentBracket({
         onMouseLeave={() => setHighlightedPhase(null)}
         className={`group relative rounded-lg border transition-all duration-150 ${
           isFinal
-            ? "border-[#00e478]/50 bg-[#0f1c2c] hover:border-[#00e478]"
+            ? "border-primary/50 bg-card hover:border-primary shadow-xs"
             : isDecider
               ? isHighlighted
-                ? "border-violet-400 bg-[#132030] shadow-[0_0_12px_rgba(139,92,246,0.2)]"
-                : "border-violet-500/30 bg-[#0f1c2c] hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]"
+                ? "border-violet-500 bg-violet-500/10 dark:bg-violet-950/30 shadow-[0_0_12px_rgba(139,92,246,0.25)]"
+                : "border-violet-500/30 bg-card hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.15)] shadow-xs"
               : isEliminationPath
                 ? isHighlighted
                   ? isQualifierDropMatch
-                    ? "border-blue-500/80 bg-[#142030] shadow-[0_0_12px_rgba(59,130,246,0.2)]"
-                    : "border-orange-500/80 bg-[#142030] shadow-[0_0_12px_rgba(249,115,22,0.2)]"
+                    ? "border-blue-500 bg-blue-500/10 dark:bg-blue-950/30 shadow-[0_0_12px_rgba(59,130,246,0.25)]"
+                    : "border-orange-500 bg-orange-500/10 dark:bg-orange-950/30 shadow-[0_0_12px_rgba(249,115,22,0.25)]"
                   : isQualifierDropMatch
-                    ? "border-[#3b4b3d] bg-[#0f1c2c] hover:border-blue-400 hover:shadow-[0_0_10px_rgba(59,130,246,0.2)]"
-                    : "border-[#3b4b3d] bg-[#0f1c2c] hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.15)]"
+                    ? "border-border bg-card hover:border-blue-400 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] shadow-xs"
+                    : "border-border bg-card hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.15)] shadow-xs"
                 : isHighlighted
-                  ? "border-[#00e478]/50 bg-[#132030]"
-                  : "border-[#3b4b3d] bg-[#0f1c2c] hover:border-[#00e478]/50"
+                  ? "border-primary/60 bg-primary/10 dark:bg-[#132030] shadow-[0_0_12px_rgba(0,228,120,0.15)]"
+                  : "border-border bg-card hover:border-primary/50 shadow-xs"
         }`}
       >
         {/* Card Header Strip */}
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#3b4b3d]/60 bg-[#0a1828] rounded-t-lg">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/60 rounded-t-lg">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className={`text-[10px] font-semibold tracking-wide uppercase ${
                 isDecider
-                  ? "text-violet-300"
+                  ? "text-violet-600 dark:text-violet-300"
                   : isQualifierDropMatch
-                    ? "text-[#849585] group-hover:text-blue-400"
+                    ? "text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400"
                     : isEliminationPath
-                      ? "text-[#849585] group-hover:text-orange-300"
-                      : "text-[#849585] group-hover:text-[#00e478]"
+                      ? "text-muted-foreground group-hover:text-orange-600 dark:group-hover:text-orange-300"
+                      : "text-muted-foreground group-hover:text-primary"
               }`}
             >
               {phaseTag}
             </span>
             {dropLabel && (
-              <span className="text-[9px] font-medium text-blue-400/90 bg-blue-500/10 border border-blue-500/30 px-1.5 py-0.2 rounded group-hover:border-blue-400/60 group-hover:text-blue-300">
+              <span className="text-[9px] font-medium text-blue-600 dark:text-blue-400/90 bg-blue-500/10 border border-blue-500/30 px-1.5 py-0.2 rounded group-hover:border-blue-400/60 group-hover:text-blue-700 dark:group-hover:text-blue-300">
                 {dropLabel}
               </span>
             )}
             {m.isTwoLeg && (
-              <span className="text-[9px] font-medium text-[#849585] bg-[#1e2b3b] px-1.5 py-0.2 rounded">
+              <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.2 rounded">
                 2 Legs
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-[#849585] font-medium shrink-0">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium shrink-0">
             <span>{gwLabel}</span>
             {m.isTwoLeg && (
               <button
                 type="button"
                 onClick={() => setExpandedMatch(isExpanded ? null : cardId)}
-                className="text-[#849585] hover:text-[#d6e4f9] ml-1 inline-flex items-center"
+                className="text-muted-foreground hover:text-foreground ml-1 inline-flex items-center"
                 title="Toggle leg breakdown"
               >
                 {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -1047,8 +1047,8 @@ export function TournamentBracket({
           <div
             className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded transition-colors ${
               isHomeWinner
-                ? "bg-[#00e478]/10 text-[#00e478]"
-                : "text-[#d6e4f9] hover:bg-[#132030]/60"
+                ? "bg-primary/10 text-primary"
+                : "text-foreground hover:bg-muted/60"
             }`}
           >
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1059,23 +1059,23 @@ export function TournamentBracket({
                 size="sm"
               />
               <div className="min-w-0 flex-1">
-                <p className={`text-xs truncate ${m.homeId ? (isHomeWinner ? "font-bold text-[#00e478]" : "font-medium text-[#d6e4f9]") : "text-[#849585] italic font-normal"}`}>
+                <p className={`text-xs truncate ${m.homeId ? (isHomeWinner ? "font-bold text-primary" : "font-medium text-foreground") : "text-muted-foreground italic font-normal"}`}>
                   {teamName(m.homeId)}
                 </p>
                 {!m.homeId && (
-                  <p className="text-[9px] text-[#849585] leading-none">{m.originHome}</p>
+                  <p className="text-[9px] text-muted-foreground leading-none">{m.originHome}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              {isHomeWinner && <Check className="h-3 w-3 text-[#00e478]" />}
+              {isHomeWinner && <Check className="h-3 w-3 text-primary" />}
               <span
                 className={`text-xs font-semibold tabular-nums min-w-[20px] text-right ${
                   isScored
                     ? isHomeWinner
-                      ? "text-[#00e478]"
-                      : "text-[#849585]"
-                    : "text-[#849585]/40"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                    : "text-muted-foreground/40"
                 }`}
               >
                 {isScored && m.homePoints !== null ? m.homePoints : "—"}
@@ -1087,8 +1087,8 @@ export function TournamentBracket({
           <div
             className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded transition-colors ${
               isAwayWinner
-                ? "bg-[#00e478]/10 text-[#00e478]"
-                : "text-[#d6e4f9] hover:bg-[#132030]/60"
+                ? "bg-primary/10 text-primary"
+                : "text-foreground hover:bg-muted/60"
             }`}
           >
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1099,23 +1099,23 @@ export function TournamentBracket({
                 size="sm"
               />
               <div className="min-w-0 flex-1">
-                <p className={`text-xs truncate ${m.awayId ? (isAwayWinner ? "font-bold text-[#00e478]" : "font-medium text-[#d6e4f9]") : "text-[#849585] italic font-normal"}`}>
+                <p className={`text-xs truncate ${m.awayId ? (isAwayWinner ? "font-bold text-primary" : "font-medium text-foreground") : "text-muted-foreground italic font-normal"}`}>
                   {teamName(m.awayId)}
                 </p>
                 {!m.awayId && (
-                  <p className="text-[9px] text-[#849585] leading-none">{m.originAway}</p>
+                  <p className="text-[9px] text-muted-foreground leading-none">{m.originAway}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              {isAwayWinner && <Check className="h-3 w-3 text-[#00e478]" />}
+              {isAwayWinner && <Check className="h-3 w-3 text-primary" />}
               <span
                 className={`text-xs font-semibold tabular-nums min-w-[20px] text-right ${
                   isScored
                     ? isAwayWinner
-                      ? "text-[#00e478]"
-                      : "text-[#849585]"
-                    : "text-[#849585]/40"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                    : "text-muted-foreground/40"
                 }`}
               >
                 {isScored && m.awayPoints !== null ? m.awayPoints : "—"}
@@ -1126,20 +1126,20 @@ export function TournamentBracket({
 
         {/* 2-Leg Detailed Breakdown (Collapsible) */}
         {m.isTwoLeg && isExpanded && (
-          <div className="px-3 py-2 bg-[#0a1828] border-t border-[#3b4b3d]/60 text-[10px] space-y-1">
-            <div className="text-[#849585] font-semibold text-[9px] uppercase tracking-wider flex justify-between">
+          <div className="px-3 py-2 bg-muted/40 border-t border-border text-[10px] space-y-1">
+            <div className="text-muted-foreground font-semibold text-[9px] uppercase tracking-wider flex justify-between">
               <span>Leg</span>
               <span>Score</span>
             </div>
             {m.legs.map((l) => (
-              <div key={l.leg} className="flex justify-between items-center text-[#b9cbb9]">
+              <div key={l.leg} className="flex justify-between items-center text-muted-foreground">
                 <span>Leg {l.leg} (GW{l.gw}):</span>
-                <span className="font-medium tabular-nums text-[#d6e4f9]">
+                <span className="font-medium tabular-nums text-foreground">
                   {l.homePoints ?? "—"} : {l.awayPoints ?? "—"}
                 </span>
               </div>
             ))}
-            <div className="flex justify-between items-center pt-1 border-t border-[#3b4b3d]/40 text-[#00e478] font-semibold">
+            <div className="flex justify-between items-center pt-1 border-t border-border text-primary font-semibold">
               <span>Aggregate:</span>
               <span className="tabular-nums">
                 {m.homePoints ?? "—"} : {m.awayPoints ?? "—"}
@@ -1149,10 +1149,10 @@ export function TournamentBracket({
         )}
 
         {/* Path Destination Footer */}
-        <div className="px-3 py-1 bg-[#0a1828]/50 border-t border-[#3b4b3d]/30 rounded-b-lg flex items-center justify-between text-[9px] text-[#849585]">
+        <div className="px-3 py-1 bg-muted/30 border-t border-border/60 rounded-b-lg flex items-center justify-between text-[9px] text-muted-foreground">
           <span className="truncate">To {m.winnerAdvancesTo}</span>
           {m.loserDropsTo && (
-            <span className="text-[#849585] truncate">Drop: {m.loserDropsTo}</span>
+            <span className="text-muted-foreground truncate">Drop: {m.loserDropsTo}</span>
           )}
         </div>
       </div>
@@ -1160,19 +1160,19 @@ export function TournamentBracket({
   };
 
   const renderTriangularDeciderCard = () => (
-    <div className="group relative rounded-lg border border-violet-500/40 hover:border-violet-400 bg-[#0f1c2c] shadow-sm hover:shadow-[0_0_15px_rgba(139,92,246,0.2)] transition-all duration-150">
+    <div className="group relative rounded-lg border border-violet-500/40 hover:border-violet-400 bg-card shadow-xs hover:shadow-[0_0_15px_rgba(139,92,246,0.15)] transition-all duration-150">
       {/* Card Header Strip */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-violet-500/30 bg-[#0a1828] rounded-t-lg">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-violet-500/20 bg-muted/50 rounded-t-lg">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[10px] font-semibold text-violet-300 uppercase tracking-wide flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-violet-400" />
+          <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-300 uppercase tracking-wide flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-violet-500 dark:text-violet-400" />
             Triangular Decider
           </span>
-          <span className="text-[9px] font-medium text-violet-300 bg-violet-500/15 border border-violet-500/30 px-1.5 py-0.2 rounded">
+          <span className="text-[9px] font-medium text-violet-600 dark:text-violet-300 bg-violet-500/15 border border-violet-500/30 px-1.5 py-0.2 rounded">
             3 Teams
           </span>
         </div>
-        <div className="text-[10px] text-[#849585] font-medium shrink-0">
+        <div className="text-[10px] text-muted-foreground font-medium shrink-0">
           <span>GW 36</span>
         </div>
       </div>
@@ -1186,12 +1186,12 @@ export function TournamentBracket({
               key={team.key}
               className={`flex items-center justify-between p-1.5 rounded text-xs transition-colors ${
                 isWinner
-                  ? "bg-violet-500/20 border border-violet-500/50 text-violet-100 font-semibold"
-                  : "bg-[#0a1828] border border-[#3b4b3d]/50 text-[#d6e4f9] hover:bg-[#132030]/60"
+                  ? "bg-violet-500/15 border border-violet-500/40 text-violet-900 dark:text-violet-100 font-semibold"
+                  : "bg-muted/30 border border-border text-foreground hover:bg-muted/60"
               }`}
             >
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <span className={`text-[10px] px-1 rounded shrink-0 font-bold ${isWinner ? "text-violet-200" : "text-[#849585]"}`}>
+                <span className={`text-[10px] px-1 rounded shrink-0 font-bold ${isWinner ? "text-violet-700 dark:text-violet-200" : "text-muted-foreground"}`}>
                   #{idx + 1}
                 </span>
                 {team.teamId ? (
@@ -1202,28 +1202,28 @@ export function TournamentBracket({
                     size="sm"
                   />
                 ) : (
-                  <div className="h-5 w-5 rounded-full bg-[#1e2b3b] border border-[#3b4b3d] flex items-center justify-center text-[9px] text-[#849585] shrink-0 font-semibold">
+                  <div className="h-5 w-5 rounded-full bg-muted border border-border flex items-center justify-center text-[9px] text-muted-foreground shrink-0 font-semibold">
                     TB
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className={`text-xs truncate ${team.teamId ? (isWinner ? "font-bold text-violet-100" : "font-medium text-[#d6e4f9]") : "text-[#849585] italic font-normal"}`}>
+                  <p className={`text-xs truncate ${team.teamId ? (isWinner ? "font-bold text-violet-900 dark:text-violet-100" : "font-medium text-foreground") : "text-muted-foreground italic font-normal"}`}>
                     {team.name}
                   </p>
                   {!team.teamId && team.origin && (
-                    <p className="text-[9px] text-[#849585] leading-none">{team.origin}</p>
+                    <p className="text-[9px] text-muted-foreground leading-none">{team.origin}</p>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {isWinner && <Check className="h-3 w-3 text-violet-300" />}
+                {isWinner && <Check className="h-3 w-3 text-violet-600 dark:text-violet-300" />}
                 <span
                   className={`text-xs font-semibold tabular-nums min-w-[20px] text-right ${
                     isWinner
-                      ? "text-violet-200 font-bold"
+                      ? "text-violet-700 dark:text-violet-200 font-bold"
                       : team.pts !== null
-                        ? "text-violet-300"
-                        : "text-[#849585]/40"
+                        ? "text-violet-600 dark:text-violet-300"
+                        : "text-muted-foreground/40"
                   }`}
                 >
                   {team.pts !== null ? team.pts : "—"}
@@ -1235,12 +1235,12 @@ export function TournamentBracket({
       </div>
 
       {/* Footer */}
-      <div className="px-3 py-1 bg-[#0a1828]/50 border-t border-[#3b4b3d]/30 rounded-b-lg flex items-center justify-between text-[9px]">
-        <div className="flex items-center gap-1 text-violet-300/90 font-medium">
+      <div className="px-3 py-1 bg-muted/30 border-t border-border/50 rounded-b-lg flex items-center justify-between text-[9px]">
+        <div className="flex items-center gap-1 text-violet-600 dark:text-violet-300/90 font-medium">
           <ArrowRight className="h-3 w-3 shrink-0" />
           <span>Winner to Eliminators Final</span>
         </div>
-        <span className="text-[#849585]">1 of 3 advances</span>
+        <span className="text-muted-foreground">1 of 3 advances</span>
       </div>
     </div>
   );
@@ -1250,9 +1250,9 @@ export function TournamentBracket({
   return (
     <div className="space-y-6">
       {/* Top Header Controls & Stats Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#3b4b3d]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-border">
         {/* Navigation Switcher Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-[#0a1828] border border-[#3b4b3d] rounded-lg overflow-x-auto">
+        <div className="flex items-center gap-1 p-1 bg-muted/60 border border-border rounded-lg overflow-x-auto">
           {[
             { key: "all", label: "Full Bracket", icon: Layers },
             { key: "qualifiers", label: "Qualifiers Path", icon: Shield },
@@ -1267,8 +1267,8 @@ export function TournamentBracket({
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   active
-                    ? "bg-[#00e478] text-[#003919]"
-                    : "text-[#849585] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -1280,10 +1280,10 @@ export function TournamentBracket({
 
         {/* Match Count */}
         <div className="flex items-center gap-3 shrink-0 text-xs">
-          <div className="flex items-center gap-2 bg-[#0f1c2c] border border-[#3b4b3d] px-3 py-1.5 rounded-lg whitespace-nowrap">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] shrink-0" />
-            <span className="text-[#849585]">
-              <strong className="text-[#d6e4f9] font-bold">{matchCounts.scored}</strong> / {matchCounts.total} Played
+          <div className="flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+            <span className="text-muted-foreground">
+              <strong className="text-foreground font-bold">{matchCounts.scored}</strong> / {matchCounts.total} Played
             </span>
           </div>
         </div>
@@ -1293,33 +1293,33 @@ export function TournamentBracket({
       {activeTab === "qualifiers" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#d6e4f9]">Upper Bracket Qualifiers Path</h3>
+            <h3 className="text-sm font-bold text-foreground">Upper Bracket Qualifiers Path</h3>
           </div>
 
           <div className="overflow-x-auto overflow-y-hidden pb-6 -mx-2 px-2">
             <div className="min-w-[1100px] space-y-4 pb-8">
               {/* TOP HEADER ROW */}
               <div className="flex items-center gap-0">
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-3 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Opening Round</p>
-                  <p className="text-[10px] text-[#849585]">GW 30 · 31 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-3 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Opening Round</p>
+                  <p className="text-[10px] text-muted-foreground">GW 30 · 31 · 2 Legs</p>
                 </div>
                 <div className="w-8 shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-3 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Qualifiers Semi-Finals</p>
-                  <p className="text-[10px] text-[#849585]">GW 32 · 33 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-3 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Qualifiers Semi-Finals</p>
+                  <p className="text-[10px] text-muted-foreground">GW 32 · 33 · 2 Legs</p>
                 </div>
                 <div className="w-8 shrink-0" />
-                <div className="w-[250px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-3 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Qualifiers Final</p>
-                  <p className="text-[10px] text-[#849585]">GW 36 · 1 Leg</p>
+                <div className="w-[250px] shrink-0 bg-card border border-border px-3 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Qualifiers Final</p>
+                  <p className="text-[10px] text-muted-foreground">GW 36 · 1 Leg</p>
                 </div>
                 <div className="w-9 shrink-0" />
-                <div className="w-[260px] shrink-0 bg-[#0f1c2c] border border-[#00e478]/40 px-3 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#00e478] flex items-center justify-center gap-1.5">
+                <div className="w-[260px] shrink-0 bg-card border border-primary/40 px-3 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-primary flex items-center justify-center gap-1.5">
                     <Trophy className="h-3.5 w-3.5" /> Grand Final
                   </p>
-                  <p className="text-[10px] text-[#849585]">GW 38 · 1 Leg</p>
+                  <p className="text-[10px] text-muted-foreground">GW 38 · 1 Leg</p>
                 </div>
               </div>
 
@@ -1399,45 +1399,45 @@ export function TournamentBracket({
       {activeTab === "eliminators" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-[#d6e4f9]">Lower Bracket Elimination Path</h3>
+            <h3 className="text-sm font-bold text-foreground">Lower Bracket Elimination Path</h3>
           </div>
 
           <div className="overflow-x-auto overflow-y-hidden pb-6 -mx-2 px-2">
             <div className="min-w-[1856px] space-y-4 pb-8">
               {/* TOP HEADER ROW FOR ELIMINATORS */}
               <div className="flex items-center gap-0">
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Opening Round</p>
-                  <p className="text-[10px] text-[#849585]">GW 30 · 31 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Opening Round</p>
+                  <p className="text-[10px] text-muted-foreground">GW 30 · 31 · 2 Legs</p>
                 </div>
                 <div className="w-[80px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Eliminators R1 & R2</p>
-                  <p className="text-[10px] text-[#849585]">GW 32 · 33 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Eliminators R1 & R2</p>
+                  <p className="text-[10px] text-muted-foreground">GW 32 · 33 · 2 Legs</p>
                 </div>
                 <div className="w-[96px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Eliminators R3 & R4</p>
-                  <p className="text-[10px] text-[#849585]">GW 34 · 35 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Eliminators R3 & R4</p>
+                  <p className="text-[10px] text-muted-foreground">GW 34 · 35 · 2 Legs</p>
                 </div>
                 <div className="w-[72px] shrink-0" />
-                <div className="w-[260px] shrink-0 bg-[#0f1c2c] border border-violet-500/30 px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-violet-300 flex items-center justify-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5" /> Triangular Decider
+                <div className="w-[260px] shrink-0 bg-card border border-violet-500/30 px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-violet-600 dark:text-violet-300 flex items-center justify-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-violet-500 dark:text-violet-400" /> Triangular Decider
                   </p>
-                  <p className="text-[10px] text-[#849585]">GW 36 · 3 Teams</p>
+                  <p className="text-[10px] text-muted-foreground">GW 36 · 3 Teams</p>
                 </div>
                 <div className="w-[64px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Eliminators Final</p>
-                  <p className="text-[10px] text-[#849585]">GW 37 · 1 Leg</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Eliminators Final</p>
+                  <p className="text-[10px] text-muted-foreground">GW 37 · 1 Leg</p>
                 </div>
                 <div className="w-[64px] shrink-0" />
-                <div className="w-[260px] shrink-0 bg-[#0f1c2c] border border-[#00e478]/40 px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#00e478] flex items-center justify-center gap-1.5">
+                <div className="w-[260px] shrink-0 bg-card border border-primary/40 px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-primary flex items-center justify-center gap-1.5">
                     <Trophy className="h-3.5 w-3.5" /> Grand Final
                   </p>
-                  <p className="text-[10px] text-[#849585]">GW 38 · 1 Leg</p>
+                  <p className="text-[10px] text-muted-foreground">GW 38 · 1 Leg</p>
                 </div>
               </div>
 
@@ -1548,36 +1548,36 @@ export function TournamentBracket({
             <div className="min-w-[1856px] space-y-4 pb-8">
               {/* TOP HEADER ROW - 6 GW COLUMNS */}
               <div className="flex items-center gap-0">
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Opening Round</p>
-                  <p className="text-[10px] text-[#849585]">GW 30 · 31 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Opening Round</p>
+                  <p className="text-[10px] text-muted-foreground">GW 30 · 31 · 2 Legs</p>
                 </div>
                 <div className="w-[80px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Semis & Drops</p>
-                  <p className="text-[10px] text-[#849585]">GW 32 · 33 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Semis & Drops</p>
+                  <p className="text-[10px] text-muted-foreground">GW 32 · 33 · 2 Legs</p>
                 </div>
                 <div className="w-[96px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Eliminators R3 & R4</p>
-                  <p className="text-[10px] text-[#849585]">GW 34 · 35 · 2 Legs</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Eliminators R3 & R4</p>
+                  <p className="text-[10px] text-muted-foreground">GW 34 · 35 · 2 Legs</p>
                 </div>
                 <div className="w-[72px] shrink-0" />
-                <div className="w-[260px] shrink-0 bg-[#0f1c2c] border border-violet-500/30 px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Qualifiers Final & Decider</p>
-                  <p className="text-[10px] text-[#849585]">GW 36 · 1 Leg</p>
+                <div className="w-[260px] shrink-0 bg-card border border-violet-500/30 px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Qualifiers Final & Decider</p>
+                  <p className="text-[10px] text-muted-foreground">GW 36 · 1 Leg</p>
                 </div>
                 <div className="w-[64px] shrink-0" />
-                <div className="w-[240px] shrink-0 bg-[#0f1c2c] border border-[#3b4b3d] px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#d6e4f9]">Eliminators Final</p>
-                  <p className="text-[10px] text-[#849585]">GW 37 · 1 Leg</p>
+                <div className="w-[240px] shrink-0 bg-card border border-border px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-foreground">Eliminators Final</p>
+                  <p className="text-[10px] text-muted-foreground">GW 37 · 1 Leg</p>
                 </div>
                 <div className="w-[64px] shrink-0" />
-                <div className="w-[260px] shrink-0 bg-[#0f1c2c] border border-[#00e478]/40 px-2.5 py-2 rounded-lg text-center">
-                  <p className="text-xs font-semibold text-[#00e478] flex items-center justify-center gap-1.5">
+                <div className="w-[260px] shrink-0 bg-card border border-primary/40 px-2.5 py-2 rounded-lg text-center shadow-xs">
+                  <p className="text-xs font-semibold text-primary flex items-center justify-center gap-1.5">
                     <Trophy className="h-3.5 w-3.5" /> Grand Final
                   </p>
-                  <p className="text-[10px] text-[#849585]">GW 38 · 1 Leg</p>
+                  <p className="text-[10px] text-muted-foreground">GW 38 · 1 Leg</p>
                 </div>
               </div>
 
@@ -1636,13 +1636,13 @@ export function TournamentBracket({
                     {/* Col 3 Upper: GW 34-35 Qualifiers Bye */}
                     <div className="relative w-[240px] shrink-0 self-stretch flex items-center justify-center">
                       <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none" viewBox="0 0 240 620" preserveAspectRatio="none">
-                        <path d="M 0 138 H 240" fill="none" stroke="#3b4b3d" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
-                        <path d="M 0 482 H 240" fill="none" stroke="#3b4b3d" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <path d="M 0 138 H 240" fill="none" stroke="var(--bracket-line, #3b4b3d)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <path d="M 0 482 H 240" fill="none" stroke="var(--bracket-line, #3b4b3d)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                       </svg>
-                      <div className="relative z-10 w-[210px] rounded-lg border border-dashed border-[#3b4b3d] bg-[#0f1c2c]/85 backdrop-blur-xs p-3 text-center">
-                        <span className="text-[10px] font-semibold text-[#849585] uppercase tracking-wider block">Qualifiers Bye</span>
-                        <p className="text-xs font-semibold text-[#d6e4f9] mt-0.5">GW 34 · 35</p>
-                        <p className="text-[10px] text-[#849585] mt-1">Q5 & Q6 winners advance to Q7</p>
+                      <div className="relative z-10 w-[210px] rounded-lg border border-dashed border-border bg-card/90 dark:bg-[#0f1c2c]/85 backdrop-blur-xs p-3 text-center shadow-xs">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">Qualifiers Bye</span>
+                        <p className="text-xs font-semibold text-foreground mt-0.5">GW 34 · 35</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Q5 & Q6 winners advance to Q7</p>
                       </div>
                     </div>
 
@@ -1665,13 +1665,13 @@ export function TournamentBracket({
                       <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none" viewBox="0 0 240 620" preserveAspectRatio="none">
                         <path d="M 0 310 H 240" fill="none" stroke="#00e478" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                       </svg>
-                      <div className="relative z-10 w-[210px] rounded-lg border border-[#00e478]/40 bg-[#0f1c2c]/90 backdrop-blur-xs p-3 text-center">
-                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-[#00e478] uppercase tracking-wider">
+                      <div className="relative z-10 w-[210px] rounded-lg border border-primary/40 bg-card/90 dark:bg-[#0f1c2c]/90 backdrop-blur-xs p-3 text-center shadow-xs">
+                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-primary uppercase tracking-wider">
                           <Trophy className="h-3.5 w-3.5" />
                           <span>Upper Champion</span>
                         </div>
-                        <p className="text-xs font-semibold text-[#d6e4f9] mt-0.5">GW 37 Bye</p>
-                        <p className="text-[10px] text-[#849585] mt-1">Advances to Grand Final</p>
+                        <p className="text-xs font-semibold text-foreground mt-0.5">GW 37 Bye</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Advances to Grand Final</p>
                       </div>
                     </div>
 
