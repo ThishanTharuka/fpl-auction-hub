@@ -18,6 +18,7 @@ import { computeGroupStandings } from "@/lib/tournament/standings";
 import { computeTieOutcomes, resolveKnockoutPlacement } from "@/lib/tournament/knockout";
 import { buildTwoPathBracket } from "@/lib/tournament/knockout-two-path";
 import { TeamAvatar } from "@/components/team-avatar";
+import { StandingsExport } from "@/components/standings-export";
 import { TournamentBracket } from "@/components/tournament-bracket";
 import { TournamentFixtures } from "@/components/tournament-fixtures";
 import type {
@@ -615,6 +616,12 @@ export default function TournamentAdminPage() {
               </div>
             </div>
           ))}
+          <StandingsExport
+            competitionName={competition.name}
+            sublabel={`Starts GW${competition.start_gw} · scored on official FPL gameweek points`}
+            standings={standings}
+            teams={teams}
+          />
         </div>
       )}
 

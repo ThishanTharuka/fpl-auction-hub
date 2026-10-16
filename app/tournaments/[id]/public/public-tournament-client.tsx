@@ -6,6 +6,7 @@ import { Trophy, Layers, Calendar, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TeamAvatar } from "@/components/team-avatar";
+import { StandingsExport } from "@/components/standings-export";
 import { TournamentBracket } from "@/components/tournament-bracket";
 import { TournamentFixtures } from "@/components/tournament-fixtures";
 import { computeGroupStandings } from "@/lib/tournament/standings";
@@ -254,6 +255,12 @@ export function PublicTournamentClient({
               </div>
             </div>
           ))}
+          <StandingsExport
+            competitionName={competition.name}
+            sublabel={`Starts GW${competition.start_gw} · scored on official FPL gameweek points`}
+            standings={standings}
+            teams={teams}
+          />
         </section>
       )}
 
