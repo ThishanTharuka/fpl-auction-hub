@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.32.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.5...v1.32.0) (2026-10-16)
+
+
+### Bug Fixes
+
+* :bug: Enhance UI components with position badges and improved styling ([8749b67](https://github.com/ThishanTharuka/fpl-auction-hub/commit/8749b675cfa6270eebad37d22e5e2450470789cd))
+
+
+### Features
+
+* add theme toggle functionality and improve UI styling ([312e9d1](https://github.com/ThishanTharuka/fpl-auction-hub/commit/312e9d16968e0a26b62cf060fa2f0f0754896003))
+
 ## [1.31.5](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.4...v1.31.5) (2026-09-12)
 
 
