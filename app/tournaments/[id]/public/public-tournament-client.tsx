@@ -65,6 +65,12 @@ export function PublicTournamentClient({
       cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     };
 
+  const gameweekLabel = liveGameweek
+    ? `Live GW${liveGameweek}`
+    : currentGameweek
+      ? `GW${currentGameweek}`
+      : `Starts GW${competition.start_gw}`;
+
   // Background non-blocking auto-score sync
   useEffect(() => {
     const targetGw = liveGameweek ?? currentGameweek;
@@ -151,26 +157,38 @@ export function PublicTournamentClient({
         )}
       </header>
 
-      {/* Tabs Navigation Bar */}
-      <div className="flex gap-2 sm:gap-4 border-b border-[#3b4b3d] overflow-x-auto no-scrollbar">
-        {tabs.map(({ key, label, icon: Icon }) => {
-          const isActive = activeTab === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => handleTabChange(key)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all shrink-0 ${
-                isActive
-                  ? "border-[#00e478] text-[#00e478]"
-                  : "border-transparent text-[#849585] hover:text-[#d6e4f9]"
-              }`}
-            >
-              <Icon className={`h-4 w-4 ${isActive ? "text-[#00e478]" : "text-[#849585]"}`} />
-              <span>{label}</span>
-            </button>
-          );
-        })}
+      {/* Tabs Navigation Bar — the standings export trigger shares this row */}
+      <div className="flex items-center gap-x-3 border-b border-[#3b4b3d]">
+        <div className="flex gap-2 sm:gap-4 overflow-x-auto no-scrollbar min-w-0">
+          {tabs.map(({ key, label, icon: Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleTabChange(key)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all shrink-0 ${
+                  isActive
+                    ? "border-[#00e478] text-[#00e478]"
+                    : "border-transparent text-[#849585] hover:text-[#d6e4f9]"
+                }`}
+              >
+                <Icon className={`h-4 w-4 ${isActive ? "text-[#00e478]" : "text-[#849585]"}`} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {activeTab === "standings" && (
+          <div className="ml-auto shrink-0">
+            <StandingsExport
+              competitionName={competition.name}
+              gameweekLabel={gameweekLabel}
+              standings={standings}
+              teams={teams}
+            />
+          </div>
+        )}
       </div>
 
       {/* Tab Content: Standings */}
@@ -255,12 +273,6 @@ export function PublicTournamentClient({
               </div>
             </div>
           ))}
-          <StandingsExport
-            competitionName={competition.name}
-            sublabel={`Starts GW${competition.start_gw} · scored on official FPL gameweek points`}
-            standings={standings}
-            teams={teams}
-          />
         </section>
       )}
 

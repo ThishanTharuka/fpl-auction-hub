@@ -86,8 +86,36 @@ export default function TournamentAdminPage() {
       }
       setCompetition(compRes.data as CompetitionRow);
       setNewName(compRes.data.name);
-      setTeams((teamsRes.data ?? []) as CompetitionTeamRow[]);
+      const loadedTeams = (teamsRes.data ?? []) as CompetitionTeamRow[];
       setFixtures((fixRes.data ?? []) as CompetitionFixtureRow[]);
+
+      // The snapshot stores avatars only at creation, so overlay current
+      // participant avatars to keep logos in sync on screen and in exports.
+      const participantIds = loadedTeams.map((t) => t.participant_id).filter(Boolean);
+      const participantAvatars = new Map<
+        string,
+        { avatar_url: string | null; color: string | null }
+      >();
+      if (participantIds.length > 0) {
+        const { data } = await supabase
+          .from("participants")
+          .select("id,avatar_url,color")
+          .in("id", participantIds);
+        for (const p of data ?? []) {
+          participantAvatars.set(p.id, { avatar_url: p.avatar_url, color: p.color });
+        }
+      }
+      setTeams(
+        loadedTeams.map((t) => {
+          const live = participantAvatars.get(t.participant_id);
+          if (!live) return t;
+          return {
+            ...t,
+            avatar_url: live.avatar_url ?? t.avatar_url,
+            color: live.color ?? t.color,
+          };
+        }),
+      );
       const availableGws = [...new Set((fixRes.data ?? []).map((f) => f.gw as number))].sort(
         (a, b) => a - b,
       );
@@ -336,6 +364,12 @@ export default function TournamentAdminPage() {
   const competitionStatus =
     STATUS_LABELS[competition.status] ?? { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
 
+  const gameweekLabel = liveGameweek
+    ? `Live GW${liveGameweek}`
+    : scoreGw
+      ? `GW${scoreGw}`
+      : `Starts GW${competition.start_gw}`;
+
   const tabs: { key: typeof tab; label: string }[] = [
     { key: "fixtures", label: "Fixtures" },
     { key: "standings", label: "Standings" },
@@ -364,20 +398,33 @@ export default function TournamentAdminPage() {
         </a>
       </div>
 
-      <div className="flex gap-1 border-b border-[#3b4b3d]">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${
-              tab === t.key
-                ? "border-[#00e478] text-[#00e478]"
-                : "border-transparent text-[#849585] hover:text-[#d6e4f9]"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Tab strip — the standings export trigger shares this row */}
+      <div className="flex items-center gap-x-3 border-b border-[#3b4b3d]">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar min-w-0">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`shrink-0 px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${
+                tab === t.key
+                  ? "border-[#00e478] text-[#00e478]"
+                  : "border-transparent text-[#849585] hover:text-[#d6e4f9]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === "standings" && (
+          <div className="ml-auto shrink-0">
+            <StandingsExport
+              competitionName={competition.name}
+              gameweekLabel={gameweekLabel}
+              standings={standings}
+              teams={teams}
+            />
+          </div>
+        )}
       </div>
 
       {tab === "fixtures" && (
@@ -616,12 +663,6 @@ export default function TournamentAdminPage() {
               </div>
             </div>
           ))}
-          <StandingsExport
-            competitionName={competition.name}
-            sublabel={`Starts GW${competition.start_gw} · scored on official FPL gameweek points`}
-            standings={standings}
-            teams={teams}
-          />
         </div>
       )}
 

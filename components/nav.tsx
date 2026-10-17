@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,30 @@ const links = [
   { href: "/tournaments", label: "Tournaments" },
 ];
 
+// The session only exists on the client (read from cookies in an effect), so
+// nothing auth-dependent may render until hydration finishes. Otherwise the
+// server HTML (always signed out) diverges from the client tree and React
+// reports a hydration error. useSyncExternalStore also returns the server
+// snapshot during deferred hydration, so late-hydrated Suspense boundaries
+// stay consistent too.
+const subscribeToHydration = () => () => {};
+const getHydratedSnapshot = () => true;
+const getServerHydratedSnapshot = () => false;
+
 export function Nav() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    getHydratedSnapshot,
+    getServerHydratedSnapshot,
+  );
+  // Wait for the session read to settle so we never flash the wrong state.
+  const authReady = hydrated && !loading;
+  const signedIn = authReady && user !== null;
 
-  if (pathname === "/" && !user) {
+  if (pathname === "/" && !signedIn) {
     return null;
   }
 
@@ -47,7 +65,7 @@ export function Nav() {
           <span className="hidden sm:inline">FPL Auction Hub</span>
         </Link>
 
-        {user && (
+        {signedIn && (
           <nav className="hidden md:flex items-center gap-1 ml-4">
             {links.map(({ href, label }) => (
               <Link
@@ -69,37 +87,39 @@ export function Nav() {
         <div className="ml-auto flex items-center gap-2 sm:gap-3 text-sm text-muted-foreground">
           <ThemeToggle />
 
-          {user ? (
-            <>
-              <Link
-                href="/profile"
-                className="text-xs hidden sm:block truncate max-w-[180px] hover:text-primary transition-colors"
-                title={user.email}
-              >
-                {user.email}
+          {authReady ? (
+            user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="text-xs hidden sm:block truncate max-w-[180px] hover:text-primary transition-colors"
+                  title={user.email}
+                >
+                  {user.email}
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-border hover:bg-muted"
+                  onClick={signOut}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Link href="/login">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-border hover:bg-muted"
+                >
+                  Sign in
+                </Button>
               </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs border-border hover:bg-muted"
-                onClick={signOut}
-              >
-                Sign out
-              </Button>
-            </>
-          ) : (
-            <Link href="/login">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs border-border hover:bg-muted"
-              >
-                Sign in
-              </Button>
-            </Link>
-          )}
+            )
+          ) : null}
 
-          {user && (
+          {signedIn && (
             <button
               className="md:hidden p-1.5 text-muted-foreground hover:text-foreground"
               onClick={() => setMenuOpen((o) => !o)}
@@ -121,7 +141,7 @@ export function Nav() {
             className="fixed inset-0 top-14 bg-black/50 md:hidden z-40"
             onClick={() => setMenuOpen(false)}
           />
-          {user && (
+          {signedIn && (
             <nav className="absolute top-full left-0 right-0 bg-sidebar border-b border-border md:hidden z-50 px-4 pb-3 pt-2 shadow-lg">
               {links.map(({ href, label }) => (
                 <Link
