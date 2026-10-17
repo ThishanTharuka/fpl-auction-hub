@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.33.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.32.0...v1.33.0) (2026-10-17)
+
+
+### Features
+
+* enhance tournament pages with dynamic participant avatars and improved standings export ([66acb4e](https://github.com/ThishanTharuka/fpl-auction-hub/commit/66acb4eb1487545cb3397c1d2cb65f934055da2c))
+
 # [1.32.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.31.5...v1.32.0) (2026-10-16)
 
 
