@@ -101,7 +101,7 @@ describe("insights-utils", () => {
         id: 1,
         web_name: "DailyRiser",
         cost_change_day: 1,
-        price_change_percent: "95.5",
+        price_change_percent: "112.0",
       });
       const p2 = createMockPlayer({
         id: 2,
@@ -123,6 +123,38 @@ describe("insights-utils", () => {
       expect(result.dailyFallers[0]?.player.web_name).toBe("DailyFaller");
       expect(result.predictedRisersTonight[0]?.player.web_name).toBe("DailyRiser");
       expect(result.predictedFallersTonight[0]?.player.web_name).toBe("DailyFaller");
+    });
+
+    it("uses FPL's official projection and the 100% threshold for predictions", () => {
+      const belowThreshold = createMockPlayer({
+        id: 1,
+        web_name: "BelowThreshold",
+        price_change_percent: "95.5",
+      });
+      // Official projection overrides the current progress for "tonight".
+      const projectedOver = createMockPlayer({
+        id: 2,
+        web_name: "ProjectedOver",
+        price_change_percent: "40.0",
+        price_change_projected_percent: "104.2",
+      });
+      const locked = createMockPlayer({
+        id: 3,
+        web_name: "Locked",
+        price_change_percent: "180.0",
+        price_change_locked_until: new Date(Date.now() + 86_400_000).toISOString(),
+      });
+
+      const result = calculateMarketRadar([belowThreshold, projectedOver, locked]);
+
+      expect(result.predictedRisersTonight.map((s) => s.player.web_name)).toEqual([
+        "ProjectedOver",
+      ]);
+      expect(result.predictedRisersTonight[0]?.targetProgressPercent).toBe(104.2);
+      // Locked players cannot move at the next update, however high they are.
+      expect(
+        result.predictedRisersTonight.some((s) => s.player.web_name === "Locked"),
+      ).toBe(false);
     });
 
     it("aggregates daily price history and available dates correctly", () => {

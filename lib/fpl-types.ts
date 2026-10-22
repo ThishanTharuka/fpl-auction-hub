@@ -29,8 +29,12 @@ export interface FPLPlayer {
   cost_change_event_fall?: number;
   cost_change_start?: number;
   cost_change_start_fall?: number;
+  /** Computed by this app from the daily price snapshot (not an FPL field). */
   cost_change_day?: number;
+  /** Official FPL Price Change Predictor progress. |value| >= 100 means a move is expected. */
   price_change_percent?: string;
+  /** Official projection for the next update (`price_change_projections[offset=0]`). */
+  price_change_projected_percent?: string;
   price_change_hourly_rate?: number;
   price_change_projections?: Array<{
     offset: number;
@@ -38,6 +42,7 @@ export interface FPLPlayer {
     likelihood: number;
   }>;
   price_change_locked_until?: string | null;
+  price_change_calibrating?: boolean;
   total_points: number;
   points_per_game: string;
   selected_by_percent: string;
@@ -195,6 +200,8 @@ export interface FplDataResult {
   currentGameweek: number;
   liveGameweek?: number | null;
   dailyPriceHistory?: Record<string, Record<string, number>>;
+  /** UK calendar date the payload was built for - used to invalidate at 00:00 UK time. */
+  ukDate?: string;
 }
 
 // ─── Index Builder Types ──────────────────────────────────────────────────────

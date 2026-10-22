@@ -4,6 +4,7 @@ import type {
   FPLFixture,
   FPLEvent,
 } from "./fpl-types";
+import { getUkDateString } from "./fpl-dates";
 
 // ─── Market Radar ─────────────────────────────────────────────────────────────
 
@@ -13,9 +14,17 @@ export interface MarketPlayerSummary {
   costChangeEvent: number;
   costChangeStart: number;
   costChangeDay: number;
+  /** FPL's current progress towards a change (|value| >= 100 means expected). */
+  currentProgressPercent: number;
+  /** Projected progress at the next price update (falls back to current progress). */
   targetProgressPercent: number;
+  /** FPL has locked this player's price, so it cannot move at the next update. */
+  priceLocked: boolean;
   ownershipPercent: number;
 }
+
+/** FPL applies a price change once |progress| reaches 100%. */
+export const PRICE_CHANGE_THRESHOLD = 100;
 
 export interface MarketRadarData {
   // Gameweek view
@@ -44,11 +53,24 @@ export function calculateMarketRadar(
   players: EnrichedPlayer[],
   dailyPriceHistory?: Record<string, Record<string, number>>,
 ): MarketRadarData {
+  const now = Date.now();
+
   const summaries: MarketPlayerSummary[] = players.map((p) => {
     const costChangeEvent = p.cost_change_event ?? 0;
     const costChangeStart = p.cost_change_start ?? 0;
     const costChangeDay = p.cost_change_day ?? 0;
-    const targetProgressPercent = parseFloat(p.price_change_percent || "0");
+    const currentProgress = parseFloat(p.price_change_percent ?? "");
+    const projectedProgress = parseFloat(p.price_change_projected_percent ?? "");
+    const currentProgressPercent = Number.isFinite(currentProgress) ? currentProgress : 0;
+    // The "tonight" projection is what matters for predictions; fall back to
+    // FPL's live progress when no projection has been published yet.
+    const targetProgressPercent = Number.isFinite(projectedProgress)
+      ? projectedProgress
+      : currentProgressPercent;
+    const lockedUntil = p.price_change_locked_until;
+    const priceLocked = Boolean(
+      lockedUntil && new Date(lockedUntil).getTime() > now,
+    );
     const transfersIn = p.transfers_in_event ?? 0;
     const transfersOut = p.transfers_out_event ?? 0;
     const netTransfersEvent = transfersIn - transfersOut;
@@ -60,7 +82,9 @@ export function calculateMarketRadar(
       costChangeEvent,
       costChangeStart,
       costChangeDay,
+      currentProgressPercent,
       targetProgressPercent,
+      priceLocked,
       ownershipPercent,
     };
   });
@@ -93,16 +117,19 @@ export function calculateMarketRadar(
     .filter((s) => s.costChangeDay < 0)
     .sort((a, b) => a.costChangeDay - b.costChangeDay || a.netTransfersEvent - b.netTransfersEvent);
 
-  // Target predictions tonight
-  const predictedRisersTonight = summaries
-    .filter((s) => s.targetProgressPercent >= 60)
+  // Predictions for the next update, using FPL's official projections.
+  // Locked players cannot move, so they are never "expected".
+  const predictable = summaries.filter((s) => !s.priceLocked);
+
+  const predictedRisersTonight = predictable
+    .filter((s) => s.targetProgressPercent >= PRICE_CHANGE_THRESHOLD)
     .sort((a, b) => b.targetProgressPercent - a.targetProgressPercent || b.netTransfersEvent - a.netTransfersEvent);
 
-  const predictedFallersTonight = summaries
-    .filter((s) => s.targetProgressPercent <= -60)
+  const predictedFallersTonight = predictable
+    .filter((s) => s.targetProgressPercent <= -PRICE_CHANGE_THRESHOLD)
     .sort((a, b) => a.targetProgressPercent - b.targetProgressPercent || a.netTransfersEvent - b.netTransfersEvent);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getUkDateString();
   const combinedHistory = { ...(dailyPriceHistory || {}) };
   const todayMap: Record<string, number> = {};
   for (const s of summaries) {
@@ -126,8 +153,8 @@ export function calculateMarketRadar(
     predictedFallersTonight,
     totalDailyRisersCount: dailyRisers.length,
     totalDailyFallersCount: dailyFallers.length,
-    totalPredictedRisersCount: predictedRisersTonight.filter((s) => s.targetProgressPercent >= 85).length,
-    totalPredictedFallersCount: predictedFallersTonight.filter((s) => s.targetProgressPercent <= -85).length,
+    totalPredictedRisersCount: predictedRisersTonight.length,
+    totalPredictedFallersCount: predictedFallersTonight.length,
     dailyPriceHistory: combinedHistory,
     availableDates,
     summaries,

@@ -1,5 +1,6 @@
 import type {
   FPLBootstrapResponse,
+  FPLPlayer,
   FPLTeam,
   EnrichedPlayer,
   FPLFixture,
@@ -9,6 +10,7 @@ import type {
 export type { FplDataResult };
 import { createClient } from "@supabase/supabase-js";
 import type { Database, Json } from "./database.types";
+import { getUkDateString } from "./fpl-dates";
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
@@ -75,15 +77,176 @@ export function calculatePriceChangeProgress(
   return clampedProgress.toFixed(1);
 }
 
+/**
+ * FPL has published an official Price Change Predictor since 2026/27:
+ * `price_change_percent` is the progress towards the next change and anything
+ * past +/-100 is expected to move. Prefer it and only fall back to the
+ * community-style estimate when the field is missing or still calibrating.
+ */
+export function resolvePriceChangePercent(
+  player: Pick<
+    FPLPlayer,
+    "price_change_percent" | "price_change_calibrating" | "selected_by_percent" | "transfers_in_event" | "transfers_out_event"
+  >,
+  totalPlayers?: number,
+): string {
+  const official = player.price_change_percent;
+  if (
+    !player.price_change_calibrating &&
+    typeof official === "string" &&
+    Number.isFinite(parseFloat(official))
+  ) {
+    return official;
+  }
+  return calculatePriceChangeProgress(player, totalPlayers);
+}
+
+/** Projected progress at the next update (`price_change_projections` offset 0). */
+export function resolveProjectedPriceChangePercent(
+  player: Pick<FPLPlayer, "price_change_projections">,
+): string | undefined {
+  const next = player.price_change_projections?.find((entry) => entry.offset === 0);
+  if (!next) return undefined;
+  return Number.isFinite(parseFloat(next.projected_percent))
+    ? next.projected_percent
+    : undefined;
+}
+
+export interface PriceReconciliation {
+  snapshot: DailyPriceSnapshot;
+  changesMap: Map<number, number>;
+  updated: boolean;
+}
+
+/**
+ * Pure reconciliation of the stored daily price snapshot against the current
+ * `bootstrap-static` prices.
+ *
+ * The snapshot keeps `baselinePrices` (prices at the start of `date`), so the
+ * day's movement can be recomputed from `now_cost` at any time. A move is only
+ * ever credited to one calendar day: when the day rolls over, whatever was
+ * already credited to the previous day is subtracted from the diff.
+ *
+ * `todayStr` must be the **UK** calendar date (see `lib/fpl-dates.ts`), because
+ * FPL applies price changes at 00:00 Europe/London.
+ */
+export function reconcileDailyPriceSnapshot(
+  elements: Array<{ id: number; now_cost: number }>,
+  snapshot: DailyPriceSnapshot | null | undefined,
+  todayStr: string,
+): PriceReconciliation {
+  const changesMap = new Map<number, number>();
+  const baseline = snapshot?.baselinePrices;
+
+  // First ever run (or a corrupted snapshot): remember today's prices as the
+  // baseline. Today's movements cannot be recovered, but every following day
+  // will be attributed correctly.
+  if (!snapshot || !baseline || Object.keys(baseline).length === 0) {
+    const baselinePrices: Record<string, number> = {};
+    for (const el of elements) {
+      baselinePrices[el.id.toString()] = el.now_cost;
+    }
+
+    return {
+      changesMap,
+      updated: true,
+      snapshot: {
+        date: todayStr,
+        baselinePrices,
+        todayChanges: {},
+        history: { [todayStr]: {} },
+      },
+    };
+  }
+
+  const history: Record<string, Record<string, number>> = {
+    ...(snapshot.history ?? {}),
+  };
+
+  if (snapshot.date === todayStr) {
+    const todayChanges: Record<string, number> = {
+      ...(snapshot.todayChanges ?? {}),
+    };
+    // Backfill the day bucket when a snapshot predating history tracking is read.
+    let updated = snapshot.history?.[todayStr] === undefined;
+
+    for (const el of elements) {
+      const key = el.id.toString();
+      const baselineCost = baseline[key];
+      if (baselineCost === undefined) continue;
+
+      const diff = el.now_cost - baselineCost;
+
+      if (diff === 0) {
+        // Price moved and came back - never keep a stale entry for the day.
+        if (todayChanges[key] !== undefined) {
+          delete todayChanges[key];
+          updated = true;
+        }
+        continue;
+      }
+
+      changesMap.set(el.id, diff);
+      if (todayChanges[key] !== diff) {
+        todayChanges[key] = diff;
+        updated = true;
+      }
+    }
+
+    history[todayStr] = todayChanges;
+
+    return {
+      changesMap,
+      updated,
+      snapshot: { ...snapshot, todayChanges, history },
+    };
+  }
+
+  // Day rollover (possibly several days late, if the sync job did not run).
+  // Everything that moved since the baseline is credited to `todayStr`, minus
+  // whatever was already credited to the snapshot day - a move is never
+  // counted on two days.
+  const alreadyCredited = snapshot.todayChanges ?? {};
+  const todayChanges: Record<string, number> = {};
+  const baselinePrices: Record<string, number> = {};
+
+  for (const el of elements) {
+    const key = el.id.toString();
+    baselinePrices[key] = el.now_cost;
+
+    const baselineCost = baseline[key];
+    if (baselineCost === undefined) continue;
+
+    const diff = el.now_cost - baselineCost - (alreadyCredited[key] ?? 0);
+    if (diff !== 0) {
+      todayChanges[key] = diff;
+      changesMap.set(el.id, diff);
+    }
+  }
+
+  // Only close out a day that is actually in the past (guards against a
+  // snapshot written with a future date because of clock skew).
+  if (Object.keys(alreadyCredited).length > 0 && snapshot.date < todayStr) {
+    history[snapshot.date] = alreadyCredited;
+  }
+  history[todayStr] = todayChanges;
+
+  return {
+    changesMap,
+    updated: true,
+    snapshot: { date: todayStr, baselinePrices, todayChanges, history },
+  };
+}
+
 export async function getDailyPriceChanges(
   elements: Array<{ id: number; now_cost: number }>,
 ): Promise<{
   changesMap: Map<number, number>;
   history: Record<string, Record<string, number>>;
+  updated: boolean;
 }> {
-  const changesMap = new Map<number, number>();
-  const todayStr = new Date().toISOString().slice(0, 10);
-  let history: Record<string, Record<string, number>> = {};
+  const todayStr = getUkDateString();
+  let reconciliation: PriceReconciliation | null = null;
 
   try {
     const { data: cached } = await supabase
@@ -93,122 +256,29 @@ export async function getDailyPriceChanges(
       .single();
 
     const snapshot = cached?.value as unknown as DailyPriceSnapshot | null;
+    reconciliation = reconcileDailyPriceSnapshot(elements, snapshot, todayStr);
 
-    if (snapshot && snapshot.baselinePrices) {
-      history = { ...(snapshot.history || {}) };
-      if (snapshot.date === todayStr) {
-        for (const [idStr, change] of Object.entries(snapshot.todayChanges || {})) {
-          changesMap.set(Number(idStr), change);
-        }
-        let hasNewChange = false;
-        const updatedTodayChanges = { ...(snapshot.todayChanges || {}) };
-        for (const el of elements) {
-          const baseline = snapshot.baselinePrices[el.id.toString()];
-          if (baseline !== undefined) {
-            const diff = el.now_cost - baseline;
-            if (diff !== 0) {
-              changesMap.set(el.id, diff);
-              if (updatedTodayChanges[el.id.toString()] !== diff) {
-                updatedTodayChanges[el.id.toString()] = diff;
-                hasNewChange = true;
-              }
-            }
-          }
-        }
-        history[todayStr] = updatedTodayChanges;
-        const historyNeedsUpdate =
-          !snapshot.history ||
-          Object.keys(snapshot.history).length < Object.keys(history).length;
-
-        if (hasNewChange || historyNeedsUpdate) {
-          await supabase.from("fpl_cache").upsert(
-            {
-              key: DAILY_PRICES_CACHE_KEY,
-              value: {
-                ...snapshot,
-                todayChanges: updatedTodayChanges,
-                history,
-              } as unknown as Json,
-              updated_at: new Date().toISOString(),
-              ttl_ms: 24 * 60 * 60 * 1000,
-            },
-            { onConflict: "key" },
-          );
-        }
-        return { changesMap, history };
-      } else {
-        const previousPrices = snapshot.baselinePrices;
-        const newTodayChanges: Record<string, number> = {};
-        const newBaselinePrices: Record<string, number> = {};
-
-        for (const el of elements) {
-          newBaselinePrices[el.id.toString()] = el.now_cost;
-          const prevCost = previousPrices[el.id.toString()];
-          if (prevCost !== undefined) {
-            const diff = el.now_cost - prevCost;
-            if (diff !== 0) {
-              newTodayChanges[el.id.toString()] = diff;
-              changesMap.set(el.id, diff);
-            }
-          }
-        }
-
-        if (snapshot.todayChanges && Object.keys(snapshot.todayChanges).length > 0) {
-          history[snapshot.date] = snapshot.todayChanges;
-        }
-        history[todayStr] = newTodayChanges;
-
-        await supabase.from("fpl_cache").upsert(
-          {
-            key: DAILY_PRICES_CACHE_KEY,
-            value: {
-              date: todayStr,
-              baselinePrices: newBaselinePrices,
-              todayChanges: newTodayChanges,
-              history,
-            } as unknown as Json,
-            updated_at: new Date().toISOString(),
-            ttl_ms: 24 * 60 * 60 * 1000,
-          },
-          { onConflict: "key" },
-        );
-
-        return { changesMap, history };
-      }
+    // Nothing moved since the last run - skip the write entirely.
+    if (reconciliation.updated) {
+      await supabase.from("fpl_cache").upsert(
+        {
+          key: DAILY_PRICES_CACHE_KEY,
+          value: reconciliation.snapshot as unknown as Json,
+          updated_at: new Date().toISOString(),
+          ttl_ms: 24 * 60 * 60 * 1000,
+        },
+        { onConflict: "key" },
+      );
     }
   } catch (err) {
-    console.error("Error reading daily price snapshot:", err);
+    console.error("Error syncing daily price snapshot:", err);
   }
 
-  const initialBaseline: Record<string, number> = {};
-  const initialChanges: Record<string, number> = {};
-
-  for (const el of elements) {
-    initialBaseline[el.id.toString()] = el.now_cost;
-  }
-
-  history[todayStr] = initialChanges;
-
-  try {
-    await supabase.from("fpl_cache").upsert(
-      {
-        key: DAILY_PRICES_CACHE_KEY,
-        value: {
-          date: todayStr,
-          baselinePrices: initialBaseline,
-          todayChanges: initialChanges,
-          history,
-        } as unknown as Json,
-        updated_at: new Date().toISOString(),
-        ttl_ms: 24 * 60 * 60 * 1000,
-      },
-      { onConflict: "key" },
-    );
-  } catch (err) {
-    console.error("Error initializing daily price snapshot:", err);
-  }
-
-  return { changesMap, history };
+  return {
+    changesMap: reconciliation?.changesMap ?? new Map<number, number>(),
+    history: reconciliation?.snapshot.history ?? {},
+    updated: reconciliation?.updated ?? false,
+  };
 }
 
 const TTL = {
@@ -332,10 +402,8 @@ async function fetchFromUpstream(precomputed?: {
       price: p.now_cost / 10,
       avg_fdr_next5: teamFdrMap.get(p.team) ?? 3,
       cost_change_day: dailyChangesMap.get(p.id) ?? 0,
-      price_change_percent: calculatePriceChangeProgress(
-        p,
-        bootstrap.total_players,
-      ),
+      price_change_percent: resolvePriceChangePercent(p, bootstrap.total_players),
+      price_change_projected_percent: resolveProjectedPriceChangePercent(p),
     };
   });
 
@@ -348,6 +416,7 @@ async function fetchFromUpstream(precomputed?: {
       currentGameweek: currentGw,
       liveGameweek: liveGw,
       dailyPriceHistory,
+      ukDate: getUkDateString(),
     },
     ttl,
   };
@@ -389,6 +458,9 @@ export async function getFplData(): Promise<FplDataResult> {
       cached.players &&
       cached.events &&
       cached.fixtures &&
+      // `cost_change_day` is baked into the payload, so a payload built before
+      // 00:00 UK time must not be served after the price changes land.
+      cached.ukDate === getUkDateString() &&
       cached.dailyPriceHistory &&
       Object.keys(cached.dailyPriceHistory).length > 0
     ) {
@@ -400,7 +472,7 @@ export async function getFplData(): Promise<FplDataResult> {
 }
 
 export async function syncDailyPrices(
-  _force = false,
+  force = false,
 ): Promise<DailyPriceSyncResult> {
   const bootstrapRes = await fetch(FPL_BOOTSTRAP_URL, { headers: HEADERS });
   if (!bootstrapRes.ok) {
@@ -409,7 +481,9 @@ export async function syncDailyPrices(
     );
   }
   const bootstrap: FPLBootstrapResponse = await bootstrapRes.json();
-  const { changesMap, history } = await getDailyPriceChanges(bootstrap.elements);
+  const { changesMap, history, updated } = await getDailyPriceChanges(
+    bootstrap.elements,
+  );
 
   const risers: DailyPriceSyncPlayer[] = [];
   const fallers: DailyPriceSyncPlayer[] = [];
@@ -429,11 +503,15 @@ export async function syncDailyPrices(
     else if (change < 0) fallers.push(item);
   }
 
-  await fetchAndCacheFplData({ changesMap, history });
+  // This endpoint runs on a schedule, so only rewrite the (large) FPL cache
+  // when the price snapshot actually moved or a refresh was requested.
+  if (updated || force) {
+    await fetchAndCacheFplData({ changesMap, history });
+  }
 
   return {
     success: true,
-    date: new Date().toISOString().slice(0, 10),
+    date: getUkDateString(),
     risersCount: risers.length,
     fallersCount: fallers.length,
     risers,

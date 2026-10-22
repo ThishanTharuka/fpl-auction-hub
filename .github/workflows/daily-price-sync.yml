@@ -2,8 +2,12 @@ name: FPL Daily Price Sync
 
 on:
   schedule:
-    # 02:15 AM UTC daily (after FPL 01:15-02:00 AM UK price change window)
-    - cron: '15 2 * * *'
+    # Hourly. FPL applies price changes at 00:00 UK time and a day bucket can
+    # only be recorded while the job is running, so a single daily run silently
+    # swallows every day it misses into the next successful run (which is how
+    # the history ended up with gaps and 200+ mover days). Hourly also keeps the
+    # run clear of GitHub's top-of-the-hour scheduling spike.
+    - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
       target_url:

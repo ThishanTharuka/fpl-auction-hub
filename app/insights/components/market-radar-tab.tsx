@@ -15,6 +15,7 @@ import {
   History,
 } from "lucide-react";
 import type { MarketRadarData, MarketPlayerSummary } from "@/lib/insights-utils";
+import { getUkDateString, shiftDateString } from "@/lib/fpl-dates";
 
 function getPositionBadgeClass(pos: string): string {
   switch (pos) {
@@ -79,16 +80,12 @@ function formatDateFull(dateStr: string): string {
 }
 
 export function MarketRadarTab({ data }: MarketRadarTabProps) {
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const yesterdayStr = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().slice(0, 10);
-  }, []);
+  const todayStr = useMemo(() => getUkDateString(), []);
+  const yesterdayStr = useMemo(() => shiftDateString(getUkDateString(), -1), []);
 
   const [timeframe, setTimeframe] = useState<Timeframe>("today");
   const [selectedDate, setSelectedDate] = useState<string>(() => {
-    return data.availableDates[0] || new Date().toISOString().slice(0, 10);
+    return data.availableDates[0] || getUkDateString();
   });
   const [activeView, setActiveView] = useState<MarketSubView>("dailyRisers");
   const [search, setSearch] = useState("");
@@ -257,7 +254,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
 
         <div className="text-[11px] text-muted-foreground px-2 flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span>FPL price updates run once daily at 00:00 - 01:30 UK time</span>
+          <span>FPL price changes apply once daily at 00:00 UK time</span>
         </div>
       </div>
 
@@ -385,7 +382,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 <div className="mt-2 text-2xl font-black text-foreground">
                   {data.predictedRisersTonight.length}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Target progress ≥ 60%</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Projected &ge; 100% next update</p>
               </button>
 
               <button
@@ -406,7 +403,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 <div className="mt-2 text-2xl font-black text-foreground">
                   {data.predictedFallersTonight.length}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Target progress ≤ -60%</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Projected &le; -100% next update</p>
               </button>
             </>
           ) : (
@@ -626,7 +623,8 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 No price changes recorded on {formatDateFull(selectedDate)}
               </div>
               <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                FPL price changes only occur overnight (00:00 - 01:30 UK time) when player net transfer velocity reaches the required threshold.
+                FPL applies price changes once daily at 00:00 UK time, and only
+                when a player&apos;s progress towards the threshold reaches 100%.
               </p>
               <button
                 type="button"
@@ -639,6 +637,17 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                 <Zap className="w-3.5 h-3.5" />
                 View Today&apos;s Price Changes
               </button>
+            </div>
+          ) : (activeView === "predictedRisers" || activeView === "predictedFallers") &&
+            !search.trim() ? (
+            <div className="p-8 text-center space-y-1.5">
+              <div className="text-sm font-semibold text-foreground">
+                No price changes projected for the next update
+              </div>
+              <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                FPL&apos;s Price Change Predictor refreshes every 15 minutes.
+                A player needs 100% projected progress to change at 00:00 UK time.
+              </p>
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground text-sm">
@@ -659,7 +668,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                       <th className="py-3 px-3">
                         {isToday ? "Today Change" : `Change (${selectedDateLabel})`}
                       </th>
-                      <th className="py-3 px-3">Target Progress Tonight</th>
+                      <th className="py-3 px-3">Projected Tonight</th>
                       <th className="py-3 px-3">GW Delta</th>
                       <th className="py-3 px-4 text-right">Net Velocity</th>
                     </tr>
@@ -685,6 +694,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                       costChangeStart,
                       costChangeDay,
                       targetProgressPercent,
+                      priceLocked,
                       ownershipPercent,
                     }) => (
                       <tr
@@ -754,12 +764,17 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                     {targetProgressPercent > 0
                                       ? `+${targetProgressPercent.toFixed(1)}%`
                                       : `${targetProgressPercent.toFixed(1)}%`}
+                                    {priceLocked && (
+                                      <span className="ml-1.5 text-[10px] uppercase font-bold text-muted-foreground bg-muted px-1.5 py-0.2 rounded border border-border">
+                                        Locked
+                                      </span>
+                                    )}
                                   </span>
-                                  {targetProgressPercent >= 90 ? (
+                                  {targetProgressPercent >= 100 ? (
                                     <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-primary bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30 animate-pulse">
                                       Imminent
                                     </span>
-                                  ) : targetProgressPercent <= -90 ? (
+                                  ) : targetProgressPercent <= -100 ? (
                                     <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/30 animate-pulse">
                                       Imminent
                                     </span>
@@ -861,6 +876,7 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                   costChangeStart,
                   costChangeDay,
                   targetProgressPercent,
+                  priceLocked,
                   ownershipPercent,
                 }) => (
                   <div key={player.id} className="p-3.5 space-y-2.5">
@@ -953,12 +969,17 @@ export function MarketRadarTab({ data }: MarketRadarTabProps) {
                                 {targetProgressPercent > 0
                                   ? `+${targetProgressPercent.toFixed(1)}%`
                                   : `${targetProgressPercent.toFixed(1)}%`}
+                                {priceLocked && (
+                                  <span className="ml-1 text-[9px] uppercase font-bold text-muted-foreground bg-muted px-1 py-0.2 rounded border border-border">
+                                    Locked
+                                  </span>
+                                )}
                               </span>
-                              {targetProgressPercent >= 90 ? (
+                              {targetProgressPercent >= 100 ? (
                                 <span className="text-[9px] uppercase font-bold text-emerald-700 dark:text-primary bg-emerald-500/15 px-1 py-0.2 rounded border border-emerald-500/30">
                                   Imminent
                                 </span>
-                              ) : targetProgressPercent <= -90 ? (
+                              ) : targetProgressPercent <= -100 ? (
                                 <span className="text-[9px] uppercase font-bold text-rose-700 dark:text-rose-400 bg-rose-500/15 px-1 py-0.2 rounded border border-rose-500/30">
                                   Imminent
                                 </span>
