@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.0...v1.33.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* implement UK date handling for price changes and enhance price prediction logic ([a0ca5f9](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a0ca5f98fae396982451e90804d108fd487a9b5a))
+
 # [1.33.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.32.0...v1.33.0) (2026-10-17)
 
 
