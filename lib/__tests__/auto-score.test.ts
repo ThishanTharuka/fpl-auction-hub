@@ -57,14 +57,22 @@ vi.mock("@/lib/fpl-data", () => ({
 }));
 
 vi.mock("@/lib/tournament/scoring", () => ({
-  fetchFplGameweekPoints: vi.fn().mockResolvedValue(50),
+  fetchFplGameweekScore: vi.fn().mockResolvedValue({
+    points: 50,
+    chip: null,
+    captainPoints: null,
+    benchPoints: null,
+  }),
   scoreGameweek: vi.fn().mockResolvedValue({
     scored: [{ fixtureId: "fix-1", homePoints: 50, awayPoints: 42 }],
     manual: [],
+    manualReasons: {},
+    chipNotes: {},
   }),
 }));
 
 import { autoScoreCompetition } from "@/lib/tournament/auto-score";
+import { scoreGameweek } from "@/lib/tournament/scoring";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 
@@ -211,5 +219,192 @@ describe("autoScoreCompetition", () => {
     expect(result.attempted).toBe(true);
     expect(result.scored).toBe(1);
     expect(activeRpc).toHaveBeenCalledWith("apply_fixture_scores", expect.any(Object));
+  });
+
+  it("keeps an admin score override when re-scoring the same fixture", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const testFixtures = [
+      {
+        id: "fix-1",
+        competition_id: "comp-1",
+        gw: 5,
+        home_team_id: "team-1",
+        away_team_id: "team-2",
+        status: "scheduled",
+        stage: "group",
+        phase: "intra_group",
+        tie_index: 0,
+        leg: 1,
+        home_points: null,
+        away_points: null,
+        // Admin pinned the home score; the away side is still FPL's to compute.
+        home_points_override: 12,
+        away_points_override: null,
+        chip_notes: null,
+      },
+    ];
+
+    const client = {
+      from: vi.fn((table: string) => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => {
+            if (table === "fpl_cache") {
+              return { single: vi.fn().mockResolvedValue({ data: null, error: null }) };
+            }
+            if (table === "competitions") {
+              return {
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "comp-1",
+                    name: "Test",
+                    status: "active",
+                    format_config: {
+                      // Non-two-path template keeps this test on the scoring path.
+                      knockout: { template: "single", third_place: false },
+                      qualification: { qualifiers_per_group: 4, tiebreakers: ["points"] },
+                      group_stage: { phases: [] },
+                    },
+                  },
+                  error: null,
+                }),
+              };
+            }
+            if (table === "competition_teams") {
+              return Promise.resolve({
+                data: [
+                  { id: "team-1", fpl_manager_id: 101, group_label: "A", team_number: 1 },
+                  { id: "team-2", fpl_manager_id: 102, group_label: "A", team_number: 2 },
+                ],
+                error: null,
+              });
+            }
+            if (table === "competition_fixtures") {
+              return Promise.resolve({ data: testFixtures, error: null });
+            }
+            return { single: vi.fn().mockResolvedValue({ data: null, error: null }) };
+          }),
+        })),
+        upsert: vi.fn().mockResolvedValue({ error: null }),
+      })),
+      rpc,
+    } as unknown as SupabaseClient<Database>;
+
+    const result = await autoScoreCompetition({
+      competitionId: "comp-1",
+      gw: 5,
+      force: true,
+      supabaseClient: client,
+    });
+
+    expect(result.attempted).toBe(true);
+    const payload = rpc.mock.calls[0]?.[1] as {
+      p_fixtures: Array<Record<string, unknown>>;
+    };
+    const row = payload.p_fixtures.find((f) => f.id === "fix-1");
+    // The mocked scorer reports 50; the override must win.
+    expect(row?.home_points).toBe(12);
+    expect(row?.away_points).toBe(42);
+    expect(row?.status).toBe("scored");
+    expect(row?.chip_notes).toBeNull();
+  });
+
+  it("persists the chip audit trail on the fixture it scores", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const testFixtures = [
+      {
+        id: "fix-1",
+        competition_id: "comp-1",
+        gw: 5,
+        home_team_id: "team-1",
+        away_team_id: "team-2",
+        status: "scheduled",
+        stage: "group",
+        phase: "intra_group",
+        tie_index: 0,
+        leg: 1,
+      },
+    ];
+
+    vi.mocked(scoreGameweek).mockResolvedValueOnce({
+      scored: [{ fixtureId: "fix-1", homePoints: 40, awayPoints: 42 }],
+      manual: [],
+      manualReasons: {},
+      chipNotes: {
+        "fix-1": {
+          home: {
+            chip: "3xc",
+            label: "Triple Captain",
+            rawPoints: 46,
+            penalty: 6,
+            adjustedPoints: 40,
+            applied: true,
+            reason: "Triple Captain used in the league phase - not counted",
+          },
+          away: null,
+        },
+      },
+    });
+
+    const client = {
+      from: vi.fn((table: string) => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => {
+            if (table === "fpl_cache") {
+              return { single: vi.fn().mockResolvedValue({ data: null, error: null }) };
+            }
+            if (table === "competitions") {
+              return {
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "comp-1",
+                    name: "Test",
+                    status: "active",
+                    format_config: {
+                      knockout: { template: "single", third_place: false },
+                      qualification: { qualifiers_per_group: 4, tiebreakers: ["points"] },
+                      group_stage: { phases: [] },
+                    },
+                  },
+                  error: null,
+                }),
+              };
+            }
+            if (table === "competition_teams") {
+              return Promise.resolve({
+                data: [
+                  { id: "team-1", fpl_manager_id: 101, group_label: "A", team_number: 1 },
+                  { id: "team-2", fpl_manager_id: 102, group_label: "A", team_number: 2 },
+                ],
+                error: null,
+              });
+            }
+            if (table === "competition_fixtures") {
+              return Promise.resolve({ data: testFixtures, error: null });
+            }
+            return { single: vi.fn().mockResolvedValue({ data: null, error: null }) };
+          }),
+        })),
+        upsert: vi.fn().mockResolvedValue({ error: null }),
+      })),
+      rpc,
+    } as unknown as SupabaseClient<Database>;
+
+    const result = await autoScoreCompetition({
+      competitionId: "comp-1",
+      gw: 5,
+      force: true,
+      supabaseClient: client,
+    });
+
+    expect(result.attempted).toBe(true);
+    const payload = rpc.mock.calls[0]?.[1] as {
+      p_fixtures: Array<Record<string, unknown>>;
+    };
+    const row = payload.p_fixtures.find((f) => f.id === "fix-1");
+    expect(row?.home_points).toBe(40);
+    expect(row?.chip_notes).toMatchObject({
+      home: { chip: "3xc", penalty: 6, adjustedPoints: 40 },
+      away: null,
+    });
   });
 });

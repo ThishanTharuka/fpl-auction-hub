@@ -79,6 +79,7 @@ export async function POST(
   return NextResponse.json({
     scored: res.scored,
     manual: res.manual,
+    manualReasons: res.manualReasons ?? {},
     status: res.status,
     reason: res.reason,
     isLive: res.isLive,

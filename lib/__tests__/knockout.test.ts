@@ -30,6 +30,12 @@ const koFixture = (
   away_points: ap,
   status: "scored",
   created_at: "",
+  home_points_override: null,
+  away_points_override: null,
+  chip_notes: null,
+  override_reason: null,
+  overridden_by: null,
+  overridden_at: null,
 });
 
 const twoLeg = (

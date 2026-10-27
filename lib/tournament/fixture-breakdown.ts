@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { getFplData } from "@/lib/fpl-data";
 import type { Json } from "@/lib/database.types";
+import type { ChipNote, FixtureChipNotes } from "./chips";
 import type { CompetitionFixtureRow, CompetitionTeamRow } from "./types";
 
 export interface PlayerBreakdown {
@@ -44,6 +45,11 @@ export interface TeamBreakdown {
   avatarUrl: string | null;
   color: string | null;
   chip: string | null;
+  /**
+   * Set when a chip was played where chips are not allowed: records how many
+   * points were taken off the fixture score.
+   */
+  chipAdjustment?: ChipNote | null;
   grossPoints: number;
   transferCost: number;
   netPoints: number;
@@ -283,8 +289,13 @@ export async function getFixtureBreakdown(
     ]),
   );
 
-  async function processTeam(team: CompetitionTeamRow | null): Promise<TeamBreakdown | null> {
+  async function processTeam(
+    team: CompetitionTeamRow | null,
+    side: "home" | "away",
+  ): Promise<TeamBreakdown | null> {
     if (!team) return null;
+    const chipNotes = (fixRow.chip_notes ?? null) as unknown as FixtureChipNotes | null;
+    const chipAdjustment = (side === "home" ? chipNotes?.home : chipNotes?.away) ?? null;
     if (!team.fpl_manager_id) {
       return {
         teamId: team.id,
@@ -293,6 +304,7 @@ export async function getFixtureBreakdown(
         avatarUrl: team.avatar_url,
         color: team.color,
         chip: null,
+        chipAdjustment,
         grossPoints: 0,
         transferCost: 0,
         netPoints: 0,
@@ -470,12 +482,13 @@ export async function getFixtureBreakdown(
       playing11,
       bench,
       statsSummary,
+      chipAdjustment,
     };
   }
 
   const [homeTeam, awayTeam] = await Promise.all([
-    processTeam(homeTeamRow),
-    processTeam(awayTeamRow),
+    processTeam(homeTeamRow, "home"),
+    processTeam(awayTeamRow, "away"),
   ]);
 
   return {
