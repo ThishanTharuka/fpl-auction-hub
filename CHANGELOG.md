@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.34.0...v1.34.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* add chip notes and manual score overrides for tournament fixtures ([9338375](https://github.com/ThishanTharuka/fpl-auction-hub/commit/93383751125a12f674cca709e90e45835a0fda5c))
+
 # [1.34.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.1...v1.34.0) (2026-10-27)
 
 
