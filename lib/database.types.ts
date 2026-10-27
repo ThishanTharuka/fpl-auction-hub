@@ -240,14 +240,20 @@ export type Database = {
       competition_fixtures: {
         Row: {
           away_points: number | null
+          away_points_override: number | null
           away_team_id: string | null
+          chip_notes: Json | null
           competition_id: string
           created_at: string
           gw: number
           home_points: number | null
+          home_points_override: number | null
           home_team_id: string | null
           id: string
           leg: number
+          override_reason: string | null
+          overridden_at: string | null
+          overridden_by: string | null
           phase: string
           stage: string
           status: string
@@ -255,14 +261,20 @@ export type Database = {
         }
         Insert: {
           away_points?: number | null
+          away_points_override?: number | null
           away_team_id?: string | null
+          chip_notes?: Json | null
           competition_id: string
           created_at?: string
           gw: number
           home_points?: number | null
+          home_points_override?: number | null
           home_team_id?: string | null
           id?: string
           leg?: number
+          override_reason?: string | null
+          overridden_at?: string | null
+          overridden_by?: string | null
           phase: string
           stage: string
           status?: string
@@ -270,14 +282,20 @@ export type Database = {
         }
         Update: {
           away_points?: number | null
+          away_points_override?: number | null
           away_team_id?: string | null
+          chip_notes?: Json | null
           competition_id?: string
           created_at?: string
           gw?: number
           home_points?: number | null
+          home_points_override?: number | null
           home_team_id?: string | null
           id?: string
           leg?: number
+          override_reason?: string | null
+          overridden_at?: string | null
+          overridden_by?: string | null
           phase?: string
           stage?: string
           status?: string

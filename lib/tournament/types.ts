@@ -29,10 +29,20 @@ export type KnockoutConfig = {
   third_place: boolean;
 };
 
+export type ChipPolicy = {
+  /**
+   * When false (default), FPL chips played during the group/league phase have
+   * their scoring effect removed. Chips are always permitted in the knockout
+   * stage.
+   */
+  league_phase_allowed: boolean;
+};
+
 export type CompetitionConfig = {
   group_stage: GroupStageConfig;
   qualification: QualificationConfig;
   knockout: KnockoutConfig;
+  chip_policy?: ChipPolicy;
 };
 
 export const DEFAULT_FORMAT_CONFIG: CompetitionConfig = {
@@ -51,6 +61,7 @@ export const DEFAULT_FORMAT_CONFIG: CompetitionConfig = {
     tiebreakers: ["points", "goal_diff", "head_to_head"],
   },
   knockout: { template: "two_path_v1", third_place: false },
+  chip_policy: { league_phase_allowed: false },
 };
 
 export type GroupLabel = "A" | "B";

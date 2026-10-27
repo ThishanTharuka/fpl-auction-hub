@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { scoreGameweek } from "@/lib/tournament/scoring";
+import type { ManagerGameweekScore } from "@/lib/tournament/scoring";
 import type {
   CompetitionFixtureRow,
   CompetitionTeamRow,
@@ -41,6 +42,19 @@ const fixture = (
   away_points: null,
   status,
   created_at: "",
+  home_points_override: null,
+  away_points_override: null,
+  chip_notes: null,
+  override_reason: null,
+  overridden_by: null,
+  overridden_at: null,
+});
+
+const score = (points: number, chip: string | null = null): ManagerGameweekScore => ({
+  points,
+  chip,
+  captainPoints: null,
+  benchPoints: null,
 });
 
 describe("scoreGameweek", () => {
@@ -50,18 +64,20 @@ describe("scoreGameweek", () => {
       fixture("f1", "t1", "t2"),
       fixture("f2", "t1", "t3"),
     ];
-    const fetchPoints = vi.fn(async (manager: number, gw: number) => manager * 10 + gw);
+    const fetchScore = vi.fn(async (manager: number, gw: number) =>
+      score(manager * 10 + gw),
+    );
 
     const result = await scoreGameweek({
       gw: 5,
       teams,
       fixtures,
-      fetchPoints,
+      fetchScore,
     });
 
     expect(result.scored).toHaveLength(2);
     expect(result.scored[0]).toEqual({ fixtureId: "f1", homePoints: 1015, awayPoints: 1025 });
-    expect(fetchPoints).toHaveBeenCalledWith(101, 5);
+    expect(fetchScore).toHaveBeenCalledWith(101, 5);
     expect(result.manual).toHaveLength(0);
   });
 
@@ -73,7 +89,7 @@ describe("scoreGameweek", () => {
       gw: 5,
       teams,
       fixtures,
-      fetchPoints: async () => 50,
+      fetchScore: async () => score(50),
     });
 
     expect(result.scored).toHaveLength(0);
@@ -91,7 +107,7 @@ describe("scoreGameweek", () => {
       gw: 5,
       teams,
       fixtures,
-      fetchPoints: async () => 50,
+      fetchScore: async () => score(50),
     });
 
     expect(result.scored).toHaveLength(1);
@@ -107,7 +123,7 @@ describe("scoreGameweek", () => {
       gw: 5,
       teams,
       fixtures,
-      fetchPoints: async () => null,
+      fetchScore: async () => null,
     });
 
     expect(result.scored).toHaveLength(0);

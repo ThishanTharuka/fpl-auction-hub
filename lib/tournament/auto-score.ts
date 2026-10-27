@@ -2,7 +2,8 @@ import { supabase as defaultSupabase } from "@/lib/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/lib/database.types";
 import { getFplData } from "@/lib/fpl-data";
-import { fetchFplGameweekPoints, scoreGameweek } from "./scoring";
+import { chipsAllowedForStage } from "./chips";
+import { fetchFplGameweekScore, scoreGameweek } from "./scoring";
 import {
   computeTieOutcomes,
   resolveEntrant,
@@ -35,6 +36,8 @@ export interface AutoScoreResult {
   isLive?: boolean;
   isFinished?: boolean;
   cooldownRemainingMs?: number;
+  /** Why a fixture needs manual entry, keyed by fixture ID (chip rule, etc). */
+  manualReasons?: Record<string, string>;
 }
 
 const COOLDOWNS = {
@@ -136,6 +139,7 @@ export async function autoScoreCompetition(
   const teams = (teamsRes.data ?? []) as CompetitionTeamRow[];
   const allFixtures = (fixturesRes.data ?? []) as CompetitionFixtureRow[];
   const gwFixtures = allFixtures.filter((f) => f.gw === targetGw);
+  const config = competition.format_config as unknown as CompetitionConfig;
 
   if (gwFixtures.length === 0) {
     return {
@@ -197,29 +201,51 @@ export async function autoScoreCompetition(
     gw: targetGw,
     teams,
     fixtures: gwFixtures.filter((f) => !manualIds.has(f.id)),
-    fetchPoints: fetchFplGameweekPoints,
+    fetchScore: fetchFplGameweekScore,
+    chipsAllowedForStage: (stage) => chipsAllowedForStage(config, stage),
+  });
+  const chipNotesById = result.chipNotes ?? {};
+
+  /**
+   * An admin override wins over anything FPL reports, per side, so a manual
+   * correction is never clobbered by the next auto-score run.
+   */
+  const applyOverrides = (original: CompetitionFixtureRow, computed: {
+    home: number;
+    away: number;
+  }) => ({
+    home_points: original.home_points_override ?? computed.home,
+    away_points: original.away_points_override ?? computed.away,
   });
 
   const scoredUpdates: CompetitionFixtureRow[] = [...manualUpdates];
   for (const s of result.scored) {
     const original = gwFixtures.find((f) => f.id === s.fixtureId);
     if (!original) continue;
+    const points = applyOverrides(original, { home: s.homePoints, away: s.awayPoints });
     scoredUpdates.push({
       ...original,
-      home_points: s.homePoints,
-      away_points: s.awayPoints,
+      ...points,
+      chip_notes: (chipNotesById[s.fixtureId] ?? null) as unknown as Json,
       status: "scored",
     });
   }
 
   // Also include manual status updates if needed
   for (const f of result.manual) {
-    if (!scoredUpdates.some((u) => u.id === f.id)) {
-      scoredUpdates.push({
-        ...f,
-        status: "manual",
-      });
-    }
+    if (scoredUpdates.some((u) => u.id === f.id)) continue;
+
+    const home = f.home_points_override ?? f.home_points;
+    const away = f.away_points_override ?? f.away_points;
+    const resolved = home !== null && away !== null;
+
+    scoredUpdates.push({
+      ...f,
+      home_points: home,
+      away_points: away,
+      chip_notes: (chipNotesById[f.id] ?? null) as unknown as Json,
+      status: resolved ? "scored" : "manual",
+    });
   }
 
   // 5. Compute knockout bracket advancements if applicable
@@ -244,7 +270,6 @@ export async function autoScoreCompetition(
     };
   });
 
-  const config = competition.format_config as unknown as CompetitionConfig;
   let decidersPayload: Array<{ id: string; home_team_id: string | null; away_team_id: string | null }> | null = null;
   let knockoutPayload: Array<{ phase: string; leg: number; home_team_id: string | null; away_team_id: string | null }> | null = null;
 
@@ -331,6 +356,7 @@ export async function autoScoreCompetition(
     home_points: f.home_points,
     away_points: f.away_points,
     status: f.status,
+    chip_notes: (f.chip_notes ?? null) as Json,
   }));
 
   const { error: rpcError } = await supabaseClient.rpc("apply_fixture_scores", {
@@ -364,6 +390,7 @@ export async function autoScoreCompetition(
     gw: targetGw,
     scored: scoredUpdates.filter((s) => s.status === "scored").length,
     manual: result.manual.length,
+    manualReasons: result.manualReasons,
     status: nextStatus,
     isLive,
     isFinished,

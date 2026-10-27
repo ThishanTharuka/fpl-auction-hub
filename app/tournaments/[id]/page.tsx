@@ -21,6 +21,12 @@ import { TeamAvatar } from "@/components/team-avatar";
 import { StandingsExport } from "@/components/standings-export";
 import { TournamentBracket } from "@/components/tournament-bracket";
 import { TournamentFixtures } from "@/components/tournament-fixtures";
+import {
+  FixtureChipBadges,
+  ScoreOverrideButton,
+  ScoreOverridePanel,
+} from "@/components/tournament-score-editor";
+import type { FixtureChipNotes } from "@/lib/tournament/chips";
 import type {
   CompetitionConfig,
   CompetitionFixtureRow,
@@ -60,6 +66,7 @@ export default function TournamentAdminPage() {
   const [scoring, setScoring] = useState(false);
   const [scoreMsg, setScoreMsg] = useState("");
   const [manualScores, setManualScores] = useState<Record<string, { home: string; away: string }>>({});
+  const [editingOverrideId, setEditingOverrideId] = useState<string | null>(null);
 
   const [newName, setNewName] = useState("");
   const [savingName, setSavingName] = useState(false);
@@ -246,7 +253,12 @@ export default function TournamentAdminPage() {
         setScoreMsg(data.error ?? "Scoring failed.");
         return;
       }
-      setScoreMsg(`Scored ${data.scored} fixture(s). ${data.manual > 0 ? `${data.manual} need manual entry.` : ""}`);
+      const reasons = Object.values(
+        (data.manualReasons ?? {}) as Record<string, string>,
+      );
+      setScoreMsg(
+        `Scored ${data.scored} fixture(s). ${data.manual > 0 ? `${data.manual} need manual entry.` : ""}${reasons.length > 0 ? ` ${reasons[0]}` : ""}`,
+      );
       await reloadData();
     } finally {
       setScoring(false);
@@ -298,6 +310,13 @@ export default function TournamentAdminPage() {
     }
     setFixtures((fixRes.data ?? []) as CompetitionFixtureRow[]);
   }
+
+  /** Applies a locally-updated fixture after an override save/clear. */
+  const handleOverrideSaved = useCallback((updated: CompetitionFixtureRow) => {
+    setFixtures((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
+    setEditingOverrideId(null);
+    setScoreMsg("Score override saved.");
+  }, []);
 
   async function rename() {
     if (!id || !newName.trim()) return;
@@ -473,9 +492,22 @@ export default function TournamentAdminPage() {
               )}
             </div>
 
+            {gwFixtures.some((f) => f.chip_notes) && (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 space-y-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  Chips are not allowed in the league phase
+                </p>
+                <p className="text-xs text-amber-800 dark:text-amber-300/80">
+                  Scores below already exclude the chip effect. Use &quot;Edit score&quot; to pin a
+                  different result if the league decides otherwise.
+                </p>
+              </div>
+            )}
+
             <div className="grid gap-2.5">
               {gwFixtures.map((f) => {
                 const label = statusInfo(f.status);
+                const chipNotes = (f.chip_notes ?? null) as unknown as FixtureChipNotes | null;
                 const manual = manualScores[f.id];
                 const hTeam = f.home_team_id ? teamById.get(f.home_team_id) : null;
                 const aTeam = f.away_team_id ? teamById.get(f.away_team_id) : null;
@@ -483,68 +515,86 @@ export default function TournamentAdminPage() {
                 const aName = teamName(f.away_team_id);
 
                 return (
-                  <div
-                    key={f.id}
-                    className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center justify-between gap-3"
-                  >
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]/60 shrink-0">
-                      {fixtureGroupLabel(f)}
-                    </span>
-
-                    <div className="flex-1 min-w-[240px] flex items-center gap-2.5 text-sm text-[#d6e4f9]">
-                      <span className="inline-flex items-center gap-2 min-w-0">
-                        <TeamAvatar
-                          name={hName}
-                          src={hTeam?.avatar_url ?? null}
-                          color={hTeam?.color ?? null}
-                          size="sm"
-                        />
-                        <span className="truncate">{hName}</span>
+                  <div key={f.id} className="space-y-2">
+                    <div className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center justify-between gap-3">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]/60 shrink-0">
+                        {fixtureGroupLabel(f)}
                       </span>
-                      <span className="text-xs text-[#849585] shrink-0 font-medium">vs</span>
-                      <span className="inline-flex items-center gap-2 min-w-0">
-                        <TeamAvatar
-                          name={aName}
-                          src={aTeam?.avatar_url ?? null}
-                          color={aTeam?.color ?? null}
-                          size="sm"
-                        />
-                        <span className="truncate">{aName}</span>
-                      </span>
-                    </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      {f.status === "scored" && (
-                        <span className="text-sm text-[#d6e4f9] tabular-nums font-semibold px-2 py-0.5 rounded bg-[#0f1c2c] border border-[#3b4b3d]">
-                          <b className="text-[#00e478]">{f.home_points}</b>
-                          <span className="text-[#849585] mx-1">–</span>
-                          <b className="text-[#00e478]">{f.away_points}</b>
+                      <div className="flex-1 min-w-[240px] flex items-center gap-2.5 text-sm text-[#d6e4f9]">
+                        <span className="inline-flex items-center gap-2 min-w-0">
+                          <TeamAvatar
+                            name={hName}
+                            src={hTeam?.avatar_url ?? null}
+                            color={hTeam?.color ?? null}
+                            size="sm"
+                          />
+                          <span className="truncate">{hName}</span>
                         </span>
-                      )}
-                      <Badge className={`text-[10px] border ${label.cls}`}>{label.label}</Badge>
-                      {f.status !== "scored" && (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="Home"
-                            value={manual?.home ?? ""}
-                            onChange={(e) =>
-                              setManualScores((m) => ({ ...m, [f.id]: { home: e.target.value, away: m[f.id]?.away ?? "" } }))
-                            }
-                            className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                        <span className="text-xs text-[#849585] shrink-0 font-medium">vs</span>
+                        <span className="inline-flex items-center gap-2 min-w-0">
+                          <TeamAvatar
+                            name={aName}
+                            src={aTeam?.avatar_url ?? null}
+                            color={aTeam?.color ?? null}
+                            size="sm"
                           />
-                          <Input
-                            type="number"
-                            placeholder="Away"
-                            value={manual?.away ?? ""}
-                            onChange={(e) =>
-                              setManualScores((m) => ({ ...m, [f.id]: { home: m[f.id]?.home ?? "", away: e.target.value } }))
-                            }
-                            className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                          <span className="truncate">{aName}</span>
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-end gap-3 min-w-0">
+                        {f.status === "scored" && (
+                          <span className="text-sm text-[#d6e4f9] tabular-nums font-semibold px-2 py-0.5 rounded bg-[#0f1c2c] border border-[#3b4b3d]">
+                            <b className="text-[#00e478]">{f.home_points}</b>
+                            <span className="text-[#849585] mx-1">–</span>
+                            <b className="text-[#00e478]">{f.away_points}</b>
+                          </span>
+                        )}
+                        <FixtureChipBadges notes={chipNotes} />
+                        <Badge className={`text-[10px] border ${label.cls}`}>{label.label}</Badge>
+                        {f.status !== "scored" && (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="Home"
+                              value={manual?.home ?? ""}
+                              onChange={(e) =>
+                                setManualScores((m) => ({ ...m, [f.id]: { home: e.target.value, away: m[f.id]?.away ?? "" } }))
+                              }
+                              className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Away"
+                              value={manual?.away ?? ""}
+                              onChange={(e) =>
+                                setManualScores((m) => ({ ...m, [f.id]: { home: m[f.id]?.home ?? "", away: e.target.value } }))
+                              }
+                              className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                            />
+                          </div>
+                        )}
+                        {f.status === "scored" && (
+                          <ScoreOverrideButton
+                            fixture={f}
+                            onEdit={() => setEditingOverrideId(f.id)}
                           />
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
+
+                    {editingOverrideId === f.id && (
+                      <ScoreOverridePanel
+                        competitionId={id}
+                        fixture={f}
+                        homeName={hName}
+                        awayName={aName}
+                        onSaved={handleOverrideSaved}
+                        onCancel={() => setEditingOverrideId(null)}
+                        onError={setScoreMsg}
+                      />
+                    )}
                   </div>
                 );
               })}

@@ -49,6 +49,12 @@ const fixture = (
   away_points: scored ? ap : null,
   status: scored ? "scored" : "scheduled",
   created_at: "",
+  home_points_override: null,
+  away_points_override: null,
+  chip_notes: null,
+  override_reason: null,
+  overridden_by: null,
+  overridden_at: null,
 });
 
 describe("computeGroupStandings", () => {

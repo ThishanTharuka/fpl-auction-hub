@@ -223,6 +223,16 @@ export function FixtureBreakdownModal({
                 {team.chip}
               </span>
             )}
+            {team.chipAdjustment && (
+              <span
+                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                title={team.chipAdjustment.reason}
+              >
+                {team.chipAdjustment.applied
+                  ? `-${team.chipAdjustment.penalty} not counted`
+                  : "manual entry"}
+              </span>
+            )}
             {team.transferCost > 0 && (
               <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                 -{team.transferCost} Hit
@@ -337,6 +347,16 @@ export function FixtureBreakdownModal({
       { label: "Bench Points", homeVal: `${home.benchPoints} pts`, awayVal: `${away.benchPoints} pts` },
       { label: "Active Chip", homeVal: home.chip ?? "None", awayVal: away.chip ?? "None" },
     ];
+
+    if (home.chipAdjustment || away.chipAdjustment) {
+      const describe = (a: typeof home.chipAdjustment) =>
+        a ? (a.applied ? `-${a.penalty} pts` : "Manual") : "-";
+      statsList.push({
+        label: "Chip Scored in League Phase",
+        homeVal: describe(home.chipAdjustment),
+        awayVal: describe(away.chipAdjustment),
+      });
+    }
 
     return (
       <div className="rounded-lg border border-border bg-card p-3 sm:p-4 space-y-3 shadow-xs">
