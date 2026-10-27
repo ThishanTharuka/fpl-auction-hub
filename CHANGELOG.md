@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.34.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.1...v1.34.0) (2026-10-27)
+
+
+### Features
+
+* implement chip policy and scoring adjustments for tournament fixtures ([c49f08c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c49f08c00acd7a894db50cedc04d154244bd7ef1))
+
 ## [1.33.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.0...v1.33.1) (2026-10-22)
 
 
