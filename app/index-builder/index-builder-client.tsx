@@ -5,8 +5,18 @@ import { createPortal } from "react-dom";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Info, SlidersHorizontal, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Info, SlidersHorizontal, ClipboardList, X } from "lucide-react";
 import { applyIndexToPlayers } from "@/lib/index-calculator";
+import { parseShortlist, type ShortlistMatch } from "@/lib/player-shortlist";
+import { cn } from "@/lib/utils";
 import type {
   EnrichedPlayer,
   WeightConfig,
@@ -291,6 +301,15 @@ const POSITION_COLORS: Record<string, string> = {
   FWD: "bg-red-500/15 border border-red-500/25 text-red-700 dark:text-red-400",
 };
 
+type ShortlistState = {
+  /** Matched player ids — the ranking pool when a shortlist is active. */
+  ids: Set<number>;
+  /** Pasted entries that matched nothing, surfaced as a dismissible notice. */
+  unmatched: string[];
+  /** Raw text as it was applied, so reopening the dialog restores it. */
+  raw: string;
+};
+
 export function IndexBuilderClient({
   players,
 }: Readonly<{ players: EnrichedPlayer[] }>) {
@@ -310,6 +329,15 @@ export function IndexBuilderClient({
   const [pageIndex, setPageIndex] = useState(0);
   const PAGE_SIZE = 10;
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  const [shortlistOpen, setShortlistOpen] = useState(false);
+  const [shortlistDraft, setShortlistDraft] = useState("");
+  const [shortlist, setShortlist] = useState<ShortlistState | null>(null);
+  const [shortlistFeedback, setShortlistFeedback] =
+    useState<ShortlistMatch | null>(null);
+
+  const shortlistCount = shortlist?.ids.size ?? 0;
+  const shortlistActive = shortlistCount > 0;
 
   // Close metric picker on outside click
   useEffect(() => {
@@ -342,12 +370,20 @@ export function IndexBuilderClient({
   }, [weights, activeStats]);
 
   const ranked = useMemo<IndexedPlayer[]>(() => {
+    const ids = shortlist?.ids;
+    // A pasted shortlist takes precedence over the position filter: scores are
+    // normalised across exactly the players that were pasted.
+    const shortlistPool =
+      ids && ids.size > 0 ? players.filter((p) => ids.has(p.id)) : null;
     const pool =
-      posFilter === "ALL"
+      shortlistPool ??
+      (posFilter === "ALL"
         ? players
-        : players.filter((p) => p.position === posFilter);
-    return applyIndexToPlayers(pool, effectiveWeights).slice(0, 50);
-  }, [players, effectiveWeights, posFilter]);
+        : players.filter((p) => p.position === posFilter));
+    const indexed = applyIndexToPlayers(pool, effectiveWeights);
+    // The 50 cap keeps the default ranking tidy; a shortlist shows every match.
+    return shortlistPool ? indexed : indexed.slice(0, 50);
+  }, [players, effectiveWeights, posFilter, shortlist]);
 
   const pageCount = useMemo(
     () => Math.max(1, Math.ceil(ranked.length / PAGE_SIZE)),
@@ -393,6 +429,37 @@ export function IndexBuilderClient({
 
   function resetAll() {
     applyPreset(DEFAULT_PRESET);
+  }
+
+  function openShortlist() {
+    setShortlistDraft(shortlist?.raw ?? "");
+    setShortlistFeedback(null);
+    setShortlistOpen(true);
+  }
+
+  function applyShortlist() {
+    const result = parseShortlist(shortlistDraft, players);
+    if (result.ids.length === 0) {
+      // Stay open so the unmatched entries are visible to the user.
+      setShortlistFeedback(result);
+      return;
+    }
+    setShortlist({
+      ids: new Set(result.ids),
+      unmatched: result.unmatched,
+      raw: shortlistDraft,
+    });
+    setShortlistFeedback(null);
+    setShortlistOpen(false);
+    setPageIndex(0);
+  }
+
+  function clearShortlist() {
+    setShortlist(null);
+    setShortlistFeedback(null);
+    setShortlistDraft("");
+    setShortlistOpen(false);
+    setPageIndex(0);
   }
 
   const sidebarContent = (
@@ -539,6 +606,21 @@ export function IndexBuilderClient({
               Rankings
             </h2>
             <div className="flex items-center gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openShortlist}
+                className={cn(
+                  "text-[11px] text-muted-foreground",
+                  shortlistActive &&
+                    "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                )}
+              >
+                <ClipboardList className="size-3.5" />
+                {shortlistActive
+                  ? `Shortlist · ${shortlistCount}`
+                  : "Paste list"}
+              </Button>
               <span className="text-[11px] sm:text-xs text-muted-foreground">
                 {ranked.length} players
               </span>
@@ -547,6 +629,33 @@ export function IndexBuilderClient({
               </span>
             </div>
           </div>
+
+          {/* Unmatched names from the active shortlist */}
+          {shortlist && shortlist.unmatched.length > 0 && (
+            <div className="flex items-start gap-2 border-b border-border bg-amber-500/10 px-4 sm:px-5 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+              <span className="flex-1 leading-relaxed break-words">
+                {shortlist.unmatched.length === 1
+                  ? "1 pasted name matched nothing: "
+                  : `${shortlist.unmatched.length} pasted names matched nothing: `}
+                <span className="font-mono">
+                  {shortlist.unmatched.slice(0, 6).join(", ")}
+                  {shortlist.unmatched.length > 6
+                    ? ` +${shortlist.unmatched.length - 6} more`
+                    : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                aria-label="Dismiss unmatched names notice"
+                onClick={() =>
+                  setShortlist((s) => (s ? { ...s, unmatched: [] } : s))
+                }
+                className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Desktop table */}
           <div className="hidden lg:block overflow-x-auto">
@@ -679,6 +788,73 @@ export function IndexBuilderClient({
           </div>
         </div>
       </div>
+
+      {/* Paste-a-list dialog */}
+      <Dialog open={shortlistOpen} onOpenChange={setShortlistOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Paste player list</DialogTitle>
+            <DialogDescription>
+              One player per line, e.g. Acheampong (CHE). The club code in
+              brackets is optional and only used to tell same-named players
+              apart. Scores are then calculated across the pasted players only.
+            </DialogDescription>
+          </DialogHeader>
+
+          <textarea
+            value={shortlistDraft}
+            onChange={(e) => {
+              setShortlistDraft(e.target.value);
+              setShortlistFeedback(null);
+            }}
+            aria-label="Player list, one player per line"
+            spellCheck={false}
+            placeholder={"Acheampong (CHE)\nAffengruber (FUL)\nAjer (BRE)"}
+            className="h-56 w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+          />
+
+          {shortlistFeedback && shortlistFeedback.ids.length === 0 && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
+              <p className="font-medium">
+                Nothing matched — check the spelling or club code.
+              </p>
+              {shortlistFeedback.unmatched.length > 0 && (
+                <ul className="mt-1.5 max-h-32 list-disc overflow-y-auto pl-4 font-mono">
+                  {shortlistFeedback.unmatched.map((entry, i) => (
+                    <li key={`${i}-${entry}`}>{entry}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            {shortlist && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={clearShortlist}
+              >
+                Clear
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShortlistOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={applyShortlist}
+              disabled={!shortlistDraft.trim()}
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile weight sliders trigger */}
       <button
