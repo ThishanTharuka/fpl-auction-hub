@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.34.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.34.0...v1.34.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* add chip notes and manual score overrides for tournament fixtures ([9338375](https://github.com/ThishanTharuka/fpl-auction-hub/commit/93383751125a12f674cca709e90e45835a0fda5c))
+
+# [1.34.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.1...v1.34.0) (2026-10-27)
+
+
+### Features
+
+* implement chip policy and scoring adjustments for tournament fixtures ([c49f08c](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c49f08c00acd7a894db50cedc04d154244bd7ef1))
+
+## [1.33.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.33.0...v1.33.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* implement UK date handling for price changes and enhance price prediction logic ([a0ca5f9](https://github.com/ThishanTharuka/fpl-auction-hub/commit/a0ca5f98fae396982451e90804d108fd487a9b5a))
+
 # [1.33.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.32.0...v1.33.0) (2026-10-17)
 
 
