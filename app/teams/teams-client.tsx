@@ -2,6 +2,8 @@
 /* eslint-disable @next/next/no-img-element -- dynamic crests with onError fallback, next/image incompatible */
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import {
   Dialog,
@@ -18,7 +20,6 @@ import {
 } from "@/components/ui/drawer";
 import {
   Select,
-  SelectValue,
   SelectTrigger,
   SelectContent,
   SelectGroup,
@@ -79,19 +80,19 @@ interface SquadPlayer extends EnrichedPlayer {
 }
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-[#c05a00]",
-  DEF: "bg-[#0058c0]",
-  MID: "bg-[#6a00c0]",
-  FWD: "bg-[#c00028]",
-  BENCH: "bg-[#444]",
+  GKP: "bg-amber-600",
+  DEF: "bg-sky-600",
+  MID: "bg-emerald-600",
+  FWD: "bg-rose-600",
+  BENCH: "bg-slate-600",
 };
 
 const POSITION_DOT: Record<string, string> = {
-  GKP: "bg-[#c05a00]",
-  DEF: "bg-[#0058c0]",
-  MID: "bg-[#6a00c0]",
-  FWD: "bg-[#c00028]",
-  BENCH: "bg-[#444]",
+  GKP: "bg-amber-500",
+  DEF: "bg-sky-500",
+  MID: "bg-emerald-500",
+  FWD: "bg-rose-500",
+  BENCH: "bg-slate-500",
 };
 
 const POSITION_LABELS: Record<string, string> = {
@@ -120,6 +121,7 @@ export function TeamsClient({
   players,
   currentGameweek,
 }: Readonly<{ players: EnrichedPlayer[]; currentGameweek: number }>) {
+  const shouldReduce = useReducedMotion();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
@@ -546,19 +548,25 @@ export function TeamsClient({
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
-      {/* ─── Toolbar ─────────────────────────────── */}
+      {/* ─── Toolbar (Apple Refined Controls) ─────────────────── */}
       <div className="mb-4 sm:mb-5 flex flex-wrap items-center gap-3">
         <Select
           value={selectedLeague ?? ""}
           onValueChange={(v) => v && setSelectedLeague(v)}
         >
-          <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[160px]">
-            <span className="text-xs text-[#d6e4f9]">{selectedLeagueName}</span>
+          <SelectTrigger className="h-8 rounded-full bg-muted/60 border border-border/50 text-xs px-3.5 py-1 text-foreground hover:bg-muted/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 w-auto min-w-[160px]">
+            <span className="text-xs text-foreground font-semibold">{selectedLeagueName}</span>
           </SelectTrigger>
-          <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+          <SelectContent
+            alignItemWithTrigger={false}
+            side="bottom"
+            align="start"
+            sideOffset={6}
+            className="w-max min-w-[180px] rounded-2xl border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-foreground z-50"
+          >
             <SelectGroup>
               {leagues.filter((l) => userLeagueIds.includes(l.id)).map((l) => (
-                <SelectItem key={l.id} value={l.id} className="text-xs">
+                <SelectItem key={l.id} value={l.id} className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
                   {l.name}
                 </SelectItem>
               ))}
@@ -571,13 +579,19 @@ export function TeamsClient({
             value={currentFormation}
             onValueChange={(v) => v && handleFormationChange(v)}
           >
-            <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs w-auto min-w-[100px]">
-              <SelectValue />
+            <SelectTrigger className="h-8 rounded-full bg-muted/60 border border-border/50 text-xs px-3.5 py-1 text-foreground hover:bg-muted/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 w-auto min-w-[100px]">
+              <span className="font-mono font-semibold">{currentFormation}</span>
             </SelectTrigger>
-            <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+            <SelectContent
+              alignItemWithTrigger={false}
+              side="bottom"
+              align="start"
+              sideOffset={6}
+              className="w-max min-w-[120px] rounded-2xl border border-border/70 bg-card/95 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-foreground z-50"
+            >
               <SelectGroup>
                 {FORMATIONS.map((f) => (
-                  <SelectItem key={f} value={f} className="text-xs">
+                  <SelectItem key={f} value={f} className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors font-mono">
                     {f}
                   </SelectItem>
                 ))}
@@ -585,7 +599,7 @@ export function TeamsClient({
             </SelectContent>
           </Select>
         ) : (
-          <div className="bg-[#132030] border border-[#3b4b3d] text-[#6b7b6b] h-8 text-xs w-auto min-w-[100px] rounded px-3 py-1.5 flex items-center select-none cursor-not-allowed">
+          <div className="h-8 rounded-full bg-muted/40 border border-border/40 text-muted-foreground text-xs px-3.5 py-1 flex items-center select-none cursor-default font-mono">
             {currentFormation}
           </div>
         )}
@@ -607,14 +621,14 @@ export function TeamsClient({
               <Button
                 type="button"
                 variant="outline"
-                className="h-8 text-xs border-border bg-muted text-foreground hover:bg-muted/80"
+                className="h-8 text-xs rounded-full border-border/50 bg-muted/60 text-foreground hover:bg-muted/90 px-3.5 transition-all shadow-xs"
               >
                 FPL Team
               </Button>
             </DrawerTrigger>
-            <DrawerContent className="bg-card border-l border-border text-foreground max-w-[400px]">
-              <DrawerHeader className="border-b border-border">
-                <DrawerTitle className="text-sm font-semibold text-foreground">
+            <DrawerContent className="bg-card/95 backdrop-blur-2xl border-l border-border/70 text-foreground max-w-[400px] shadow-2xl">
+              <DrawerHeader className="border-b border-border/50 px-5 py-4">
+                <DrawerTitle className="text-sm font-bold text-foreground tracking-tight">
                   {fplTeamLoading ? "Loading..." : fplTeamManager ? `${fplTeamManager}'s FPL Team` : "FPL Team"}
                 </DrawerTitle>
               </DrawerHeader>
@@ -622,7 +636,7 @@ export function TeamsClient({
                 {fplTeamLoading && (
                   <div className="space-y-2">
                     {Array.from({ length: 11 }).map((_, i) => (
-                      <div key={i} className="h-10 bg-muted rounded animate-pulse" />
+                      <div key={i} className="h-10 bg-muted/60 rounded-xl animate-pulse" />
                     ))}
                   </div>
                 )}
@@ -632,7 +646,7 @@ export function TeamsClient({
                   </div>
                 )}
                 {fplTeamPicks && fplTeamPicks.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {fplTeamPicks
                       .sort((a, b) => a.position - b.position)
                       .map((pick) => {
@@ -642,24 +656,24 @@ export function TeamsClient({
                         return (
                           <div
                             key={pick.position}
-                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-colors ${
                               isStarting
-                                ? "bg-card hover:bg-muted/60 border border-border/70 shadow-2xs"
-                                : "bg-muted/70 hover:bg-muted border border-border/40"
+                                ? "bg-card/90 hover:bg-muted/60 border border-border/60 shadow-xs"
+                                : "bg-muted/40 hover:bg-muted/70 border border-border/30"
                             }`}
                           >
                             <span className="w-5 text-center text-muted-foreground font-mono text-[10px]">
                               {pick.position}
                             </span>
-                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                            <div className="flex-1 min-w-0 flex items-center gap-2">
                               {(player as EnrichedPlayer).team_crest_url && (
                                 <img
                                   src={(player as EnrichedPlayer).team_crest_url}
                                   alt=""
-                                  className="w-4 h-4 object-contain"
+                                  className="w-4 h-4 object-contain shrink-0"
                                 />
                               )}
-                              <span className="font-medium truncate text-foreground">
+                              <span className="font-semibold truncate text-foreground">
                                 {player.web_name}
                               </span>
                               <span className="text-muted-foreground text-[10px] uppercase font-mono">
@@ -672,17 +686,17 @@ export function TeamsClient({
                                       : "FWD"}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px]">
+                            <div className="flex items-center gap-2 text-[10px]">
                               {pick.is_captain && (
-                                <span className="text-amber-500 font-bold bg-amber-500/10 px-1 py-0.2 rounded">(C)</span>
+                                <span className="text-amber-500 font-bold bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-full">(C)</span>
                               )}
                               {pick.is_vice_captain && !pick.is_captain && (
-                                <span className="text-sky-500 font-bold bg-sky-500/10 px-1 py-0.2 rounded">(VC)</span>
+                                <span className="text-sky-500 font-bold bg-sky-500/15 border border-sky-500/30 px-1.5 py-0.5 rounded-full">(VC)</span>
                               )}
-                              <span className="text-muted-foreground">
+                              <span className="text-muted-foreground font-mono">
                                 £{(player.now_cost / 10).toFixed(1)}m
                               </span>
-                              <span className="text-emerald-700 dark:text-[#00ff87] font-semibold w-6 text-right tabular-nums">
+                              <span className="text-emerald-700 dark:text-primary font-bold w-6 text-right tabular-nums">
                                 {player.total_points}
                               </span>
                             </div>
@@ -702,15 +716,15 @@ export function TeamsClient({
         )}
 
         {currentLeague && (
-          <div className="text-xs text-[#849585] ml-auto">
+          <div className="text-xs text-muted-foreground ml-auto tracking-tight">
             Spent{" "}
-            <span className="font-mono text-[#00d166]">
+            <span className="font-mono text-emerald-700 dark:text-primary font-bold tabular-nums">
               £{totalSpent.toFixed(1)}m
             </span>
             {" / "}
-            <span className="text-[#d6e4f9]">£{budget}m</span>
+            <span className="text-foreground font-semibold">£{budget}m</span>
             {" · "}
-            <span className="font-mono text-[#00d166]">
+            <span className="font-mono text-emerald-700 dark:text-primary font-bold tabular-nums">
               £{remaining.toFixed(1)}m
             </span>{" "}
             left
@@ -718,78 +732,102 @@ export function TeamsClient({
         )}
       </div>
 
-      {/* ─── Team Tabs ───────────────────────────── */}
-      <div className="flex flex-wrap gap-1.5 mb-4 min-h-[32px]">
-        {participants.length > 0 && participants.map((p) => {
-            const isActive = selectedParticipant === p.id;
-            return (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setSelectedParticipant(p.id);
-                  setSelectedPlayer(null);
-                }}
-                className={`rounded-full px-3.5 py-1 text-xs font-medium transition-all ${
-                  isActive
-                    ? "bg-[#1a4731] text-[#00ff87]"
-                    : "bg-[#132030] text-[#b9cbb9] hover:bg-[#1e2b3b]"
-                }`}
-              >
-                {p.name}
-              </button>
-            );
-          })}
+      {/* ─── Team Tabs (Apple Segmented Rail) ─────────── */}
+      <div className="flex items-center gap-1.5 mb-5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="relative inline-flex items-center p-1 rounded-full bg-muted/60 border border-border/50 backdrop-blur-md gap-1">
+          {participants.length > 0 &&
+            participants.map((p) => {
+              const isActive = selectedParticipant === p.id;
+              return (
+                <motion.button
+                  key={p.id}
+                  onClick={() => {
+                    setSelectedParticipant(p.id);
+                    setSelectedPlayer(null);
+                  }}
+                  whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                  className={cn(
+                    "relative px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 shrink-0 select-none",
+                    isActive
+                      ? "text-primary-foreground font-bold shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-team-tab-pill"
+                      transition={
+                        shouldReduce
+                          ? { duration: 0 }
+                          : { type: "spring", bounce: 0, duration: 0.26 }
+                      }
+                      className="absolute inset-0 rounded-full bg-primary"
+                    />
+                  )}
+                  <span className="relative z-10">{p.name}</span>
+                </motion.button>
+              );
+            })}
         </div>
+      </div>
 
 
 
       {/* ─── Main content: 2-column grid ─────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] border border-border rounded-xl overflow-hidden">
-        {/* ─── Left: Pitch + Bench ──────────────────── */}
-        <div>
-          <div className="bg-[#1a5c35] bg-[repeating-linear-gradient(0deg,transparent,transparent_50px,rgba(255,255,255,0.02)_50px,rgba(255,255,255,0.02)_100px)]">
-            <div className="p-6 pb-4 min-h-[520px]">
-              <div className="flex flex-col items-center gap-1">
-                {(["gkp", "def", "mid", "fwd"] as const).map((pos) => {
-                  const slotInfo = starters[pos];
-                  const posKey = pos.toUpperCase();
-                  const slots = slotInfo.max;
-                  return (
-                    <div
-                      key={pos}
-                      className="w-full flex flex-col items-center"
-                    >
-                      <div className="text-[10px] text-white/20 tracking-widest text-center mb-1 uppercase">
-                        {posKey}
-                      </div>
-                      <div className="flex justify-center gap-3">
-                        {Array.from({ length: slots }).map((_, i) => {
-                          const player = slotInfo.players[i] ?? null;
-                          return player ? (
-                            <PitchPlayerCard
-                              key={player.auction_result_id}
-                              player={player}
-                              position={posKey}
-                              onSelect={setSelectedPlayer}
-                            />
-                          ) : (
-                            <EmptySlot key={`empty-${pos}-${i}`} />
-                          );
-                        })}
-                      </div>
-                      {pos !== "fwd" && (
-                        <div className="w-full my-2 border-t border-white/5" />
-                      )}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] border border-border/60 rounded-2xl overflow-hidden bg-card shadow-sm" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)" }}>
+        {/* ─── Left: Stadium Pitch + Bench ──────────────────── */}
+        <div className="flex flex-col">
+          <div
+            style={{
+              backgroundColor: "#156434",
+              backgroundImage:
+                "repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 48px, transparent 48px, transparent 96px)",
+            }}
+            className="p-6 pb-4 min-h-[520px] relative overflow-hidden flex-1 dark:bg-[#0c2e19]"
+          >
+            <div className="flex flex-col items-center gap-1">
+              {(["gkp", "def", "mid", "fwd"] as const).map((pos) => {
+                const slotInfo = starters[pos];
+                const posKey = pos.toUpperCase();
+                const slots = slotInfo.max;
+                return (
+                  <div
+                    key={pos}
+                    className="w-full flex flex-col items-center"
+                  >
+                    <div className="text-[10px] font-bold text-white/70 tracking-widest text-center mb-1 uppercase">
+                      {posKey}
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="flex justify-center gap-3">
+                      {Array.from({ length: slots }).map((_, i) => {
+                        const player = slotInfo.players[i] ?? null;
+                        return player ? (
+                          <PitchPlayerCard
+                            key={player.auction_result_id}
+                            player={player}
+                            position={posKey}
+                            onSelect={setSelectedPlayer}
+                          />
+                        ) : (
+                          <EmptySlot key={`empty-${pos}-${i}`} />
+                        );
+                      })}
+                    </div>
+                    {pos !== "fwd" && (
+                      <div className="w-full my-2 border-t border-white/20" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Bench strip */}
-          <div className="bg-[#163d24] border-t border-white/10 py-3 min-h-[120px]">
-            <div className="text-[10px] text-white/35 tracking-widest text-center mb-2 uppercase">
+          <div
+            style={{ backgroundColor: "#114f2a" }}
+            className="border-t border-white/15 py-3.5 min-h-[120px] dark:bg-[#082012]"
+          >
+            <div className="text-[10px] font-bold text-white/70 tracking-widest text-center mb-2 uppercase">
               Bench
             </div>
             <div className="flex justify-center gap-4">
@@ -810,13 +848,13 @@ export function TeamsClient({
         </div>
 
         {/* ─── Right: Squad Sidebar ────────────────── */}
-        <div className="border-l border-border flex flex-col bg-card">
-          <div className="px-4 py-3 border-b border-border/50">
-            <div className="text-sm font-semibold text-foreground">
+        <div className="border-t lg:border-t-0 lg:border-l border-border/60 flex flex-col bg-card">
+          <div className="px-5 py-4 border-b border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="text-sm font-bold text-foreground tracking-tight">
               {participants.find((p) => p.id === selectedParticipant)?.name ??
                 "Squad"}
             </div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-[11px] text-muted-foreground mt-0.5">
               {squad.length} players ·{" "}
               {currentLeague
                 ? Math.max(0, (currentLeague.squad_size ?? 15) - squad.length)
@@ -833,25 +871,25 @@ export function TeamsClient({
               if (posPlayers.length === 0) return null;
               return (
                 <div key={pos}>
-                  <div className="text-[10px] font-medium text-muted-foreground tracking-[0.8px] uppercase px-4 pt-3 pb-1">
+                  <div className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase px-5 pt-3.5 pb-1">
                     {pos} ({posPlayers.length})
                   </div>
                   {posPlayers.map((p) => (
                     <div
                       key={p.auction_result_id}
-                      className="flex items-center gap-2 px-4 py-1.5 border-b border-border/50 last:border-0 cursor-pointer hover:bg-muted/60 transition-colors"
+                      className="flex items-center gap-2.5 px-5 py-2 border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/60 transition-colors group active:scale-[0.99]"
                       onClick={() => setSelectedPlayer(p)}
                     >
                       <span
-                        className={`w-2 h-2 rounded-full shrink-0 ${POSITION_DOT[p.is_bench ? "BENCH" : p.position_slot] ?? POSITION_DOT.BENCH}`}
+                        className={`w-2 h-2 rounded-full shrink-0 shadow-xs ${POSITION_DOT[p.is_bench ? "BENCH" : p.position_slot] ?? POSITION_DOT.BENCH}`}
                       />
-                      <span className="text-[12px] text-foreground flex-1 truncate">
+                      <span className="text-xs font-medium text-foreground flex-1 truncate">
                         {p.web_name}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground font-mono tabular-nums">
                         {p.total_points}
                       </span>
-                      <span className="text-[11px] text-emerald-700 dark:text-[#00d166] min-w-[36px] text-right font-mono font-semibold">
+                      <span className="text-xs text-emerald-700 dark:text-primary min-w-[42px] text-right font-mono font-bold tabular-nums">
                         £{p.price_paid.toFixed(1)}m
                       </span>
                     </div>
@@ -860,23 +898,23 @@ export function TeamsClient({
               );
             })}
             {squad.length === 0 && (
-              <div className="p-4 text-xs text-muted-foreground text-center">
+              <div className="p-6 text-xs text-muted-foreground text-center">
                 No players yet
               </div>
             )}
           </div>
 
           {/* Budget bar */}
-          <div className="px-4 py-3 border-t border-border/50 mt-auto space-y-2">
+          <div className="px-5 py-4 border-t border-border/50 mt-auto space-y-2.5 bg-card/60 backdrop-blur-sm">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Budget spent</span>
-              <span className="font-mono text-foreground">
+              <span className="text-muted-foreground font-medium">Budget spent</span>
+              <span className="font-mono text-foreground font-semibold tabular-nums">
                 £{totalSpent.toFixed(1)}m / £{budget}m
               </span>
             </div>
-            <div className="h-1.5 rounded-full bg-[#1e2b3b] overflow-hidden">
+            <div className="h-2 rounded-full bg-muted overflow-hidden border border-border/40 p-[1px]">
               <div
-                className={`h-full rounded-full transition-all ${budgetBarColor}`}
+                className={`h-full rounded-full transition-all duration-300 ${budgetBarColor}`}
                 style={{ width: `${Math.min(budgetPct, 100)}%` }}
               />
             </div>
@@ -889,10 +927,10 @@ export function TeamsClient({
                 return (
                   <span
                     key={pos}
-                    className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                    className={`text-[10px] px-2.5 py-0.5 rounded-full border font-semibold tabular-nums ${
                       remainingSlots > 0
-                        ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
-                        : "border-[#3b4b3d] text-[#849585]"
+                        ? "border-amber-500/40 text-amber-800 dark:text-amber-400 bg-amber-500/10 font-bold"
+                        : "border-border/60 text-muted-foreground bg-muted/40"
                     }`}
                   >
                     {pos} {count}/{max}
@@ -909,26 +947,26 @@ export function TeamsClient({
         open={!!selectedPlayer}
         onOpenChange={(o) => !o && setSelectedPlayer(null)}
       >
-        <DialogContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] w-[calc(100%-2rem)] max-w-3xl mx-auto">
+        <DialogContent className="bg-card/95 backdrop-blur-2xl border border-border/70 text-foreground w-[calc(100%-2rem)] max-w-3xl mx-auto rounded-3xl p-6 shadow-2xl">
           {displayPlayer && (
             <>
               <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-10 sm:h-14 sm:w-12 shrink-0">
+                <div className="flex items-center gap-3.5">
+                  <div className="relative h-14 w-12 sm:h-16 sm:w-14 shrink-0 rounded-2xl overflow-hidden bg-muted border border-border/60 shadow-sm">
                     {!dialogImgLoaded && !dialogImgError && (
-                      <div className="absolute inset-0 rounded bg-[#0a1724] animate-pulse" />
+                      <div className="absolute inset-0 rounded-2xl bg-muted animate-pulse" />
                     )}
                     {dialogImgError ? (
                       <img
                         src="/player-fallback.png"
                         alt={displayPlayer.web_name}
-                        className="h-full w-full rounded object-cover bg-[#132030]"
+                        className="h-full w-full rounded-2xl object-cover bg-muted"
                       />
                     ) : (
                       <img
                         src={displayPlayer.image_url}
                         alt={displayPlayer.web_name}
-                        className={`h-full w-full rounded object-cover bg-[#132030] ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
+                        className={`h-full w-full rounded-2xl object-cover bg-muted ${dialogImgLoaded ? "" : "opacity-0 absolute inset-0"}`}
                         loading="lazy"
                         onLoad={() => {
                           setDialogImgLoaded(true);
@@ -942,24 +980,24 @@ export function TeamsClient({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-lg sm:text-xl font-bold truncate">
+                    <DialogTitle className="text-lg sm:text-xl font-bold truncate tracking-tight text-foreground">
                       {displayPlayer.web_name}
                     </DialogTitle>
-                    <p className="text-xs sm:text-sm text-[#b9cbb9]">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                       {POSITION_LABELS[displayPlayer.position] ??
                         displayPlayer.position}
                       {" · "}
                       {displayPlayer.team_name}
                       {" · "}
-                      <span className="text-[#00d166]">
+                      <span className="text-emerald-700 dark:text-primary font-mono font-bold">
                         £{displayPlayer.price_paid.toFixed(1)}m
                       </span>
                     </p>
                   </div>
                   {displayPlayer.team_crest_url &&
                     (dialogCrestError ? (
-                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#1e3248] flex items-center justify-center mr-4 sm:mr-8 shrink-0">
-                        <span className="text-[10px] sm:text-xs font-bold text-[#5e7d99]">
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-muted border border-border/60 flex items-center justify-center mr-4 sm:mr-8 shrink-0">
+                        <span className="text-xs font-bold text-muted-foreground">
                           {displayPlayer.team_short?.charAt(0) ?? "?"}
                         </span>
                       </div>
@@ -967,7 +1005,7 @@ export function TeamsClient({
                       <img
                         src={displayPlayer.team_crest_url}
                         alt={displayPlayer.team_name}
-                        className={`h-6 w-6 sm:h-8 sm:w-8 object-contain mr-4 sm:mr-8 shrink-0 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
+                        className={`h-8 w-8 sm:h-10 sm:w-10 object-contain mr-4 sm:mr-8 shrink-0 ${dialogCrestLoaded ? "" : "opacity-0 absolute"}`}
                         loading="lazy"
                         onLoad={() => {
                           setDialogCrestLoaded(true);
@@ -982,12 +1020,12 @@ export function TeamsClient({
                   {!dialogCrestLoaded &&
                     !dialogCrestError &&
                     displayPlayer.team_crest_url && (
-                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-[#0a1724] animate-pulse mr-4 sm:mr-8 shrink-0" />
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-muted animate-pulse mr-4 sm:mr-8 shrink-0" />
                     )}
                 </div>
               </DialogHeader>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 py-4">
                 <Stat
                   label="Price"
                   value={`£${displayPlayer.price_paid.toFixed(1)}m`}
@@ -1045,19 +1083,19 @@ export function TeamsClient({
               </div>
 
               {displayPlayer.news && (
-                <p className="text-xs text-orange-400 bg-orange-950/30 rounded p-2 mb-2">
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-2 leading-relaxed">
                   {displayPlayer.news}
                 </p>
               )}
 
               {/* Swap actions */}
-              <div className="border-t border-[#3b4b3d] pt-3">
+              <div className="border-t border-border/50 pt-3">
                 {isStarting ? (
                   <Button
                     size="sm"
                     disabled={saving}
                     onClick={() => handleMoveToBench(displayPlayer)}
-                    className="h-8 text-xs bg-[#444] text-white hover:bg-[#555]"
+                    className="h-9 px-4 rounded-full text-xs font-semibold bg-muted text-foreground hover:bg-muted/80 border border-border/60 transition-all active:scale-95"
                   >
                     Send to Bench
                   </Button>
@@ -1066,7 +1104,7 @@ export function TeamsClient({
                     size="sm"
                     disabled={saving}
                     onClick={() => handlePromoteToXI(displayPlayer)}
-                    className="h-8 text-xs bg-[#1a4731] text-[#00ff87] hover:bg-[#1e5c3a]"
+                    className="h-9 px-4 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-all active:scale-95"
                   >
                     Promote to Starting XI
                   </Button>
@@ -1091,6 +1129,7 @@ function PitchPlayerCard({
   position: string;
   onSelect: (p: SquadPlayer) => void;
 }>) {
+  const shouldReduce = useReducedMotion();
   const name = player.web_name;
   const initial = name.charAt(0).toUpperCase();
   const colorClass = POSITION_COLORS[position] ?? POSITION_COLORS.BENCH;
@@ -1101,46 +1140,47 @@ function PitchPlayerCard({
   const [imgError, setImgError] = useState(false);
 
   return (
-    <button
-      className="flex flex-col items-center gap-0.5 group"
+    <motion.button
+      whileTap={shouldReduce ? undefined : { scale: 0.94 }}
+      className="flex flex-col items-center gap-0.5 group focus:outline-none"
       onClick={() => onSelect(player)}
     >
       {imgError ? (
         <div
-          className={`w-12 h-14 rounded-md flex items-center justify-center text-lg font-medium text-white shadow-md transition-transform group-hover:scale-105 ${colorClass}`}
+          className={`w-14 h-16 rounded-xl flex items-center justify-center text-lg font-bold text-white shadow-sm border border-white/20 transition-transform duration-200 group-hover:scale-105 ${colorClass}`}
         >
           {initial}
         </div>
       ) : (
-        <div className="w-12 h-14 rounded-md flex items-center justify-center bg-black/30 shadow-md transition-transform group-hover:scale-105">
+        <div className="w-14 h-16 rounded-xl flex items-center justify-center bg-black/30 backdrop-blur-sm border border-white/15 shadow-sm transition-transform duration-200 group-hover:scale-105 group-hover:border-primary group-hover:shadow-md">
           <img
             src={shirtUrl}
             alt={name}
-            className="w-10 h-12 object-contain"
+            className="w-11 h-13 object-contain drop-shadow-sm"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         </div>
       )}
-      <div className="bg-black/55 rounded px-1.5 py-0.5 text-center max-w-[80px]">
-        <div className="text-[11px] text-white font-medium truncate leading-tight">
+      <div className="bg-[#021e14]/85 backdrop-blur-md border border-white/20 rounded-lg px-2 py-0.5 text-center min-w-[70px] max-w-[90px] shadow-sm">
+        <div className="text-[11px] text-white font-semibold truncate leading-tight tracking-tight">
           {name}
         </div>
-        <div className="text-[10px] text-[#00d166] font-mono">
+        <div className="text-[10px] text-emerald-300 dark:text-primary font-mono font-bold tabular-nums">
           £{player.price_paid.toFixed(1)}m
         </div>
       </div>
-    </button>
+    </motion.button>
   );
 }
 
 function EmptySlot() {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <div className="w-12 h-14 rounded-md border-2 border-dashed border-white/15 opacity-40" />
-      <div className="bg-black/55 rounded px-1.5 py-0.5 text-center min-w-[60px]">
-        <div className="h-[15px] bg-white/10 rounded w-10 mx-auto mb-0.5" />
-        <div className="h-[13px] bg-white/10 rounded w-8 mx-auto" />
+      <div className="w-14 h-16 rounded-xl border-2 border-dashed border-white/35 bg-white/10 flex items-center justify-center opacity-70" />
+      <div className="bg-[#021e14]/60 backdrop-blur-sm border border-white/15 rounded-lg px-2 py-0.5 text-center min-w-[64px]">
+        <div className="h-3 bg-white/20 rounded w-10 mx-auto mb-0.5" />
+        <div className="h-2.5 bg-white/20 rounded w-8 mx-auto" />
       </div>
     </div>
   );
@@ -1152,12 +1192,12 @@ function Stat({
   highlight,
 }: Readonly<{ label: string; value: string | number; highlight?: boolean }>) {
   return (
-    <div className="bg-muted rounded p-2 sm:p-3 border border-border/40">
-      <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5 sm:mb-1">
+    <div className="bg-muted/50 rounded-xl p-2.5 sm:p-3 border border-border/40 text-center hover:bg-muted/70 transition-colors">
+      <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">
         {label}
       </div>
       <div
-        className={`font-mono font-semibold text-sm sm:text-lg ${highlight ? "text-primary font-bold" : "text-foreground"}`}
+        className={`font-mono font-bold text-sm sm:text-base tabular-nums ${highlight ? "text-primary" : "text-foreground"}`}
       >
         {value}
       </div>

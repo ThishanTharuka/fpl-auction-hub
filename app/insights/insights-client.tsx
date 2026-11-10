@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   TrendingUp,
   Sparkles,
@@ -32,6 +33,7 @@ import { DifferentialsTab } from "./components/differentials-tab";
 import { FixtureTickerTab } from "./components/fixture-ticker-tab";
 import { StatusWatchTab } from "./components/status-watch-tab";
 import { GameweekMetaTab } from "./components/gameweek-meta-tab";
+import { cn } from "@/lib/utils";
 
 interface InsightsClientProps {
   players: EnrichedPlayer[];
@@ -62,6 +64,8 @@ const TABS: Array<{ id: TabType; label: string; icon: typeof TrendingUp }> = [
   { id: "meta", label: "Gameweek Meta", icon: Zap },
 ];
 
+const SPRING_TAB = { type: "spring" as const, bounce: 0, duration: 0.28 };
+
 export function InsightsClient({
   players,
   teams,
@@ -72,6 +76,7 @@ export function InsightsClient({
   dailyPriceHistory,
 }: InsightsClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>("market");
+  const shouldReduce = useReducedMotion();
 
   // In-memory calculated insight models
   const marketRadar = useMemo(
@@ -91,10 +96,10 @@ export function InsightsClient({
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
           FPL Insights
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
           Market trends, expected stats (xG/xA), value radar, fixture runs, and differential scouting.
         </p>
       </div>
@@ -107,55 +112,75 @@ export function InsightsClient({
         market={marketRadar}
       />
 
-      {/* Main Tabs Navigation */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-border mb-6 scrollbar-none">
-        {TABS.map(({ id, label, icon: Icon }) => {
-          const isActive = activeTab === id;
-          return (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 min-h-[40px] px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 group ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm font-bold"
-                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border"
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
-              <span>{label}</span>
-            </button>
-          );
-        })}
+      {/* Main Tabs Navigation — Apple frosted glass sticky rail */}
+      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 mb-6 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 border-b border-border/40">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none p-1 rounded-full bg-muted/60 border border-border/50 backdrop-blur-md w-fit max-w-full">
+          {TABS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeTab === id;
+            return (
+              <motion.button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                transition={SPRING_TAB}
+                className={cn(
+                  "relative flex items-center gap-2 min-h-[36px] px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 z-10",
+                  isActive
+                    ? "text-primary-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04]",
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="active-insights-tab-pill"
+                    className="absolute inset-0 rounded-full bg-primary shadow-xs -z-10"
+                    transition={shouldReduce ? { duration: 0 } : SPRING_TAB}
+                  />
+                )}
+                <Icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-colors", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+                <span>{label}</span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Tab Panels */}
-      <div>
-        {activeTab === "market" && <MarketRadarTab data={marketRadar} />}
-        {activeTab === "expected" && <ExpectedStatsTab data={expectedStats} />}
-        {activeTab === "value" && <ValueRoiTab players={valueRoi} />}
-        {activeTab === "differentials" && (
-          <DifferentialsTab differentials={differentials} />
-        )}
-        {activeTab === "fixtures" && (
-          <FixtureTickerTab
-            teams={teams}
-            fixtures={fixtures}
-            currentGw={currentGameweek}
-          />
-        )}
-        {activeTab === "status" && (
-          <StatusWatchTab
-            flaggedPlayers={statusWatch.flaggedPlayers}
-            yellowCardAlerts={statusWatch.yellowCardAlerts}
-          />
-        )}
-        {activeTab === "meta" && (
-          <GameweekMetaTab
-            meta={gameweekMeta}
-            currentGw={currentGameweek}
-          />
-        )}
-      </div>
+      {/* Tab Panels with Apple Spring Crossfade */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={shouldReduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+        >
+          {activeTab === "market" && <MarketRadarTab data={marketRadar} />}
+          {activeTab === "expected" && <ExpectedStatsTab data={expectedStats} />}
+          {activeTab === "value" && <ValueRoiTab players={valueRoi} />}
+          {activeTab === "differentials" && (
+            <DifferentialsTab differentials={differentials} />
+          )}
+          {activeTab === "fixtures" && (
+            <FixtureTickerTab
+              teams={teams}
+              fixtures={fixtures}
+              currentGw={currentGameweek}
+            />
+          )}
+          {activeTab === "status" && (
+            <StatusWatchTab
+              flaggedPlayers={statusWatch.flaggedPlayers}
+              yellowCardAlerts={statusWatch.yellowCardAlerts}
+            />
+          )}
+          {activeTab === "meta" && (
+            <GameweekMetaTab
+              meta={gameweekMeta}
+              currentGw={currentGameweek}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -181,6 +181,13 @@ export interface FPLElementSummary {
 
 // ─── Enriched / Computed Types ────────────────────────────────────────────────
 
+export interface PlayerFixturePreview {
+  event: number | null;
+  opponent_short: string;
+  is_home: boolean;
+  difficulty: number;
+}
+
 export interface EnrichedPlayer extends FPLPlayer {
   full_name: string;
   image_url: string;
@@ -190,6 +197,7 @@ export interface EnrichedPlayer extends FPLPlayer {
   position: "GKP" | "DEF" | "MID" | "FWD";
   price: number; // now_cost / 10
   avg_fdr_next5: number; // average fixture difficulty rating, next 5 GWs
+  next_fixtures?: PlayerFixturePreview[];
 }
 
 export interface FplDataResult {

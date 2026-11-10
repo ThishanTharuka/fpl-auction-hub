@@ -15,7 +15,7 @@ export async function LobbyLoader({
 
   if (!leagueRes.data) {
     return (
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 lg:py-10">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
         <div className="flex items-center justify-center h-64 text-red-400">
           Auction not found.
         </div>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import { AlertTriangle, ShieldAlert, HeartPulse, Search, X } from "lucide-react";
 import type { StatusWatchItem } from "@/lib/insights-utils";
 
@@ -31,6 +32,7 @@ export function StatusWatchTab({
   flaggedPlayers,
   yellowCardAlerts,
 }: StatusWatchTabProps) {
+  const shouldReduce = useReducedMotion();
   const [filter, setFilter] = useState<StatusViewFilter>("allFlagged");
   const [search, setSearch] = useState("");
 
@@ -105,12 +107,13 @@ export function StatusWatchTab({
     <div className="space-y-4">
       {/* Top filter cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <button
+        <motion.button
+          whileTap={shouldReduce ? undefined : { scale: 0.98 }}
           onClick={() => setFilter("allFlagged")}
-          className={`text-left p-3.5 rounded-xl border transition-all ${
+          className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
             filter === "allFlagged"
               ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
-              : "border-border bg-card hover:bg-muted"
+              : "border-border bg-card/80 backdrop-blur-sm hover:bg-muted/70"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -123,14 +126,15 @@ export function StatusWatchTab({
             {flaggedPlayers.length}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">Injuries, doubts, suspensions</p>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          whileTap={shouldReduce ? undefined : { scale: 0.98 }}
           onClick={() => setFilter("injured")}
-          className={`text-left p-3.5 rounded-xl border transition-all ${
+          className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
             filter === "injured"
               ? "border-rose-500 bg-rose-500/10 ring-1 ring-rose-500"
-              : "border-border bg-card hover:bg-muted"
+              : "border-border bg-card/80 backdrop-blur-sm hover:bg-muted/70"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -143,14 +147,15 @@ export function StatusWatchTab({
             {flaggedPlayers.filter((p) => p.status === "i").length}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">Ruled out with injuries</p>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          whileTap={shouldReduce ? undefined : { scale: 0.98 }}
           onClick={() => setFilter("doubtful")}
-          className={`text-left p-3.5 rounded-xl border transition-all ${
+          className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
             filter === "doubtful"
               ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
-              : "border-border bg-card hover:bg-muted"
+              : "border-border bg-card/80 backdrop-blur-sm hover:bg-muted/70"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -163,14 +168,15 @@ export function StatusWatchTab({
             {flaggedPlayers.filter((p) => p.status === "d").length}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">25% - 75% playing chance</p>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
+          whileTap={shouldReduce ? undefined : { scale: 0.98 }}
           onClick={() => setFilter("yellowCards")}
-          className={`text-left p-3.5 rounded-xl border transition-all ${
+          className={`text-left p-3.5 rounded-2xl border transition-all duration-200 ${
             filter === "yellowCards"
               ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
-              : "border-border bg-card hover:bg-muted"
+              : "border-border bg-card/80 backdrop-blur-sm hover:bg-muted/70"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -183,32 +189,33 @@ export function StatusWatchTab({
             {yellowCardAlerts.length}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">1 card away from 1-match ban</p>
-        </button>
+        </motion.button>
       </div>
 
       {/* Search and count */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="text"
-            placeholder="Search flagged players..."
+            placeholder="Search flagged players…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-1.5 bg-muted border border-border rounded-lg text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            className="w-full h-9 pl-9 pr-8 bg-muted/60 border border-border/50 rounded-full text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
           />
           {search && (
             <button
+              type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded-full transition-colors"
               aria-label="Clear search"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
-        <div className="text-xs text-muted-foreground self-center sm:self-auto">
-          Showing <span className="font-mono font-semibold text-foreground">{filteredList.length}</span> player{filteredList.length === 1 ? "" : "s"}
+        <div className="text-xs text-muted-foreground self-center sm:self-auto tabular-nums">
+          Showing <span className="font-semibold text-foreground">{filteredList.length}</span> player{filteredList.length === 1 ? "" : "s"}
         </div>
       </div>
 
@@ -228,9 +235,12 @@ export function StatusWatchTab({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredList.map(({ player, news, chanceThisRound, chanceNextRound, yellowCards, isYellowCardRisk }) => (
-            <div
+            <motion.div
               key={player.id}
-              className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between hover:border-primary/40 transition-colors"
+              initial={shouldReduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
+              className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 flex flex-col justify-between hover:border-primary/40 transition-colors shadow-xs"
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -283,7 +293,7 @@ export function StatusWatchTab({
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

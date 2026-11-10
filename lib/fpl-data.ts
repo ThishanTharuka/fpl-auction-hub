@@ -5,6 +5,7 @@ import type {
   EnrichedPlayer,
   FPLFixture,
   FplDataResult,
+  PlayerFixturePreview,
 } from "./fpl-types";
 
 export type { FplDataResult };
@@ -386,6 +387,32 @@ async function fetchFromUpstream(precomputed?: {
     bootstrap.teams.map((t) => [t.id, t]),
   );
 
+  const teamFixturesMap = new Map<number, PlayerFixturePreview[]>();
+  for (const team of bootstrap.teams) {
+    const upcoming = fixtures
+      .filter(
+        (f) =>
+          !f.finished &&
+          f.event !== null &&
+          f.event >= currentGw &&
+          (f.team_h === team.id || f.team_a === team.id),
+      )
+      .sort((a, b) => (a.event ?? 0) - (b.event ?? 0))
+      .slice(0, 5)
+      .map((f) => {
+        const is_home = f.team_h === team.id;
+        const oppId = is_home ? f.team_a : f.team_h;
+        const oppTeam = teamMap.get(oppId);
+        return {
+          event: f.event,
+          opponent_short: oppTeam?.short_name ?? "UNK",
+          is_home,
+          difficulty: is_home ? f.team_h_difficulty : f.team_a_difficulty,
+        };
+      });
+    teamFixturesMap.set(team.id, upcoming);
+  }
+
   const { changesMap: dailyChangesMap, history: dailyPriceHistory } =
     precomputed ?? await getDailyPriceChanges(bootstrap.elements);
 
@@ -401,6 +428,7 @@ async function fetchFromUpstream(precomputed?: {
       position: POSITION_MAP[p.element_type] ?? "MID",
       price: p.now_cost / 10,
       avg_fdr_next5: teamFdrMap.get(p.team) ?? 3,
+      next_fixtures: teamFixturesMap.get(p.team) ?? [],
       cost_change_day: dailyChangesMap.get(p.id) ?? 0,
       price_change_percent: resolvePriceChangePercent(p, bootstrap.total_players),
       price_change_projected_percent: resolveProjectedPriceChangePercent(p),

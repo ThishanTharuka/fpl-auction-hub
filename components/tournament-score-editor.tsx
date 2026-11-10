@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { ChipNote, FixtureChipNotes } from "@/lib/tournament/chips";
 import type { CompetitionFixtureRow } from "@/lib/tournament/types";
 
 const CHIP_BADGE_CLS =
-  "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
+  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30";
 
 /**
  * Badges for chips that were played where chips are not allowed, showing how
@@ -38,8 +39,6 @@ export function ScoreOverrideButton({
   fixture: CompetitionFixtureRow;
   onEdit: () => void;
 }) {
-  // `typeof` rather than `!== null`: the field is absent (undefined) until the
-  // migration lands, so a strict null check would falsely show an override.
   const hasOverride =
     typeof fixture.home_points_override === "number" ||
     typeof fixture.away_points_override === "number";
@@ -54,15 +53,17 @@ export function ScoreOverrideButton({
           Override{fixture.override_reason ? `: ${fixture.override_reason}` : ""}
         </span>
       )}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onEdit}
-        className="h-7 px-2 text-[11px] border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
-      >
-        Edit score
-      </Button>
+      <motion.div whileTap={{ scale: 0.96 }}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
+          className="h-7 px-2.5 rounded-full text-[11px] font-medium border-border/70 text-foreground hover:bg-muted/60"
+        >
+          Edit score
+        </Button>
+      </motion.div>
     </div>
   );
 }
@@ -92,8 +93,6 @@ export function ScoreOverridePanel({
   onCancel,
   onError,
 }: PanelProps) {
-  // `typeof` rather than `!== null`: the field is absent (undefined) until the
-  // migration lands, so a strict null check would falsely show an override.
   const hasOverride =
     typeof fixture.home_points_override === "number" ||
     typeof fixture.away_points_override === "number";
@@ -165,26 +164,26 @@ export function ScoreOverridePanel({
   };
 
   return (
-    <div className="w-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-2.5">
+    <div className="w-full rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-3">
       <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
         Override score{homeName && awayName ? ` · ${homeName} vs ${awayName}` : ""}
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Input
           type="number"
           aria-label={`${homeName} points`}
           value={home}
           onChange={(e) => setHome(e.target.value)}
-          className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+          className="w-16 h-8 rounded-lg bg-card border-border/70 text-foreground text-xs text-center font-bold tabular-nums"
         />
-        <span className="text-xs text-[#849585]">–</span>
+        <span className="text-xs text-muted-foreground font-semibold">–</span>
         <Input
           type="number"
           aria-label={`${awayName} points`}
           value={away}
           onChange={(e) => setAway(e.target.value)}
-          className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+          className="w-16 h-8 rounded-lg bg-card border-border/70 text-foreground text-xs text-center font-bold tabular-nums"
         />
         <Input
           aria-label="Override reason"
@@ -192,42 +191,48 @@ export function ScoreOverridePanel({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           maxLength={500}
-          className="h-8 flex-1 min-w-[200px] bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs"
+          className="h-8 flex-1 min-w-[200px] rounded-lg bg-card border-border/70 text-foreground placeholder:text-muted-foreground text-xs"
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          onClick={submit}
-          disabled={busy}
-          className="h-7 px-3 text-[11px] bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-        >
-          {busy ? "Saving..." : "Save override"}
-        </Button>
-        {hasOverride && (
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <motion.div whileTap={{ scale: 0.96 }}>
           <Button
             type="button"
-            variant="outline"
             size="sm"
-            onClick={clear}
+            onClick={submit}
             disabled={busy}
-            className="h-7 px-3 text-[11px] border-[#3b4b3d] text-[#b9cbb9] hover:bg-[#1e2b3b]"
+            className="h-7 px-3 text-[11px] rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
           >
-            Clear override
+            {busy ? "Saving..." : "Save override"}
           </Button>
+        </motion.div>
+        {hasOverride && (
+          <motion.div whileTap={{ scale: 0.96 }}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={clear}
+              disabled={busy}
+              className="h-7 px-3 text-[11px] rounded-full border-border/70 text-foreground hover:bg-muted/60"
+            >
+              Clear override
+            </Button>
+          </motion.div>
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          disabled={busy}
-          className="h-7 px-3 text-[11px] text-[#849585] hover:text-[#d6e4f9]"
-        >
-          Cancel
-        </Button>
+        <motion.div whileTap={{ scale: 0.96 }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onCancel}
+            disabled={busy}
+            className="h-7 px-3 text-[11px] rounded-full text-muted-foreground hover:text-foreground"
+          >
+            Cancel
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

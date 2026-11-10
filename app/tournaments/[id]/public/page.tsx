@@ -31,9 +31,9 @@ export default async function TournamentPublicPage({
   const competition = compRes.data as CompetitionRow | null;
   if (!competition) {
     return (
-      <div className="mx-auto max-w-xl px-6 py-20 text-center text-[#849585]">
+      <div className="mx-auto max-w-xl px-6 py-20 text-center text-muted-foreground">
         <p className="text-lg mb-2">Tournament not found.</p>
-        <Link href="/" className="text-[#00e478] hover:underline">
+        <Link href="/" className="text-primary hover:underline font-medium">
           Back home
         </Link>
       </div>

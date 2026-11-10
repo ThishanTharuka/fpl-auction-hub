@@ -3,16 +3,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth-provider";
 
 const POSITION_COLORS: Record<string, string> = {
-  GKP: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  DEF: "bg-green-500/20 text-green-400 border-green-500/30",
-  MID: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  FWD: "bg-red-500/20 text-red-400 border-red-500/30",
+  GKP: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/25",
+  DEF: "bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/25",
+  MID: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25",
+  FWD: "bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/25",
 };
 
 interface Participant {
@@ -47,6 +48,7 @@ interface TeamView {
 
 export default function TeamsHubPage() {
   const { id } = useParams<{ id: string }>();
+  const shouldReduce = useReducedMotion();
   const [budget, setBudget] = useState(200);
   const [squadSize, setSquadSize] = useState(15);
   const [teams, setTeams] = useState<TeamView[]>([]);
@@ -109,7 +111,7 @@ export default function TeamsHubPage() {
     );
 
     setLoading(false);
-  }, [id]);
+  }, [id, user?.id]);
 
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: initial data fetch + realtime subscription */
   useEffect(() => {
@@ -152,66 +154,88 @@ export default function TeamsHubPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        Loading…
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+        <div className="space-y-2">
+          <div className="h-8 w-56 rounded-xl bg-muted/60 animate-pulse" />
+          <div className="h-4 w-40 rounded bg-muted/40 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-64 rounded-2xl border border-border/60 bg-card/60 p-5 animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="px-6 py-8">
-      <h1 className="text-2xl font-bold text-foreground mb-6 flex items-baseline gap-2">
-        <span>Team Squads</span>
-        <span className="text-sm font-normal text-muted-foreground">
-          {teams.reduce((s, t) => s + t.squad.length, 0)} players sold
-        </span>
-      </h1>
+  const totalPlayersSold = teams.reduce((s, t) => s + t.squad.length, 0);
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  return (
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      {/* Header — Apple Visual Craftsmanship */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          Team Squads
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+          Roster breakdown and remaining auction budget across all participating teams ({totalPlayersSold} players drafted).
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4.5">
         {[...teams]
           .toSorted((a, b) => b.squad.length - a.squad.length)
           .map((team) => {
             const pct = Math.round((team.spent / budget) * 100);
             return (
-              <div
+              <motion.div
                 key={team.id}
-                className="rounded-lg border border-border bg-card p-4"
+                whileHover={shouldReduce ? undefined : { y: -1 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.2 }}
+                style={{
+                  boxShadow:
+                    "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
+                }}
+                className="group rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-5 space-y-4 hover:border-primary/40 hover:shadow-md transition-all duration-200"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 pb-1 border-b border-border/40">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <span
-                      className="w-3 h-3 rounded-full shrink-0"
+                      className="w-3 h-3 rounded-full shrink-0 shadow-2xs ring-1 ring-black/20"
                       style={{ backgroundColor: team.color ?? "#888" }}
                     />
-                    <h2 className="font-semibold text-foreground text-sm">{team.name}</h2>
+                    <h2 className="font-bold text-foreground text-sm tracking-tight truncate">{team.name}</h2>
                   </div>
-                    <span className="text-xs text-muted-foreground">
-                      {team.squad.length}/{squadSize}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-semibold tabular-nums text-muted-foreground bg-muted/60 border border-border/50 rounded-full px-2.5 py-0.5">
+                      {team.squad.length} / {squadSize}
                     </span>
                     {myTeamIds.has(team.id) && (
                       <Link href={`/auction/${id}/teams/${team.id}/edit`}>
                         <Button
                           size="sm"
-                          className="h-6 px-2 text-[10px] bg-secondary border border-border text-foreground hover:bg-muted"
+                          variant="outline"
+                          className="h-7 px-3 text-[11px] rounded-full border border-border/80 bg-background/80 hover:bg-muted text-foreground font-medium shadow-2xs transition-all"
                         >
                           Edit
                         </Button>
                       </Link>
                     )}
                   </div>
+                </div>
 
                 {/* Budget bar */}
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-muted-foreground">£{team.spent}m spent</span>
-                    <span className="text-primary font-mono">£{team.remaining}m left</span>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">£{team.spent}m spent</span>
+                    <span className="text-emerald-700 dark:text-primary font-mono font-bold tabular-nums">£{team.remaining}m left</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-2 rounded-full bg-muted/70 overflow-hidden border border-border/40">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full rounded-full transition-all duration-500"
                       style={{
-                        width: `${pct}%`,
+                        width: `${Math.min(pct, 100)}%`,
                         backgroundColor: team.color ?? "#00e478",
                       }}
                     />
@@ -220,30 +244,30 @@ export default function TeamsHubPage() {
 
                 {/* Squad grouped by position */}
                 {team.squad.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic text-center py-3">
-                    No players yet
-                  </p>
+                  <div className="py-6 text-center rounded-xl border border-dashed border-border/60 bg-muted/10 text-xs text-muted-foreground italic">
+                    No players acquired yet
+                  </div>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto no-scrollbar pt-1">
                     {(["GKP", "DEF", "MID", "FWD"] as const).map((pos) => {
                       const players = team.squad.filter((p) => p.position === pos);
                       if (players.length === 0) return null;
                       return players.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between text-xs bg-muted rounded px-2.5 py-1.5"
+                          className="flex items-center justify-between text-xs bg-muted/30 border border-border/50 rounded-xl px-3 py-2 hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <Badge
                               variant="outline"
-                              className={`text-[9px] shrink-0 ${POSITION_COLORS[pos] ?? ""}`}
+                              className={`text-[9px] font-bold rounded-full px-1.5 py-0 shrink-0 ${POSITION_COLORS[pos] ?? ""}`}
                             >
                               {pos}
                             </Badge>
-                            <span className="text-foreground truncate">{p.name}</span>
-                            <span className="text-muted-foreground shrink-0">{p.team}</span>
+                            <span className="text-foreground font-medium truncate">{p.name}</span>
+                            <span className="text-muted-foreground text-[11px] shrink-0 font-normal">{p.team}</span>
                           </div>
-                          <span className="font-mono text-muted-foreground shrink-0 ml-2">
+                          <span className="font-mono font-semibold text-foreground shrink-0 ml-2 tabular-nums">
                             £{p.price}m
                           </span>
                         </div>
@@ -251,7 +275,7 @@ export default function TeamsHubPage() {
                     })}
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
       </div>

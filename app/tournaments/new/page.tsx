@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { AlertCircle, CheckCircle2, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -105,20 +107,25 @@ export default function NewTournamentPage() {
     }
   }
 
+  // Calculated schedule metrics
+  const qualifiers = DEFAULT_FORMAT_CONFIG.qualification.qualifiers_per_group;
+  const sizeA = Math.max(rosterA.length, qualifiers);
+  const sizeB = Math.max(rosterB.length, qualifiers);
+  const totalGroupMds = countGroupMatchdays(DEFAULT_FORMAT_CONFIG, sizeA, sizeB);
+  const totalWeeks = totalGroupMds + 1 + 9; // group stage + 1 bye + 9 knockout
+  const safeStartGw = Number.isInteger(startGw) && startGw >= 1 ? startGw : 1;
+  const endGw = safeStartGw + totalWeeks - 1;
+  const isScheduleValid = endGw <= 38;
+
   async function createCompetition() {
     setError("");
     if (!name.trim()) return setError("Give the tournament a name.");
     if (!leagueA || !leagueB || leagueA === leagueB) return setError("Pick two different leagues.");
     if (!Number.isInteger(startGw) || startGw < 1) return setError("Enter a starting gameweek.");
 
-    const qualifiers = DEFAULT_FORMAT_CONFIG.qualification.qualifiers_per_group;
-    const sizeA = Math.max(rosterA.length, qualifiers);
-    const sizeB = Math.max(rosterB.length, qualifiers);
-    const totalGroupMds = countGroupMatchdays(DEFAULT_FORMAT_CONFIG, sizeA, sizeB);
-    const totalWeeks = totalGroupMds + 1 + 9; // group stage + 1 bye + 9 knockout
-    if (startGw + totalWeeks - 1 > 38) {
+    if (endGw > 38) {
       return setError(
-        `This tournament requires ${totalWeeks} gameweeks (${totalGroupMds} group matchdays, 1 bye week, 9 knockout weeks). Starting at GW ${startGw} would end at GW ${startGw + totalWeeks - 1}, exceeding the 38-gameweek FPL season.`,
+        `This tournament requires ${totalWeeks} gameweeks (${totalGroupMds} group matchdays, 1 bye week, 9 knockout weeks). Starting at GW ${startGw} would end at GW ${endGw}, exceeding the 38-gameweek FPL season.`,
       );
     }
 
@@ -201,7 +208,7 @@ export default function NewTournamentPage() {
     }
     if (mode === "import" && resolution) {
       const offset = (startGw > 0 ? startGw : 1) - 1;
-      const drafts = resolution.map((line, i) => {
+      const drafts: FixtureDraft[] = resolution.map((line, i) => {
         const pick = picks[i];
         const homeId = matchId(line.homeMatch, pick?.home);
         const awayId = matchId(line.awayMatch, pick?.away);
@@ -253,9 +260,9 @@ export default function NewTournamentPage() {
     if (!preview) return [];
     const map = new Map<number, FixtureDraft[]>();
     for (const f of preview) {
-      const arr = map.get(f.gw) ?? [];
-      arr.push(f);
-      map.set(f.gw, arr);
+      const list = map.get(f.gw) ?? [];
+      list.push(f);
+      map.set(f.gw, list);
     }
     return [...map.entries()].sort((a, b) => a[0] - b[0]);
   }, [preview]);
@@ -267,186 +274,381 @@ export default function NewTournamentPage() {
     roster.filter((t) => t.fpl_manager_id === null);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10 space-y-6">
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      {/* Header — Consistent with Insights, Players, Teams */}
       <div>
-        <h1 className="text-2xl font-bold text-[#d6e4f9]">New Tournament</h1>
-        <p className="text-sm text-[#849585] mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          New Tournament
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
           Combine two of your leagues into a competition with real FPL gameweek scoring.
         </p>
       </div>
 
       {!competitionId ? (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6 space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-xs text-[#849585]">League A (Group A)</label>
-              <Select value={leagueA} onValueChange={(v) => v && selectLeague("A", v)}>
-                <SelectTrigger className="w-full bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-9">
-                  <SelectValue placeholder="Pick a league" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
-                  {pickableLeagues.map((id) => (
-                    <SelectItem key={id} value={id} className="text-xs" disabled={id === leagueB}>
-                      {selectedName(id)} ({leagues.find((l) => l.id === id)?.status ?? ""})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {rosterA.length > 0 && (
-                <p className="text-xs text-[#849585]">
-                  {rosterA.length} teams
-                  {missingManagers(rosterA).length > 0 && (
-                    <span className="text-yellow-400"> · {missingManagers(rosterA).length} missing FPL link</span>
+        /* Full-Row Studio Layout: Config Column (8 cols) + Season Blueprint Column (4 cols) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Configuration Card (8 Columns) */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* 1. Tournament Details */}
+            <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 sm:p-7 space-y-5 shadow-sm">
+              <div className="pb-2 border-b border-border/40">
+                <h2 className="text-base font-semibold text-foreground tracking-tight">Tournament Details</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Name your tournament and choose which gameweek it kicks off.</p>
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-3">
+                <div className="sm:col-span-2 space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Tournament Name
+                  </label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Champions Cup 2026"
+                    className="rounded-xl bg-muted/40 border-border/70 text-foreground placeholder:text-muted-foreground h-10 px-3.5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Start Gameweek
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={38}
+                    value={startGw}
+                    onChange={(e) => setStartGw(parseInt(e.target.value, 10))}
+                    className="rounded-xl bg-muted/40 border-border/70 text-foreground h-10 px-3.5 tabular-nums focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Gameweek Stepper Pills */}
+              <div className="flex items-center gap-2 pt-1 flex-wrap">
+                <span className="text-xs text-muted-foreground">Quick pick:</span>
+                {[1, 2, 5, 10, 15, 20].map((gw) => (
+                  <button
+                    key={gw}
+                    type="button"
+                    onClick={() => setStartGw(gw)}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                      startGw === gw
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-foreground/30 border border-border/50"
+                    }`}
+                  >
+                    GW {gw}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Source Leagues Linking */}
+            <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 sm:p-7 space-y-5 shadow-sm">
+              <div className="pb-2 border-b border-border/40">
+                <h2 className="text-base font-semibold text-foreground tracking-tight">Source Leagues</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Select two 10-team leagues to pair into Group A and Group B.</p>
+              </div>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                {/* League A Card */}
+                <div className="space-y-3 p-4 rounded-xl border border-border/60 bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-800 dark:text-primary uppercase tracking-wider">
+                      Group A
+                    </span>
+                    {rosterA.length > 0 && (
+                      <Badge className="text-[11px] font-medium border rounded-full px-2 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
+                        {rosterA.length} Teams
+                      </Badge>
+                    )}
+                  </div>
+                  <Select value={leagueA} onValueChange={(v) => v && selectLeague("A", v)}>
+                    <SelectTrigger className="w-full rounded-xl bg-card border-border/70 text-foreground h-10 px-3.5 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 transition-all">
+                      <SelectValue placeholder="Pick League A">{(val: string | null) => (val ? selectedName(val) : "Pick League A")}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground shadow-2xl">
+                      {pickableLeagues.map((id) => (
+                        <SelectItem key={id} value={id} className="text-xs rounded-lg" disabled={id === leagueB}>
+                          {selectedName(id)} ({leagues.find((l) => l.id === id)?.status ?? ""})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {rosterA.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>FPL Link Status:</span>
+                        {missingManagers(rosterA).length === 0 ? (
+                          <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                            <ShieldCheck className="h-3.5 w-3.5" /> All managers linked
+                          </span>
+                        ) : (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">
+                            {missingManagers(rosterA).length} missing FPL ID
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto no-scrollbar pt-1">
+                        {rosterA.map((t) => (
+                          <span key={t.id} className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-card border border-border/50 text-foreground truncate max-w-[140px]">
+                            {t.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </p>
-              )}
-            </div>
+                </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-[#849585]">League B (Group B)</label>
-              <Select value={leagueB} onValueChange={(v) => v && selectLeague("B", v)}>
-                <SelectTrigger className="w-full bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-9">
-                  <SelectValue placeholder="Pick a league" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
-                  {pickableLeagues.map((id) => (
-                    <SelectItem key={id} value={id} className="text-xs" disabled={id === leagueA}>
-                      {selectedName(id)} ({leagues.find((l) => l.id === id)?.status ?? ""})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {rosterB.length > 0 && (
-                <p className="text-xs text-[#849585]">
-                  {rosterB.length} teams
-                  {missingManagers(rosterB).length > 0 && (
-                    <span className="text-yellow-400"> · {missingManagers(rosterB).length} missing FPL link</span>
+                {/* League B Card */}
+                <div className="space-y-3 p-4 rounded-xl border border-border/60 bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-800 dark:text-primary uppercase tracking-wider">
+                      Group B
+                    </span>
+                    {rosterB.length > 0 && (
+                      <Badge className="text-[11px] font-medium border rounded-full px-2 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30">
+                        {rosterB.length} Teams
+                      </Badge>
+                    )}
+                  </div>
+                  <Select value={leagueB} onValueChange={(v) => v && selectLeague("B", v)}>
+                    <SelectTrigger className="w-full rounded-xl bg-card border-border/70 text-foreground h-10 px-3.5 hover:border-primary/40 focus:ring-2 focus:ring-primary/20 transition-all">
+                      <SelectValue placeholder="Pick League B">{(val: string | null) => (val ? selectedName(val) : "Pick League B")}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground shadow-2xl">
+                      {pickableLeagues.map((id) => (
+                        <SelectItem key={id} value={id} className="text-xs rounded-lg" disabled={id === leagueA}>
+                          {selectedName(id)} ({leagues.find((l) => l.id === id)?.status ?? ""})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {rosterB.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>FPL Link Status:</span>
+                        {missingManagers(rosterB).length === 0 ? (
+                          <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                            <ShieldCheck className="h-3.5 w-3.5" /> All managers linked
+                          </span>
+                        ) : (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">
+                            {missingManagers(rosterB).length} missing FPL ID
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto no-scrollbar pt-1">
+                        {rosterB.map((t) => (
+                          <span key={t.id} className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-card border border-border/50 text-foreground truncate max-w-[140px]">
+                            {t.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column / Season Blueprint Card (4 Columns) */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
+            <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 sm:p-7 space-y-5 shadow-sm">
+              <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                <h3 className="text-sm font-semibold tracking-tight text-foreground uppercase">Season Blueprint</h3>
+              </div>
+
+              {/* Timeline Steps */}
+              <div className="space-y-3.5 text-xs">
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center text-primary font-bold text-[10px] shrink-0 mt-0.5">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Group Stage ({totalGroupMds} Matchdays)</p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      GW {safeStartGw} – GW {safeStartGw + totalGroupMds - 1} · Intra-group double round-robin &amp; cross-group matches.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-full bg-muted border border-border/60 flex items-center justify-center text-muted-foreground font-bold text-[10px] shrink-0 mt-0.5">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Mid-Season Bye Week</p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      GW {safeStartGw + totalGroupMds} · Table finalization and tournament bracket seeding.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center text-primary font-bold text-[10px] shrink-0 mt-0.5">
+                    3
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Two-Path Knockouts (9 Weeks)</p>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">
+                      GW {safeStartGw + totalGroupMds + 1} – GW {endGw} · Qualifiers, Eliminators &amp; Grand Final.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Season Duration & Validity Badge */}
+              <div className="pt-2 border-t border-border/40 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Total Duration:</span>
+                  <span className="font-bold text-foreground tabular-nums">{totalWeeks} Gameweeks</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Season Horizon:</span>
+                  <span className="font-bold tabular-nums text-foreground">Ends GW {endGw} / 38</span>
+                </div>
+
+                <div className="pt-1">
+                  {isScheduleValid ? (
+                    <div className="flex items-center gap-1.5 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 text-xs font-medium">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span>Fits within 38-GW season schedule</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 p-2.5 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs font-medium">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>Exceeds season (ends at GW {endGw})</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
               )}
+
+              {/* Submit Button */}
+              <motion.div whileTap={{ scale: 0.98 }} transition={{ type: "spring", bounce: 0, duration: 0.16 }}>
+                <Button
+                  onClick={createCompetition}
+                  disabled={creating || !isScheduleValid}
+                  className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs hover:shadow-md transition-shadow h-10 text-sm gap-2"
+                >
+                  {creating ? "Creating Tournament..." : "Create Tournament"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </motion.div>
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-xs text-[#849585]">Tournament name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Golden Boot Showdown"
-                className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] placeholder:text-[#849585]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-[#849585]">Starting FPL gameweek</label>
-              <Input
-                type="number"
-                min={1}
-                max={38}
-                value={startGw}
-                onChange={(e) => setStartGw(parseInt(e.target.value, 10))}
-                className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9]"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-4">
-            <p className="text-xs text-[#849585] uppercase tracking-wide mb-2">Format</p>
-            <p className="text-sm text-[#d6e4f9]">
-              Group stage (28 MDs for 10-team groups): two intra-group
-              round-robins (MD1–9 &amp; MD10–18), then a full cross-group
-              round-robin (MD19–28) · top 8 per group qualify · two-path
-              knockout runs the final nine gameweeks (GW30–38)
-            </p>
-          </div>
-
-          {error && <p className="text-sm text-red-400">{error}</p>}
-
-          <div className="flex justify-end">
-            <Button
-              onClick={createCompetition}
-              disabled={creating}
-              className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-            >
-              {creating ? "Creating..." : "Create tournament"}
-            </Button>
           </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-6 space-y-5">
-          <div className="flex items-center justify-between">
+        /* Step 2: Schedule Generation & Import — Full-Width across 1440px */
+        <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 sm:p-8 space-y-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/50">
             <div>
-              <p className="text-sm text-[#849585]">Tournament created</p>
-              <p className="text-lg font-semibold text-[#d6e4f9]">{name || "Untitled"}</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tournament Created</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{name || "Untitled"}</p>
             </div>
-            <Badge className="text-xs border bg-[#1e2b3b] text-[#849585] border-[#3b4b3d]">
-              Starting GW{startGw}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className="text-xs font-medium border rounded-full px-3 py-1 bg-primary/10 text-emerald-800 dark:text-primary border-primary/25 tabular-nums">
+                Starts GW {startGw}
+              </Badge>
+              <Badge className="text-xs font-medium border rounded-full px-3 py-1 bg-muted/60 text-muted-foreground border-border/50 tabular-nums">
+                {compRoster.length || 20} Teams
+              </Badge>
+            </div>
           </div>
 
           {!mode && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <button
+            <div className="grid gap-6 sm:grid-cols-2">
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.16 }}
                 onClick={generateFixtures}
                 disabled={busy}
-                className="rounded-lg border border-[#00e478]/40 bg-[#132030] p-5 text-left hover:bg-[#1e2b3b] transition-colors disabled:opacity-50"
+                className="group rounded-2xl border border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 p-6 sm:p-7 text-left transition-all disabled:opacity-50"
               >
-                <p className="font-semibold text-[#00e478]">Generate fixtures</p>
-                <p className="text-xs text-[#849585] mt-1">
-                  Build the full schedule automatically from the format config.
+                <div className="mb-2">
+                  <p className="text-base font-semibold text-emerald-800 dark:text-primary tracking-tight">Generate Fixtures Automatically</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Recommended standard schedule</p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                  Automatically builds the complete double round-robin, cross-group matches, and two-path knockout bracket based on rosters.
                 </p>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.16 }}
                 onClick={() => setMode("import")}
-                className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-5 text-left hover:bg-[#1e2b3b] transition-colors"
+                className="group rounded-2xl border border-border/70 bg-muted/30 hover:border-primary/40 hover:bg-muted/50 p-6 sm:p-7 text-left transition-all"
               >
-                <p className="font-semibold text-[#d6e4f9]">Paste fixture list</p>
-                <p className="text-xs text-[#849585] mt-1">
-                  Import an existing schedule (MDx headers + Team A - Team B lines).
+                <div className="mb-2">
+                  <p className="text-base font-semibold text-foreground tracking-tight">Paste Custom Fixture List</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Import your own schedule</p>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                  Import an existing custom fixture list with MD headers and team match lines (fuzzy team matching included).
                 </p>
-              </button>
+              </motion.button>
             </div>
           )}
 
           {mode === "generate" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-[#849585]">
-                  Preview generated schedule ({preview?.length ?? 0} fixtures)
+            <div className="space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/50">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Preview Generated Schedule (<span className="tabular-nums font-semibold text-foreground">{preview?.length ?? 0}</span> fixtures across <span className="tabular-nums font-semibold text-foreground">{previewByGw.length}</span> gameweeks)
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
-                    onClick={() => setMode(null)}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={busy}
-                    onClick={saveFixtures}
-                    className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-                  >
-                    Save fixtures
-                  </Button>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <motion.div whileTap={{ scale: 0.96 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-border/70 text-foreground hover:bg-muted/60 h-8.5 px-4 text-xs font-medium"
+                      onClick={() => setMode(null)}
+                    >
+                      Back
+                    </Button>
+                  </motion.div>
+                  <motion.div whileTap={{ scale: 0.96 }}>
+                    <Button
+                      size="sm"
+                      disabled={busy}
+                      onClick={saveFixtures}
+                      className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-8.5 px-5 text-xs shadow-xs"
+                    >
+                      {busy ? "Saving Schedule..." : "Save & Open Tournament"}
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
 
-              <div className="max-h-96 overflow-y-auto space-y-3 pr-1">
+              {/* 4-Column Full-Row Grid of Gameweeks */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto pr-1">
                 {previewByGw.map(([gw, rows]) => (
-                  <div key={gw} className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3">
-                    <p className="text-xs text-[#849585] mb-2">Gameweek {gw}</p>
-                    <div className="space-y-1">
+                  <div key={gw} className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-foreground uppercase tracking-wider">Gameweek {gw}</span>
+                      <span className="text-[10px] text-muted-foreground tabular-nums font-medium">{rows.length} matches</span>
+                    </div>
+                    <div className="space-y-1.5">
                       {rows.map((f) => (
-                        <div key={`${f.tie_index}-${f.leg}`} className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                          <span className="truncate">
+                        <div key={`${f.tie_index}-${f.leg}`} className="flex items-center justify-between text-xs text-foreground p-1.5 rounded-lg bg-card/70 border border-border/40">
+                          <span className="truncate pr-2 font-medium text-[11px]">
                             {teamName(f.home_team_id, [...rosterA, ...rosterB])}
-                            <span className="text-[#849585]"> vs </span>
+                            <span className="text-muted-foreground font-normal"> v </span>
                             {teamName(f.away_team_id, [...rosterA, ...rosterB])}
                           </span>
-                          <Badge className="text-[10px] border bg-[#1e2b3b] text-[#849585] border-[#3b4b3d]">
+                          <Badge className="text-[9px] border bg-muted/60 text-muted-foreground border-border/50 rounded-full px-1.5 py-0 shrink-0 font-normal">
                             {f.phase}
                           </Badge>
                         </div>
@@ -459,40 +661,46 @@ export default function NewTournamentPage() {
           )}
 
           {mode === "import" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-[#849585]">
+            <div className="space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/50">
+                <p className="text-sm font-medium text-muted-foreground">
                   {resolution
                     ? "Resolve any unmatched teams, then save."
                     : "Paste your fixture list below."}
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030]"
-                    onClick={() => setMode(null)}
-                  >
-                    Back
-                  </Button>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <motion.div whileTap={{ scale: 0.96 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-border/70 text-foreground hover:bg-muted/60 h-8.5 px-4 text-xs font-medium"
+                      onClick={() => setMode(null)}
+                    >
+                      Back
+                    </Button>
+                  </motion.div>
                   {!resolution ? (
-                    <Button
-                      size="sm"
-                      disabled={busy || !importText.trim()}
-                      onClick={resolveImport}
-                      className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]"
-                    >
-                      {busy ? "Parsing..." : "Parse"}
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.96 }}>
+                      <Button
+                        size="sm"
+                        disabled={busy || !importText.trim()}
+                        onClick={resolveImport}
+                        className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-8.5 px-5 text-xs shadow-xs"
+                      >
+                        {busy ? "Parsing..." : "Parse Schedule"}
+                      </Button>
+                    </motion.div>
                   ) : (
-                    <Button
-                      size="sm"
-                      disabled={busy}
-                      onClick={saveFixtures}
-                      className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-                    >
-                      Save fixtures
-                    </Button>
+                    <motion.div whileTap={{ scale: 0.96 }}>
+                      <Button
+                        size="sm"
+                        disabled={busy}
+                        onClick={saveFixtures}
+                        className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-8.5 px-5 text-xs shadow-xs"
+                      >
+                        {busy ? "Saving Schedule..." : "Save & Open Tournament"}
+                      </Button>
+                    </motion.div>
                   )}
                 </div>
               </div>
@@ -502,32 +710,32 @@ export default function NewTournamentPage() {
                   value={importText}
                   onChange={(e) => setImportText(e.target.value)}
                   placeholder={"MD1\nTeam A - Team B\nTeam C vs Team D\nMD2\n..."}
-                  className="w-full h-56 rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 text-sm text-[#d6e4f9] placeholder:text-[#849585] outline-none focus:border-[#00e478]"
+                  className="w-full h-72 rounded-2xl border border-border/70 bg-muted/30 p-4 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
               )}
 
               {resolution && (
-                <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[600px] overflow-y-auto pr-1">
                   {resolution.map((line, i) => {
                     const pick = picks[i] ?? { home: "", away: "" };
                     const homeResolved = matchId(line.homeMatch, pick.home);
                     const awayResolved = matchId(line.awayMatch, pick.away);
                     return (
-                      <div key={i} className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 space-y-2">
-                        <div className="flex items-center justify-between text-sm text-[#d6e4f9]">
-                          <span className="text-xs text-[#849585]">MD{line.matchday}</span>
-                          <span className="truncate px-2">
+                      <div key={i} className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-2.5">
+                        <div className="flex items-center justify-between text-xs text-foreground">
+                          <span className="text-[11px] font-semibold text-muted-foreground">MD{line.matchday}</span>
+                          <span className="truncate px-2 font-medium">
                             {line.home}
-                            <span className="text-[#849585]"> vs </span>
+                            <span className="text-muted-foreground font-normal"> vs </span>
                             {line.away}
                           </span>
                           <span className="text-xs">
                             {homeResolved && awayResolved ? (
-                              <Badge className="text-[10px] border bg-green-500/20 text-green-400 border-green-500/30">
+                              <Badge className="text-[10px] font-medium border bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 rounded-full px-2 py-0.2">
                                 Resolved
                               </Badge>
                             ) : (
-                              <Badge className="text-[10px] border bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                              <Badge className="text-[10px] font-medium border bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 rounded-full px-2 py-0.2">
                                 Needs pick
                               </Badge>
                             )}
@@ -544,10 +752,10 @@ export default function NewTournamentPage() {
                               });
                             }}
                           >
-                            <SelectTrigger className="w-full bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs">
+                            <SelectTrigger className="w-full rounded-xl bg-card border-border/70 text-foreground h-8 text-xs">
                               <SelectValue placeholder={`Pick home team for "${line.home}"`} />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+                            <SelectContent className="rounded-xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground">
                               {[...compRoster].map((t) => (
                                 <SelectItem key={t.id} value={t.id} className="text-xs">
                                   {t.name}
@@ -567,10 +775,10 @@ export default function NewTournamentPage() {
                               });
                             }}
                           >
-                            <SelectTrigger className="w-full bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] h-8 text-xs">
+                            <SelectTrigger className="w-full rounded-xl bg-card border-border/70 text-foreground h-8 text-xs">
                               <SelectValue placeholder={`Pick away team for "${line.away}"`} />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+                            <SelectContent className="rounded-xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground">
                               {[...compRoster].map((t) => (
                                 <SelectItem key={t.id} value={t.id} className="text-xs">
                                   {t.name}
@@ -585,12 +793,20 @@ export default function NewTournamentPage() {
                 </div>
               )}
 
-              {saveError && <p className="text-sm text-red-400">{saveError}</p>}
+              {saveError && (
+                <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{saveError}</span>
+                </div>
+              )}
             </div>
           )}
 
           {mode === "import" && !resolution && saveError && (
-            <p className="text-sm text-red-400">{saveError}</p>
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{saveError}</span>
+            </div>
           )}
         </div>
       )}

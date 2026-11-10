@@ -2,7 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import { Coins, Filter } from "lucide-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import type { ValuePlayer } from "@/lib/insights-utils";
 
 function getPositionBadgeClass(pos: string): string {
@@ -26,7 +29,22 @@ interface ValueRoiTabProps {
 
 type SortField = "pointsPerMillion" | "formPerMillion" | "pointsPer90" | "totalPoints";
 
+const PRICE_TIER_LABELS: Record<string, string> = {
+  ALL: "All Price Tiers",
+  BUDGET: "Budget Gems (≤ £5.5m)",
+  MID: "Mid-Priced (£5.6m - £8.5m)",
+  PREMIUM: "Premiums (> £8.5m)",
+};
+
+const ROI_SORT_LABELS: Record<SortField, string> = {
+  pointsPerMillion: "Sort: Points / £m (ROI)",
+  formPerMillion: "Sort: Form / £m",
+  pointsPer90: "Sort: Points / 90 mins",
+  totalPoints: "Sort: Total Points",
+};
+
 export function ValueRoiTab({ players }: ValueRoiTabProps) {
+  const shouldReduce = useReducedMotion();
   const [position, setPosition] = useState<string>("ALL");
   const [priceTier, setPriceTier] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<SortField>("pointsPerMillion");
@@ -55,59 +73,105 @@ export function ValueRoiTab({ players }: ValueRoiTabProps) {
 
   return (
     <div className="space-y-4">
-      {/* Filter and Control Bar */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card p-3.5 rounded-xl border border-border">
+      {/* Filter and Control Bar — Clean Apple Control Rail */}
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Position toggles */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-            <button
+            <motion.button
               key={pos}
               onClick={() => setPosition(pos)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+              whileTap={shouldReduce ? undefined : { scale: 0.94 }}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0",
                 position === pos
-                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
-                  : "bg-muted text-muted-foreground hover:text-foreground border border-border/60"
-              }`}
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-muted/60 text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted"
+              )}
             >
               {pos}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         {/* Tier and sort selector */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <select
+          <div className="flex items-center">
+            <Select
               value={priceTier}
-              onChange={(e) => setPriceTier(e.target.value)}
-              className="bg-card border border-border text-xs text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+              onValueChange={(val) => {
+                if (val) setPriceTier(val);
+              }}
             >
-              <option value="ALL">All Price Tiers</option>
-              <option value="BUDGET">Budget Gems (&le; £5.5m)</option>
-              <option value="MID">Mid-Priced (£5.6m - £8.5m)</option>
-              <option value="PREMIUM">Premiums (&gt; £8.5m)</option>
-            </select>
+              <SelectTrigger className="h-8 rounded-full bg-muted/60 border border-border/50 text-xs px-3.5 py-1 text-foreground hover:bg-muted/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 gap-2 shrink-0">
+                <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span>{PRICE_TIER_LABELS[priceTier] ?? priceTier}</span>
+              </SelectTrigger>
+              <SelectContent
+                alignItemWithTrigger={false}
+                side="bottom"
+                align="end"
+                sideOffset={6}
+                className="w-max min-w-[220px] max-w-[320px] rounded-2xl border border-border/70 bg-card/95 dark:bg-[#0f1c2c]/95 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-foreground z-50"
+              >
+                <SelectGroup>
+                  <SelectItem value="ALL" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    All Price Tiers
+                  </SelectItem>
+                  <SelectItem value="BUDGET" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Budget Gems (≤ £5.5m)
+                  </SelectItem>
+                  <SelectItem value="MID" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Mid-Priced (£5.6m - £8.5m)
+                  </SelectItem>
+                  <SelectItem value="PREMIUM" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Premiums (&gt; £8.5m)
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Coins className="w-3.5 h-3.5 text-muted-foreground" />
-            <select
+          <div className="flex items-center">
+            <Select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortField)}
-              className="bg-muted border border-border text-xs text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+              onValueChange={(val) => {
+                if (val) setSortBy(val as SortField);
+              }}
             >
-              <option value="pointsPerMillion">Sort: Points / £m (ROI)</option>
-              <option value="formPerMillion">Sort: Form / £m</option>
-              <option value="pointsPer90">Sort: Points / 90 mins</option>
-              <option value="totalPoints">Sort: Total Points</option>
-            </select>
+              <SelectTrigger className="h-8 rounded-full bg-muted/60 border border-border/50 text-xs px-3.5 py-1 text-foreground hover:bg-muted/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary/50 gap-2 shrink-0">
+                <Coins className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span>{ROI_SORT_LABELS[sortBy] ?? sortBy}</span>
+              </SelectTrigger>
+              <SelectContent
+                alignItemWithTrigger={false}
+                side="bottom"
+                align="end"
+                sideOffset={6}
+                className="w-max min-w-[230px] max-w-[320px] rounded-2xl border border-border/70 bg-card/95 dark:bg-[#0f1c2c]/95 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-foreground z-50"
+              >
+                <SelectGroup>
+                  <SelectItem value="pointsPerMillion" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Sort: Points / £m (ROI)
+                  </SelectItem>
+                  <SelectItem value="formPerMillion" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Sort: Form / £m
+                  </SelectItem>
+                  <SelectItem value="pointsPer90" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Sort: Points / 90 mins
+                  </SelectItem>
+                  <SelectItem value="totalPoints" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                    Sort: Total Points
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)" }}>
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted text-muted-foreground text-xs uppercase border-b border-border">

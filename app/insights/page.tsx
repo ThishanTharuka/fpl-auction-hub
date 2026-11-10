@@ -14,8 +14,8 @@ function InsightsSkeleton() {
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 animate-pulse">
       {/* Title */}
       <div className="mb-6">
-        <div className="h-8 bg-muted rounded w-48 mb-2" />
-        <div className="h-4 bg-muted rounded w-96 max-w-full" />
+        <div className="h-8 bg-muted rounded-xl w-48 mb-2" />
+        <div className="h-4 bg-muted rounded-md w-96 max-w-full" />
       </div>
 
       {/* KPI Ribbon */}
@@ -23,30 +23,30 @@ function InsightsSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="h-24 rounded-xl border border-border bg-card p-4"
+            className="h-28 rounded-2xl border border-border/60 bg-card/80 p-4"
           >
-            <div className="h-3 bg-muted rounded w-20 mb-3" />
-            <div className="h-6 bg-muted rounded w-28" />
+            <div className="h-3 bg-muted rounded-full w-20 mb-3" />
+            <div className="h-7 bg-muted rounded-lg w-28" />
           </div>
         ))}
       </div>
 
       {/* Tab bar skeleton */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
         {Array.from({ length: 7 }).map((_, i) => (
           <div
             key={i}
-            className="h-9 bg-muted rounded-lg w-28 shrink-0"
+            className="h-10 bg-muted/70 rounded-full w-32 shrink-0"
           />
         ))}
       </div>
 
       {/* Main card skeleton */}
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-2xl border border-border/60 bg-card/80 p-6">
         <div className="space-y-4">
-          <div className="h-10 bg-muted rounded w-full" />
+          <div className="h-10 bg-muted/80 rounded-xl w-full" />
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-12 bg-muted/60 rounded w-full" />
+            <div key={i} className="h-12 bg-muted/50 rounded-xl w-full" />
           ))}
         </div>
       </div>

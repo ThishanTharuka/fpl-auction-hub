@@ -2,7 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { Compass, Sparkles, Filter } from "lucide-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DifferentialPlayer } from "@/lib/insights-utils";
 
 function getPositionBadgeClass(pos: string): string {
@@ -26,7 +29,15 @@ interface DifferentialsTabProps {
 
 type SortOption = "form" | "totalPoints" | "xgi" | "fdr";
 
+const SORT_LABELS: Record<SortOption, string> = {
+  form: "Sort: Recent Form",
+  totalPoints: "Sort: Total Points",
+  xgi: "Sort: Expected Goal Involvement (xGI)",
+  fdr: "Sort: Best Fixtures (Next 5 FDR)",
+};
+
 export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
+  const shouldReduce = useReducedMotion();
   const [threshold, setThreshold] = useState<number>(10);
   const [position, setPosition] = useState<string>("ALL");
   const [sort, setSort] = useState<SortOption>("form");
@@ -51,72 +62,106 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
   return (
     <div className="space-y-4">
       {/* Control Strip */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-card p-3.5 rounded-xl border border-border">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_auto_1fr] items-stretch lg:items-center gap-3">
         {/* Ownership Threshold Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-start">
           <span className="text-xs text-muted-foreground flex items-center gap-1">
             <Compass className="w-3.5 h-3.5 text-primary" />
             Cap:
           </span>
-          <div className="flex bg-muted p-0.5 rounded-lg border border-border">
-            <button
+          <div className="flex bg-muted/60 p-0.5 rounded-full border border-border/50">
+            <motion.button
               onClick={() => setThreshold(10)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-medium transition-all",
                 threshold === 10
-                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
               &lt; 10% Owned
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() => setThreshold(5)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-medium transition-all",
                 threshold === 5
-                  ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
               &lt; 5% Ultra-Diff
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Position filters */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+        <div className="flex items-center justify-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
           {["ALL", "GKP", "DEF", "MID", "FWD"].map((pos) => (
-            <button
+            <motion.button
               key={pos}
               onClick={() => setPosition(pos)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 ${
+              whileTap={shouldReduce ? undefined : { scale: 0.94 }}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0",
                 position === pos
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground border border-border"
-              }`}
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-card/70 text-muted-foreground hover:text-foreground border border-border/60 hover:bg-muted"
+              )}
             >
               {pos}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         {/* Sorting */}
-        <div className="flex items-center gap-1.5 self-end lg:self-auto">
-          <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-          <select
+        <div className="flex items-center justify-end">
+          <Select
             value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            className="bg-card border border-border text-xs text-foreground rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary"
+            onValueChange={(val) => {
+              if (val) setSort(val as SortOption);
+            }}
           >
-            <option value="form">Sort: Recent Form</option>
-            <option value="totalPoints">Sort: Total Points</option>
-            <option value="xgi">Sort: Expected Goal Involvement (xGI)</option>
-            <option value="fdr">Sort: Best Fixtures (Next 5 FDR)</option>
-          </select>
+            <SelectTrigger className="h-8 rounded-full bg-card/80 dark:bg-card/60 border border-border/70 text-xs px-3.5 py-1 text-foreground hover:bg-muted/80 hover:border-foreground/40 transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary gap-2 shrink-0">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <SelectValue>
+                {(val: string | null) =>
+                  val && val in SORT_LABELS
+                    ? SORT_LABELS[val as SortOption]
+                    : SORT_LABELS.form
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent
+              alignItemWithTrigger={false}
+              side="bottom"
+              align="end"
+              sideOffset={6}
+              className="w-max min-w-[250px] max-w-[340px] rounded-2xl border border-border/70 bg-card/95 dark:bg-[#0f1c2c]/95 backdrop-blur-xl shadow-2xl p-1.5 text-xs text-foreground z-50"
+            >
+              <SelectGroup>
+                <SelectItem value="form" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                  Sort: Recent Form
+                </SelectItem>
+                <SelectItem value="totalPoints" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                  Sort: Total Points
+                </SelectItem>
+                <SelectItem value="xgi" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                  Sort: Expected Goal Involvement (xGI)
+                </SelectItem>
+                <SelectItem value="fdr" className="text-xs rounded-xl py-2 px-3 cursor-pointer focus:bg-primary/15 focus:text-primary transition-colors">
+                  Sort: Best Fixtures (Next 5 FDR)
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {/* Narrative hint */}
-      <div className="bg-card border border-border rounded-xl p-3.5 text-xs text-muted-foreground flex items-center justify-between">
+      <div className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-2xl p-4 text-xs text-muted-foreground flex items-center justify-between shadow-xs" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary shrink-0" />
           <span>
@@ -128,9 +173,13 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
       {/* Grid of Differential Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map(({ player, ownership, form, totalPoints, xgi }) => (
-          <div
+          <motion.div
             key={player.id}
-            className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between hover:border-primary/60 transition-all group"
+            initial={shouldReduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+            style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.06)" }}
+            className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4 flex flex-col justify-between hover:border-primary/50 hover:shadow-md transition-all duration-200 group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -197,7 +246,7 @@ export function DifferentialsTab({ differentials }: DifferentialsTabProps) {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>

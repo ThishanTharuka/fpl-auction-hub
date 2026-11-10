@@ -271,3 +271,182 @@ html:not(.dark) {
   z-index: 99999;
   animation: radiating-ripple-expand 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ─── Motion layer ───────────────────────────────────────────────────────── */
+
+/* tw-animate-css (dialog/drawer/popover enter-exit) ignores
+   prefers-reduced-motion, so collapse every CSS animation and transition to
+   an imperceptible instant change. Framer Motion is gated separately via
+   useReducedMotion in JS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Press feedback — every tappable control acknowledges the touch with a
+   short spring-shaped scale. Gated on no-preference so reduced-motion users
+   get an instant state change instead of movement. */
+.press {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .press {
+    transition:
+      transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  /* Press-in resolves fast — feedback starts on pointer-down, so the
+     response never lags the finger — while release springs back slowly.
+     The asymmetry keeps the acknowledgement instant without the settle
+     feeling stiff. */
+  .press:active {
+    transform: scale(0.97);
+    transition:
+      transform 100ms ease-out,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease;
+  }
+}
+
+/* Staggered children — spring-shaped rise used by dense grids (dialog stats).
+   Delays stay under one frame-budget wave (~350ms) so nothing feels laggy. */
+@keyframes apple-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Standalone rise for keyed elements that carry their own animation-delay
+   inline. CSS runs at first paint, so server-rendered content never ships
+   invisible while waiting for hydration. */
+.rise {
+  animation: apple-rise 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.stagger > * {
+  animation: apple-rise 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 18ms; }
+.stagger > *:nth-child(2) { animation-delay: 36ms; }
+.stagger > *:nth-child(3) { animation-delay: 54ms; }
+.stagger > *:nth-child(4) { animation-delay: 72ms; }
+.stagger > *:nth-child(5) { animation-delay: 90ms; }
+.stagger > *:nth-child(6) { animation-delay: 108ms; }
+.stagger > *:nth-child(7) { animation-delay: 126ms; }
+.stagger > *:nth-child(8) { animation-delay: 144ms; }
+.stagger > *:nth-child(9) { animation-delay: 162ms; }
+.stagger > *:nth-child(10) { animation-delay: 180ms; }
+.stagger > *:nth-child(11) { animation-delay: 198ms; }
+.stagger > *:nth-child(12) { animation-delay: 216ms; }
+.stagger > *:nth-child(13) { animation-delay: 234ms; }
+.stagger > *:nth-child(14) { animation-delay: 252ms; }
+.stagger > *:nth-child(15) { animation-delay: 270ms; }
+.stagger > *:nth-child(16) { animation-delay: 288ms; }
+.stagger > *:nth-child(17) { animation-delay: 306ms; }
+.stagger > *:nth-child(18) { animation-delay: 324ms; }
+.stagger > *:nth-child(19) { animation-delay: 342ms; }
+.stagger > *:nth-child(20) { animation-delay: 360ms; }
+
+/* ─── Optical typography ─────────────────────────────────────────────────── */
+
+/* Uppercase micro-labels read optically heavier than surrounding text, so
+   tracking widens as the size shrinks to keep perceived weight even.
+   Intentionally unlayered: these are complete label treatments, so
+   font-size/weight/tracking utilities must not partially override them. */
+.eyebrow {
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.eyebrow-xs {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ─── Materials & depth ──────────────────────────────────────────────────── */
+
+/* Translucent chrome marks itself with data-frost so the OS accessibility
+   signals can re-render it as a solid, defined surface. Intentionally
+   unlayered: these must beat the element's own background and backdrop-blur
+   utilities, which live in Tailwind's utilities layer. */
+[data-frost="background"] {
+  --frost-solid: var(--background);
+}
+
+[data-frost="card"] {
+  --frost-solid: var(--card);
+}
+
+/* Reduced transparency — frostier means solid here: raise the background to
+   full opacity and drop the blur entirely. */
+@media (prefers-reduced-transparency: reduce) {
+  [data-frost] {
+    background-color: var(--frost-solid, var(--card)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Higher contrast — near-solid background plus a defined edge, so the
+   surface still separates from what sits behind it without relying on
+   translucency or a soft shadow. */
+@media (prefers-contrast: more) {
+  [data-frost] {
+    background-color: var(--frost-solid, var(--card)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: color-mix(in srgb, var(--foreground) 45%, transparent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 45%, transparent) !important;
+  }
+}
+
+/* ─── Touch targets ──────────────────────────────────────────────────────── */
+
+/* Vertical-only hit padding: grows a control's tappable area by ~6px above
+   and below without changing layout or horizontal overflow, so it stays safe
+   inside the horizontally-scrolling filter-chips rail. Applied to static
+   elements, so the utility claims positioning for the pseudo-element. */
+@utility hit-y {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -6px 0;
+  }
+}
+
+/* Hides the scrollbar on swipe-only rails (filter chips). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

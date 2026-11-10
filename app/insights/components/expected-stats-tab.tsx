@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, Flame, Snowflake, ShieldCheck } from "lucide-react";
 import type { ExpectedStatsData, ExpectedStatsPlayer } from "@/lib/insights-utils";
 
@@ -26,7 +27,10 @@ interface ExpectedStatsTabProps {
 
 type ExpectedViewMode = "xgi" | "unlucky" | "clinical" | "defensive";
 
+const SPRING_ROW = { type: "spring" as const, bounce: 0, duration: 0.26 };
+
 export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
+  const shouldReduce = useReducedMotion();
   const [mode, setMode] = useState<ExpectedViewMode>("xgi");
 
   const currentList: ExpectedStatsPlayer[] = (() => {
@@ -128,7 +132,7 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
       </div>
 
       {/* Narrative Guide Box */}
-      <div className="bg-card border border-border rounded-xl p-3.5 text-xs text-muted-foreground flex items-center justify-between">
+      <div className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-2xl p-4 text-xs text-muted-foreground flex items-center justify-between shadow-xs" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
         <div>
           {mode === "xgi" && (
             <span>
@@ -154,7 +158,7 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)" }}>
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted text-muted-foreground text-xs uppercase border-b border-border">
@@ -171,10 +175,21 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
             </thead>
             <tbody className="divide-y divide-border/40">
               {currentList.map(({ player, xg, xa, xgi, finishingDelta, xgiPer90, goals, assists }) => (
-                <tr
+                <motion.tr
                   key={player.id}
-                  className="hover:bg-muted/80 transition-colors"
-                >
+                  layout={shouldReduce ? false : "position"}
+                  initial={shouldReduce ? undefined : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={
+                    shouldReduce
+                      ? { duration: 0 }
+                      : {
+                          layout: SPRING_ROW,
+                          opacity: { duration: 0.15 },
+                        }
+                  }
+                  style={{ willChange: "transform" }}
+                  className="hover:bg-primary/[0.04] transition-colors transform-gpu">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-muted border border-border shrink-0">
@@ -233,7 +248,7 @@ export function ExpectedStatsTab({ data }: ExpectedStatsTabProps) {
                       {finishingDelta > 0 ? `+${finishingDelta.toFixed(2)}` : finishingDelta.toFixed(2)}
                     </span>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>

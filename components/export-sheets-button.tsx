@@ -331,8 +331,8 @@ export function ExportSheetsButton({
           }
           className={
             variant === "outline" && !isExporting
-              ? "border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
-              : extraClass
+              ? "press h-8 border-[#3b4b3d] text-[#b9cbb9] hover:text-[#d6e4f9] hover:bg-[#1e2b3b]"
+              : `press h-8 ${extraClass}`
           }
         >
           {isExporting ? (

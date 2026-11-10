@@ -97,7 +97,7 @@ function getDeciderMatchInfo(tieIndex: number) {
 // ── SVG Bracket Forks & Routing Connectors ───────────────────────────────────
 
 function BracketFork({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   width = 32,
   topPercent = 25,
   bottomPercent = 75,
@@ -150,7 +150,7 @@ function BracketFork({
 
 // Connector between Opening Round [E1, E4, E2, E3] and Eliminators R1 & R2 [E6, E7, E5, E8]
 function EliminatorsConnectorR1ToR2({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -203,7 +203,7 @@ function EliminatorsConnectorR1ToR2({
 
 // Connector between Eliminators R1 & R2 [E6, E7, E5, E8] and Eliminators R3 & R4 [E9, E11, E10]
 function EliminatorsConnectorR2ToR3({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -243,7 +243,7 @@ function EliminatorsConnectorR2ToR3({
 
 // Connector between Eliminators R3 & R4 [E9, E11, E10] and Triangular Decider
 function EliminatorsConnectorR3ToDecider({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   width = 72,
 }: {
   color?: string;
@@ -264,7 +264,7 @@ function EliminatorsConnectorR3ToDecider({
 
 // Connector between Triangular Decider and Eliminators Final [E13]
 function EliminatorsConnectorDeciderToE13({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -302,7 +302,7 @@ function EliminatorsConnectorDeciderToE13({
 
 // Connector between Eliminators Final [E13] and Grand Final
 function EliminatorsConnectorE13ToFinal({
-  color = "var(--primary, #00e478)",
+  color = "var(--primary)",
   width = 64,
 }: {
   color?: string;
@@ -322,7 +322,7 @@ function EliminatorsConnectorE13ToFinal({
 
 // Spacer 1 (width=80)
 function FullBracketSpacer1Upper({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -373,7 +373,7 @@ function FullBracketSpacer1Mid({
 }
 
 function FullBracketSpacer1Lower({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 80,
 }: {
@@ -426,7 +426,7 @@ function FullBracketSpacer1Lower({
 
 // Spacer 2 (width=96)
 function FullBracketSpacer2Upper({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -463,7 +463,7 @@ function FullBracketSpacer2Mid({
 }
 
 function FullBracketSpacer2Lower({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 96,
 }: {
@@ -503,7 +503,7 @@ function FullBracketSpacer2Lower({
 
 // Spacer 3 (width=72)
 function FullBracketSpacer3Upper({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   width = 72,
 }: {
   color?: string;
@@ -521,7 +521,7 @@ function FullBracketSpacer3Upper({
 }
 
 function FullBracketSpacer3Lower({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   width = 72,
 }: {
   color?: string;
@@ -542,7 +542,7 @@ function FullBracketSpacer3Lower({
 
 // Spacer 4 (width=64)
 function FullBracketSpacer4Upper({
-  color = "var(--primary, #00e478)",
+  color = "var(--primary)",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -582,7 +582,7 @@ function FullBracketSpacer4Mid({
 }
 
 function FullBracketSpacer4Lower({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   dropColor = "#3b82f6",
   width = 64,
 }: {
@@ -616,7 +616,7 @@ function FullBracketSpacer4Lower({
 
 // Spacer 5 (width=64) - Grand Final Convergence
 function FullBracketSpacer5Upper({
-  color = "var(--primary, #00e478)",
+  color = "var(--primary)",
   width = 64,
 }: {
   color?: string;
@@ -641,7 +641,7 @@ function FullBracketSpacer5Upper({
 }
 
 function FullBracketSpacer5Mid({
-  color = "var(--primary, #00e478)",
+  color = "var(--primary)",
   width = 64,
 }: {
   color?: string;
@@ -678,7 +678,7 @@ function FullBracketSpacer5Mid({
 }
 
 function FullBracketSpacer5Lower({
-  color = "var(--primary, #00e478)",
+  color = "var(--primary)",
   width = 64,
 }: {
   color?: string;
@@ -703,7 +703,7 @@ function FullBracketSpacer5Lower({
 }
 
 function DirectStem({
-  color = "var(--bracket-line, #3b4b3d)",
+  color = "var(--bracket-line, var(--border))",
   width = 36,
   label,
 }: {
@@ -995,7 +995,7 @@ export function TournamentBracket({
                     ? "border-border bg-card hover:border-blue-400 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] shadow-xs"
                     : "border-border bg-card hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.15)] shadow-xs"
                 : isHighlighted
-                  ? "border-primary/60 bg-primary/10 dark:bg-[#132030] shadow-[0_0_12px_rgba(0,228,120,0.15)]"
+                  ? "border-primary/60 bg-primary/10 dark:bg-card shadow-[0_0_12px_rgba(0,228,120,0.15)]"
                   : "border-border bg-card hover:border-primary/50 shadow-xs"
         }`}
       >
@@ -1380,7 +1380,7 @@ export function TournamentBracket({
                   })()}
                 </div>
 
-                <DirectStem color="#00e478" width={36} label="W(Q7)" />
+                <DirectStem color="var(--primary)" width={36} label="W(Q7)" />
 
                 <div className="w-[260px] shrink-0">
                   {(() => {
@@ -1636,10 +1636,10 @@ export function TournamentBracket({
                     {/* Col 3 Upper: GW 34-35 Qualifiers Bye */}
                     <div className="relative w-[240px] shrink-0 self-stretch flex items-center justify-center">
                       <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none" viewBox="0 0 240 620" preserveAspectRatio="none">
-                        <path d="M 0 138 H 240" fill="none" stroke="var(--bracket-line, #3b4b3d)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
-                        <path d="M 0 482 H 240" fill="none" stroke="var(--bracket-line, #3b4b3d)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <path d="M 0 138 H 240" fill="none" stroke="var(--bracket-line, var(--border))" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <path d="M 0 482 H 240" fill="none" stroke="var(--bracket-line, var(--border))" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                       </svg>
-                      <div className="relative z-10 w-[210px] rounded-lg border border-dashed border-border bg-card/90 dark:bg-[#0f1c2c]/85 backdrop-blur-xs p-3 text-center shadow-xs">
+                      <div className="relative z-10 w-[210px] rounded-lg border border-dashed border-border bg-card/90 dark:bg-card/85 backdrop-blur-xs p-3 text-center shadow-xs">
                         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">Qualifiers Bye</span>
                         <p className="text-xs font-semibold text-foreground mt-0.5">GW 34 · 35</p>
                         <p className="text-[10px] text-muted-foreground mt-1">Q5 & Q6 winners advance to Q7</p>
@@ -1663,9 +1663,9 @@ export function TournamentBracket({
                     {/* Col 5 Upper: Upper Champion */}
                     <div className="relative w-[240px] shrink-0 self-stretch flex items-center justify-center">
                       <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none" viewBox="0 0 240 620" preserveAspectRatio="none">
-                        <path d="M 0 310 H 240" fill="none" stroke="#00e478" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+                        <path d="M 0 310 H 240" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
                       </svg>
-                      <div className="relative z-10 w-[210px] rounded-lg border border-primary/40 bg-card/90 dark:bg-[#0f1c2c]/90 backdrop-blur-xs p-3 text-center shadow-xs">
+                      <div className="relative z-10 w-[210px] rounded-lg border border-primary/40 bg-card/90 dark:bg-card/90 backdrop-blur-xs p-3 text-center shadow-xs">
                         <div className="flex items-center justify-center gap-1.5 text-[10px] font-semibold text-primary uppercase tracking-wider">
                           <Trophy className="h-3.5 w-3.5" />
                           <span>Upper Champion</span>

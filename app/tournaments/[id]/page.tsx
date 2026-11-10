@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,10 +38,10 @@ import type {
 
 const supabase = createSupabaseBrowserClient();
 
-const DEFAULT_STATUS = { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border" };
+const DEFAULT_STATUS = { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border/60" };
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  scheduled: { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border" },
+  scheduled: { label: "Scheduled", cls: "bg-muted text-muted-foreground border-border/60" },
   scored: { label: "Scored", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
   manual: { label: "Manual", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
 };
@@ -361,19 +363,23 @@ export default function TournamentAdminPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-10 space-y-4">
-        <div className="h-8 w-64 rounded bg-[#1e2b3b] animate-pulse" />
-        <div className="h-4 w-40 rounded bg-[#1e2b3b] animate-pulse" />
-        <div className="h-64 rounded-lg bg-[#0f1c2c] border border-[#3b4b3d] animate-pulse" />
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-4">
+        <div className="h-8 w-64 rounded-xl bg-muted animate-pulse" />
+        <div className="h-4 w-40 rounded-lg bg-muted/60 animate-pulse" />
+        <div className="h-64 rounded-2xl bg-card border border-border/60 animate-pulse" />
       </div>
     );
   }
 
   if (notFound || !competition) {
     return (
-      <div className="mx-auto max-w-xl px-6 py-20 text-center text-[#849585]">
-        <p className="text-lg mb-2">Tournament not found.</p>
-        <Button variant="outline" className="border-[#3b4b3d] text-[#849585]" onClick={() => router.push("/tournaments")}>
+      <div className="mx-auto max-w-xl px-6 py-20 text-center text-muted-foreground">
+        <p className="text-lg font-semibold text-foreground mb-2">Tournament not found.</p>
+        <Button
+          variant="outline"
+          className="rounded-full border-border/80 text-foreground hover:bg-muted/70"
+          onClick={() => router.push("/tournaments")}
+        >
           Back to tournaments
         </Button>
       </div>
@@ -381,7 +387,7 @@ export default function TournamentAdminPage() {
   }
 
   const competitionStatus =
-    STATUS_LABELS[competition.status] ?? { label: "Setup", cls: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" };
+    STATUS_LABELS[competition.status] ?? { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" };
 
   const gameweekLabel = liveGameweek
     ? `Live GW${liveGameweek}`
@@ -397,45 +403,66 @@ export default function TournamentAdminPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10 space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="space-y-1.5 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-[#d6e4f9]">{competition.name}</h1>
-            <Badge className={`text-xs border ${competitionStatus.cls}`}>{competitionStatus.label}</Badge>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground truncate">
+              {competition.name}
+            </h1>
+            <Badge className={`text-xs font-medium border rounded-full px-2.5 py-0.5 ${competitionStatus.cls}`}>
+              {competitionStatus.label}
+            </Badge>
           </div>
-          <p className="text-sm text-[#849585] mt-1">
-            {teams.filter((t) => t.group_label === "A").length} teams in Group A ·{" "}
-            {teams.filter((t) => t.group_label === "B").length} teams in Group B · starts GW
-            {competition.start_gw}
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            <span className="tabular-nums font-medium text-foreground/80">{teams.filter((t) => t.group_label === "A").length}</span> teams in Group A ·{" "}
+            <span className="tabular-nums font-medium text-foreground/80">{teams.filter((t) => t.group_label === "B").length}</span> teams in Group B · starts GW
+            <span className="tabular-nums font-semibold text-foreground/90">{competition.start_gw}</span>
           </p>
         </div>
-        <a href={`/tournaments/${id}/public`} target="_blank" rel="noreferrer">
-          <Button size="sm" className="bg-[#132030] border border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]">
-            View public
-          </Button>
+        <a href={`/tournaments/${id}/public`} target="_blank" rel="noreferrer" className="shrink-0 self-end sm:self-auto">
+          <motion.div whileTap={{ scale: 0.96 }}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full border-border/80 text-foreground hover:bg-muted/70 flex items-center gap-1.5 h-8 px-3.5 text-xs font-medium"
+            >
+              <span>View public</span>
+              <ExternalLink className="h-3 w-3 text-muted-foreground" />
+            </Button>
+          </motion.div>
         </a>
       </div>
 
-      {/* Tab strip — the standings export trigger shares this row */}
-      <div className="flex items-center gap-x-3 border-b border-[#3b4b3d]">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar min-w-0">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`shrink-0 px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${
-                tab === t.key
-                  ? "border-[#00e478] text-[#00e478]"
-                  : "border-transparent text-[#849585] hover:text-[#d6e4f9]"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+      {/* Tab strip — Apple Segmented Capsule Rail */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/50 backdrop-blur-md overflow-x-auto no-scrollbar max-w-full">
+          {tabs.map((t) => {
+            const isActive = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`relative px-4 py-1.5 text-xs font-semibold rounded-full transition-colors flex items-center gap-1.5 shrink-0 ${
+                  isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="admin-tournament-active-tab"
+                    transition={{ type: "spring", bounce: 0, duration: 0.26 }}
+                    className="absolute inset-0 rounded-full bg-primary shadow-xs"
+                  />
+                )}
+                <span className="relative z-10">{t.label}</span>
+              </button>
+            );
+          })}
         </div>
         {tab === "standings" && (
-          <div className="ml-auto shrink-0">
+          <div className="shrink-0 self-end sm:self-auto">
             <StandingsExport
               competitionName={competition.name}
               gameweekLabel={gameweekLabel}
@@ -448,23 +475,25 @@ export default function TournamentAdminPage() {
 
       {tab === "fixtures" && (
         <div className="space-y-6">
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-5 sm:p-6 space-y-5 shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs text-[#849585]">Gameweek</label>
+              <div className="flex flex-wrap items-end gap-3.5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Gameweek
+                  </label>
                   <Select value={String(scoreGw)} onValueChange={(v) => v && setScoreGw(parseInt(v, 10))}>
-                    <SelectTrigger className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9] h-9 min-w-[90px]">
+                    <SelectTrigger className="rounded-xl bg-muted/40 border-border/70 text-foreground h-9 min-w-[100px] px-3 focus:ring-2 focus:ring-primary/20">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9]">
+                    <SelectContent className="rounded-2xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground shadow-2xl">
                       {fixturesByGw.map(([gw]) => (
-                        <SelectItem key={gw} value={String(gw)} className="text-xs">
+                        <SelectItem key={gw} value={String(gw)} className="text-xs rounded-lg">
                           <span className="flex items-center gap-2">
                             <span>GW{gw}</span>
                             {gw === liveGameweek && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-primary/15 text-emerald-800 dark:text-primary border border-primary/30">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse-slow shadow-[0_0_6px_rgba(0,228,120,0.8)]" />
                                 Live
                               </span>
                             )}
@@ -474,30 +503,32 @@ export default function TournamentAdminPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button
-                  onClick={autoScore}
-                  disabled={scoring || gwFixtures.length === 0}
-                  className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-                >
-                  {scoring ? "Scoring..." : `Auto-score GW${scoreGw}`}
-                </Button>
-                {scoreMsg && <p className="text-sm text-[#849585]">{scoreMsg}</p>}
+                <motion.div whileTap={{ scale: 0.96 }}>
+                  <Button
+                    onClick={autoScore}
+                    disabled={scoring || gwFixtures.length === 0}
+                    className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-4 h-9 shadow-xs"
+                  >
+                    {scoring ? "Scoring..." : `Auto-score GW${scoreGw}`}
+                  </Button>
+                </motion.div>
+                {scoreMsg && <p className="text-xs text-muted-foreground font-medium pb-1.5">{scoreMsg}</p>}
               </div>
 
               {scoreGw === liveGameweek && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#00e478]/15 text-[#00e478] border border-[#00e478]/30 shadow-[0_0_12px_rgba(0,228,120,0.15)] self-start sm:self-center ml-auto">
-                  <span className="h-2 w-2 rounded-full bg-[#00e478] animate-pulse-slow shadow-[0_0_8px_rgba(0,228,120,0.8)]" />
-                  Live
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-emerald-800 dark:text-primary border border-primary/30 shadow-xs self-start sm:self-center ml-auto">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse-slow shadow-[0_0_8px_rgba(0,228,120,0.8)]" />
+                  Live Matchday
                 </span>
               )}
             </div>
 
             {gwFixtures.some((f) => f.chip_notes) && (
-              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 space-y-1">
+              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 space-y-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                   Chips are not allowed in the league phase
                 </p>
-                <p className="text-xs text-amber-800 dark:text-amber-300/80">
+                <p className="text-xs text-amber-800 dark:text-amber-300/80 leading-relaxed">
                   Scores below already exclude the chip effect. Use &quot;Edit score&quot; to pin a
                   different result if the league decides otherwise.
                 </p>
@@ -516,13 +547,13 @@ export default function TournamentAdminPage() {
 
                 return (
                   <div key={f.id} className="space-y-2">
-                    <div className="rounded-lg border border-[#3b4b3d] bg-[#132030] p-3 flex flex-wrap items-center justify-between gap-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-[#1e2b3b] text-[#b9cbb9] border border-[#3b4b3d]/60 shrink-0">
+                    <div className="rounded-xl border border-border/60 bg-muted/30 hover:border-primary/30 p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3 transition-colors">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/50 shrink-0">
                         {fixtureGroupLabel(f)}
                       </span>
 
-                      <div className="flex-1 min-w-[240px] flex items-center gap-2.5 text-sm text-[#d6e4f9]">
-                        <span className="inline-flex items-center gap-2 min-w-0">
+                      <div className="flex-1 min-w-[240px] flex items-center gap-3 text-xs sm:text-sm text-foreground">
+                        <span className="inline-flex items-center gap-2 min-w-0 font-medium">
                           <TeamAvatar
                             name={hName}
                             src={hTeam?.avatar_url ?? null}
@@ -531,8 +562,8 @@ export default function TournamentAdminPage() {
                           />
                           <span className="truncate">{hName}</span>
                         </span>
-                        <span className="text-xs text-[#849585] shrink-0 font-medium">vs</span>
-                        <span className="inline-flex items-center gap-2 min-w-0">
+                        <span className="text-xs text-muted-foreground shrink-0 font-normal">vs</span>
+                        <span className="inline-flex items-center gap-2 min-w-0 font-medium">
                           <TeamAvatar
                             name={aName}
                             src={aTeam?.avatar_url ?? null}
@@ -543,18 +574,18 @@ export default function TournamentAdminPage() {
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center justify-end gap-3 min-w-0">
+                      <div className="flex flex-wrap items-center justify-end gap-2.5 min-w-0">
                         {f.status === "scored" && (
-                          <span className="text-sm text-[#d6e4f9] tabular-nums font-semibold px-2 py-0.5 rounded bg-[#0f1c2c] border border-[#3b4b3d]">
-                            <b className="text-[#00e478]">{f.home_points}</b>
-                            <span className="text-[#849585] mx-1">–</span>
-                            <b className="text-[#00e478]">{f.away_points}</b>
+                          <span className="text-xs sm:text-sm text-foreground tabular-nums font-bold px-2.5 py-1 rounded-lg bg-card border border-border/70 shadow-xs">
+                            <span className="text-emerald-700 dark:text-primary">{f.home_points}</span>
+                            <span className="text-muted-foreground mx-1.5">–</span>
+                            <span className="text-emerald-700 dark:text-primary">{f.away_points}</span>
                           </span>
                         )}
                         <FixtureChipBadges notes={chipNotes} />
-                        <Badge className={`text-[10px] border ${label.cls}`}>{label.label}</Badge>
+                        <Badge className={`text-[10px] font-medium border rounded-full px-2 py-0.2 ${label.cls}`}>{label.label}</Badge>
                         {f.status !== "scored" && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <Input
                               type="number"
                               placeholder="Home"
@@ -562,7 +593,7 @@ export default function TournamentAdminPage() {
                               onChange={(e) =>
                                 setManualScores((m) => ({ ...m, [f.id]: { home: e.target.value, away: m[f.id]?.away ?? "" } }))
                               }
-                              className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                              className="w-16 h-8 rounded-lg bg-card border-border/70 text-foreground text-xs text-center font-bold tabular-nums"
                             />
                             <Input
                               type="number"
@@ -571,7 +602,7 @@ export default function TournamentAdminPage() {
                               onChange={(e) =>
                                 setManualScores((m) => ({ ...m, [f.id]: { home: m[f.id]?.home ?? "", away: e.target.value } }))
                               }
-                              className="w-16 h-8 bg-[#0f1c2c] border-[#3b4b3d] text-[#d6e4f9] text-xs text-center font-bold"
+                              className="w-16 h-8 rounded-lg bg-card border-border/70 text-foreground text-xs text-center font-bold tabular-nums"
                             />
                           </div>
                         )}
@@ -599,24 +630,25 @@ export default function TournamentAdminPage() {
                 );
               })}
               {gwFixtures.length === 0 && (
-                <p className="text-sm text-[#849585]">No fixtures scheduled for this gameweek.</p>
+                <p className="text-sm text-muted-foreground text-center py-6">No fixtures scheduled for this gameweek.</p>
               )}
             </div>
 
             {Object.keys(manualScores).length > 0 && (
-              <Button
-                onClick={saveManualScores}
-                disabled={scoring}
-                variant="outline"
-                className="border-[#00e478]/40 text-[#00e478] hover:bg-[#1e2b3b]"
-              >
-                {scoring ? "Saving..." : "Save manual scores"}
-              </Button>
+              <motion.div whileTap={{ scale: 0.96 }}>
+                <Button
+                  onClick={saveManualScores}
+                  disabled={scoring}
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-4 h-9 shadow-xs"
+                >
+                  {scoring ? "Saving..." : "Save manual scores"}
+                </Button>
+              </motion.div>
             )}
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#849585]">
+          <div className="space-y-3 pt-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               All Matchdays
             </h3>
             <TournamentFixtures
@@ -634,35 +666,35 @@ export default function TournamentAdminPage() {
       {tab === "standings" && (
         <div className="space-y-6">
           {(["A", "B"] as const).map((g) => (
-            <div key={g} className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#3b4b3d] flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-[#d6e4f9]">Group {g}</span>
-                <span className="flex items-center gap-3 text-[10px]">
-                  <span className="flex items-center gap-1.5 text-[#849585]">
-                    <span className="h-2 w-2 rounded-full bg-[#00e478]" /> Qualifiers (1-4)
+            <div key={g} className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md overflow-hidden shadow-sm">
+              <div className="px-5 py-3.5 border-b border-border/60 bg-muted/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <span className="text-sm font-semibold tracking-tight text-foreground">Group {g}</span>
+                <span className="flex items-center gap-3.5 text-[11px] flex-wrap">
+                  <span className="flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-xs" /> Qualifiers (1-4)
                   </span>
-                  <span className="flex items-center gap-1.5 text-[#849585]">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" /> Eliminators (5-8)
+                  <span className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-400">
+                    <span className="h-2 w-2 rounded-full bg-amber-500 shadow-xs" /> Eliminators (5-8)
                   </span>
-                  <span className="flex items-center gap-1.5 text-[#849585]">
-                    <span className="h-2 w-2 rounded-full bg-red-500" /> Out (9-10)
+                  <span className="flex items-center gap-1.5 font-medium text-rose-700 dark:text-rose-400">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 shadow-xs" /> Out (9-10)
                   </span>
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="text-xs text-[#849585] text-left border-b border-[#3b4b3d]">
-                      <th className="px-4 py-2 font-normal">#</th>
-                      <th className="px-2 py-2 font-normal">Team</th>
-                      <th className="px-2 py-2 font-normal text-center">P</th>
-                      <th className="px-2 py-2 font-normal text-center">W</th>
-                      <th className="px-2 py-2 font-normal text-center">D</th>
-                      <th className="px-2 py-2 font-normal text-center">L</th>
-                      <th className="px-2 py-2 font-normal text-center">SD</th>
-                      <th className="px-2 py-2 font-normal text-center">PS</th>
-                      <th className="px-2 py-2 font-normal text-center">PC</th>
-                      <th className="px-4 py-2 font-normal text-right">Pts</th>
+                    <tr className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider text-left border-b border-border/50">
+                      <th className="px-4 py-2.5 font-semibold">#</th>
+                      <th className="px-3 py-2.5 font-semibold">Team</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">P</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">W</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">D</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">L</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">SD</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">PS</th>
+                      <th className="px-2.5 py-2.5 font-semibold text-center">PC</th>
+                      <th className="px-4 py-2.5 font-semibold text-right">Pts</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -670,41 +702,40 @@ export default function TournamentAdminPage() {
                       .filter((s) => s.group === g)
                       .map((s, i) => {
                         const zoneBg =
-                          i < 4 ? "bg-[#00e478]" : i < 8 ? "bg-amber-500" : "bg-red-500";
+                          i < 4 ? "bg-emerald-500" : i < 8 ? "bg-amber-500" : "bg-rose-500";
                         const team = teams.find((t) => t.id === s.teamId);
                         return (
-                          <tr key={s.teamId} className="border-b border-[#3b4b3d]/50 text-[#d6e4f9]">
-                            <td className="px-4 py-2 text-[#849585] relative">
+                          <tr key={s.teamId} className="border-b border-border/40 hover:bg-muted/30 transition-colors text-foreground">
+                            <td className="px-4 py-2.5 text-muted-foreground relative tabular-nums font-medium">
                               <span
                                 aria-hidden
-                                className={`pointer-events-none absolute left-0 top-[1px] bottom-[1px] w-[3px] ${zoneBg}`}
-                                style={{
-                                  clipPath: "polygon(0 0, 100% 14%, 100% 86%, 0 100%)",
-                                }}
+                                className={`pointer-events-none absolute left-0 top-[2px] bottom-[2px] w-[3px] rounded-r ${zoneBg}`}
                               />
                               {i + 1}
                             </td>
-                            <td className="px-2 py-2">
-                              <span className="flex items-center gap-2 min-w-0">
+                            <td className="px-3 py-2.5">
+                              <span className="flex items-center gap-2.5 min-w-0">
                                 <TeamAvatar
                                   name={s.name}
                                   src={team?.avatar_url ?? null}
                                   color={team?.color ?? null}
                                   size="sm"
                                 />
-                                <span className="truncate max-w-[220px]">{s.name}</span>
+                                <span className="truncate max-w-[220px] font-medium">{s.name}</span>
                               </span>
                             </td>
-                            <td className="px-2 py-2 text-center text-[#849585]">{s.played}</td>
-                            <td className="px-2 py-2 text-center">{s.won}</td>
-                            <td className="px-2 py-2 text-center">{s.drawn}</td>
-                            <td className="px-2 py-2 text-center">{s.lost}</td>
-                            <td className="px-2 py-2 text-center">
+                            <td className="px-2.5 py-2.5 text-center text-muted-foreground tabular-nums">{s.played}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums">{s.won}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums">{s.drawn}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums">{s.lost}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums font-medium">
                               {s.goalDiff > 0 ? `+${s.goalDiff}` : s.goalDiff}
                             </td>
-                            <td className="px-2 py-2 text-center">{s.pointsFor}</td>
-                            <td className="px-2 py-2 text-center">{s.pointsAgainst}</td>
-                            <td className="px-4 py-2 text-right font-semibold text-[#00e478]">{s.points}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums">{s.pointsFor}</td>
+                            <td className="px-2.5 py-2.5 text-center tabular-nums">{s.pointsAgainst}</td>
+                            <td className="px-4 py-2.5 text-right font-bold tabular-nums text-emerald-700 dark:text-primary">
+                              {s.points}
+                            </td>
                           </tr>
                         );
                       })}
@@ -717,68 +748,94 @@ export default function TournamentAdminPage() {
       )}
 
       {tab === "bracket" && (
-        <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5">
+        <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-4 sm:p-6 shadow-sm overflow-x-auto">
           <TournamentBracket teams={teams} fixtures={fixtures} />
         </div>
       )}
 
       {tab === "settings" && (
-        <div className="max-w-lg space-y-6">
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
-            <p className="text-sm font-semibold text-[#d6e4f9]">Rename tournament</p>
-            <div className="flex gap-2">
+        <div className="max-w-xl space-y-6">
+          <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-5 sm:p-6 space-y-3.5 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-foreground">Rename Tournament</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Change the display name of this tournament.</p>
+            </div>
+            <div className="flex gap-2.5">
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="bg-[#132030] border-[#3b4b3d] text-[#d6e4f9]"
+                className="rounded-xl bg-muted/40 border-border/70 text-foreground h-10 px-3.5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
               />
-              <Button
-                onClick={rename}
-                disabled={savingName || !newName.trim()}
-                className="bg-[#00e478] text-[#003919] hover:bg-[#00e478]/90 font-semibold"
-              >
-                {savingName ? "Saving..." : "Save"}
-              </Button>
+              <motion.div whileTap={{ scale: 0.96 }}>
+                <Button
+                  onClick={rename}
+                  disabled={savingName || !newName.trim()}
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-10 px-5 shadow-xs"
+                >
+                  {savingName ? "Saving..." : "Save"}
+                </Button>
+              </motion.div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-[#3b4b3d] bg-[#0f1c2c] p-5 space-y-3">
-            <p className="text-sm font-semibold text-[#d6e4f9]">Refresh manager links</p>
-            <p className="text-xs text-[#849585]">
-              Re-sync fpl_manager_id from the source league participants for all {teams.length} teams.
-            </p>
-            <Button
-              onClick={refreshManagers}
-              disabled={refreshingManagers}
-              variant="outline"
-              className="border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#132030]"
-            >
-              {refreshingManagers ? "Refreshing..." : "Refresh"}
-            </Button>
+          <div className="rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-5 sm:p-6 space-y-3.5 shadow-sm">
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-foreground">Refresh Manager Links</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Re-sync fpl_manager_id from the source league participants for all {teams.length} teams.
+              </p>
+            </div>
+            <motion.div whileTap={{ scale: 0.96 }}>
+              <Button
+                onClick={refreshManagers}
+                disabled={refreshingManagers}
+                variant="outline"
+                className="rounded-full border-border/80 text-foreground hover:bg-muted/70 h-9 px-4 text-xs font-semibold gap-1.5"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshingManagers ? "animate-spin" : ""}`} />
+                <span>{refreshingManagers ? "Refreshing..." : "Refresh Links"}</span>
+              </Button>
+            </motion.div>
           </div>
 
-          <div className="rounded-lg border border-red-500/30 bg-[#0f1c2c] p-5 space-y-3">
-            <p className="text-sm font-semibold text-red-400">Delete tournament</p>
-            <p className="text-xs text-[#849585]">
-              Removes the tournament, its team snapshot, and all fixtures. Source leagues are untouched.
-            </p>
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 sm:p-6 space-y-3.5">
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-destructive">Delete Tournament</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Removes the tournament, its team snapshot, and all fixtures. Source leagues are completely untouched.
+              </p>
+            </div>
             {confirmDelete ? (
-              <div className="flex gap-2">
-                <Button onClick={remove} className="bg-red-500 text-white hover:bg-red-400 font-semibold">
-                  Confirm delete
-                </Button>
-                <Button variant="outline" className="border-[#3b4b3d] text-[#849585]" onClick={() => setConfirmDelete(false)}>
-                  Cancel
-                </Button>
+              <div className="flex gap-2.5">
+                <motion.div whileTap={{ scale: 0.96 }}>
+                  <Button
+                    onClick={remove}
+                    className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold h-9 px-4 text-xs shadow-xs"
+                  >
+                    Confirm delete
+                  </Button>
+                </motion.div>
+                <motion.div whileTap={{ scale: 0.96 }}>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-border/80 text-muted-foreground hover:bg-muted/70 h-9 px-4 text-xs"
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </Button>
+                </motion.div>
               </div>
             ) : (
-              <Button
-                onClick={() => setConfirmDelete(true)}
-                variant="outline"
-                className="border-red-500/40 text-red-400 hover:bg-red-500/10"
-              >
-                Delete
-              </Button>
+              <motion.div whileTap={{ scale: 0.96 }}>
+                <Button
+                  onClick={() => setConfirmDelete(true)}
+                  variant="outline"
+                  className="rounded-full border-destructive/40 text-destructive hover:bg-destructive/10 h-9 px-4 text-xs font-semibold gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Tournament</span>
+                </Button>
+              </motion.div>
             )}
           </div>
         </div>

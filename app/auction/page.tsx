@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Lock, Plus, Users, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth-provider";
-import Link from "next/link";
-import { Lock } from "lucide-react";
-
-const supabase = createSupabaseBrowserClient();
 
 interface LeagueRow {
   id: string;
@@ -25,20 +24,21 @@ interface LeagueRow {
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   setup: { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" },
   active: { label: "Live", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
-  complete: { label: "Complete", cls: "bg-muted text-muted-foreground border-border" },
+  complete: { label: "Complete", cls: "bg-muted text-muted-foreground border-border/60" },
 };
 
 export default function AuctionBrowsePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const shouldReduce = useReducedMotion();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
   const [leagues, setLeagues] = useState<LeagueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [memberLeagueIds, setMemberLeagueIds] = useState<Set<string>>(new Set());
 
   const [pendingLeague, setPendingLeague] = useState<LeagueRow | null>(null);
-  const [pendingAction, setPendingAction] = useState<"enter" | "spectate">(
-    "enter",
-  );
+  const [pendingAction, setPendingAction] = useState<"enter" | "spectate">("enter");
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -137,152 +137,254 @@ export default function AuctionBrowsePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 space-y-6">
+      {/* Page Header — Consistent across Hub */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Auctions</h1>
-          <p className="text-sm text-muted-foreground mt-1">Browse and join auction rooms.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Auctions
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+            Browse live auction rooms, manage your draft leagues, or spectate ongoing sessions.
+          </p>
         </div>
         <Link href="/auction/setup">
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer">
-            + New Auction
-          </Button>
+          <motion.div whileTap={shouldReduce ? undefined : { scale: 0.96 }}>
+            <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:brightness-105 active:scale-95 font-semibold text-xs px-4 h-9 gap-1.5 shadow-xs transition-all">
+              <Plus className="h-4 w-4" />
+              <span>New Auction</span>
+            </Button>
+          </motion.div>
         </Link>
       </div>
 
+      {/* Loading Skeletons */}
       {loading && (
         <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 animate-pulse"
+              className="rounded-2xl border border-border/60 bg-card/60 p-5 sm:p-6 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div className="space-y-2 min-w-0 flex-1">
+              <div className="space-y-2.5 min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-48 rounded bg-muted" />
-                  <div className="h-5 w-14 rounded-full bg-muted" />
+                  <div className="h-6 w-48 rounded-lg bg-muted/60" />
+                  <div className="h-5 w-16 rounded-full bg-muted/40" />
                 </div>
-                <div className="h-3 w-24 rounded bg-muted" />
+                <div className="h-3.5 w-32 rounded bg-muted/40" />
               </div>
-              <div className="h-8 w-16 rounded bg-muted shrink-0 ml-4" />
+              <div className="h-9 w-24 rounded-full bg-muted/60 shrink-0" />
             </div>
           ))}
         </div>
       )}
 
+      {/* Empty State */}
       {!loading && leagues.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg mb-2">No auctions yet.</p>
-          <p className="text-sm">
-            <Link href="/auction/setup" className="text-primary hover:underline font-medium">
-              Create the first one
-            </Link>
+        <div className="text-center py-20 rounded-2xl border border-dashed border-border/70 bg-card/40 p-8 max-w-xl mx-auto">
+          <div className="mx-auto w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
+            <Users className="h-6 w-6" />
+          </div>
+          <p className="text-base font-semibold text-foreground mb-1">No auctions yet</p>
+          <p className="text-sm text-muted-foreground mb-5">
+            Create an auction room to draft FPL squads in realtime with your league managers.
           </p>
+          <Link href="/auction/setup">
+            <motion.div whileTap={shouldReduce ? undefined : { scale: 0.96 }} className="inline-block">
+              <Button size="sm" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-4">
+                Create First Auction
+              </Button>
+            </motion.div>
+          </Link>
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Full-Row Auction Cards List */}
+      <div className="space-y-3.5">
         {leagues.map((league) => {
-          const statusInfo = STATUS_LABELS[league.status ?? "setup"] ?? { label: "Setup", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30" };
+          const statusInfo =
+            STATUS_LABELS[league.status ?? "setup"] ?? {
+              label: "Setup",
+              cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+            };
           const isOwner = user?.id === league.created_by;
-          return (
-            <div
-              key={league.id}
-              className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 shadow-sm"
-            >
-              <div className="space-y-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-semibold text-foreground truncate">
-                    {league.name}
-                  </span>
-                  <Badge className={`text-xs border ${statusInfo.cls}`}>
-                    {statusInfo.label}
-                  </Badge>
-                  {isOwner && (
-                    <Badge className="text-xs border bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30">
-                      Your auction
-                    </Badge>
-                  )}
-                  {league.room_password && !isOwner && (
-                    <Badge className="text-xs border bg-muted text-muted-foreground border-border inline-flex items-center gap-1">
-                      <Lock className="w-3 h-3" /> Password
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {league.participant_count} team{league.participant_count === 1 ? "" : "s"}
-                </p>
-              </div>
+          const isMember = memberLeagueIds.has(league.id);
 
-              <div className="flex items-center gap-2 shrink-0 ml-4">
-                {league.status === "active" && !isOwner && !memberLeagueIds.has(league.id) && (
-                  <Button
-                    onClick={() => handleSpectate(league)}
-                    size="sm"
-                    variant="outline"
-                    className="border-primary/40 text-primary hover:bg-primary/10 cursor-pointer"
-                  >
-                    Spectate
-                  </Button>
-                )}
-                <Button
-                  onClick={() => handleEnter(league)}
-                  size="sm"
-                  variant="outline"
-                  className="border-border text-foreground hover:bg-muted font-medium cursor-pointer"
-                >
-                  {isOwner ? "Manage" : "Enter"}
-                </Button>
+          return (
+            <motion.div
+              key={league.id}
+              whileHover={shouldReduce ? undefined : { y: -1 }}
+              whileTap={shouldReduce ? undefined : { scale: 0.998 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.2 }}
+              style={{
+                boxShadow:
+                  "0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
+              }}
+              className="group rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-5 sm:p-6 hover:border-primary/40 hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                {/* Left: Identity and Badges */}
+                <div className="space-y-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground group-hover:text-primary transition-colors truncate">
+                      {league.name}
+                    </h2>
+                    <Badge className={`text-[11px] font-medium border rounded-full px-2.5 py-0.5 ${statusInfo.cls}`}>
+                      {statusInfo.label}
+                    </Badge>
+                    {isOwner && (
+                      <Badge className="text-[11px] font-medium border rounded-full px-2.5 py-0.5 bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/30">
+                        Your auction
+                      </Badge>
+                    )}
+                    {isMember && !isOwner && (
+                      <Badge className="text-[11px] font-medium border rounded-full px-2.5 py-0.5 bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30">
+                        Joined
+                      </Badge>
+                    )}
+                    {league.room_password && !isOwner && (
+                      <Badge className="text-[11px] font-medium border rounded-full px-2 py-0.5 bg-muted text-muted-foreground border-border/60 inline-flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-muted-foreground" />
+                        <span>Password</span>
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                      <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="tabular-nums font-semibold">{league.participant_count}</span>
+                      <span>{league.participant_count === 1 ? "team" : "teams"}</span>
+                    </span>
+                    <span>·</span>
+                    <span className="text-[11px]">
+                      Created {league.created_at ? new Date(league.created_at).toLocaleDateString() : "recently"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Action Buttons with clear hover states */}
+                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                  {league.status === "active" && !isOwner && !isMember && (
+                    <motion.div whileTap={shouldReduce ? undefined : { scale: 0.96 }} className="flex-1 sm:flex-initial">
+                      <Button
+                        onClick={() => handleSpectate(league)}
+                        size="sm"
+                        variant="outline"
+                        className="w-full sm:w-auto rounded-full border border-border/80 bg-background/80 hover:bg-muted hover:border-foreground/40 hover:text-foreground text-foreground h-8.5 px-4 text-xs font-medium transition-all shadow-2xs"
+                      >
+                        Spectate
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  <motion.div whileTap={shouldReduce ? undefined : { scale: 0.96 }} className="flex-1 sm:flex-initial">
+                    {isOwner ? (
+                      <Button
+                        onClick={() => handleEnter(league)}
+                        size="sm"
+                        className="w-full sm:w-auto rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:brightness-105 active:scale-95 font-semibold h-8.5 px-4 text-xs gap-1 shadow-xs transition-all"
+                      >
+                        <span>Manage</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleEnter(league)}
+                        size="sm"
+                        variant={isMember ? "default" : "outline"}
+                        className={
+                          isMember
+                            ? "w-full sm:w-auto rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:brightness-105 active:scale-95 font-semibold h-8.5 px-4 text-xs gap-1 shadow-xs transition-all"
+                            : "w-full sm:w-auto rounded-full border border-border/80 bg-background/80 hover:bg-muted hover:border-foreground/40 hover:text-foreground text-foreground h-8.5 px-4 text-xs font-medium transition-all shadow-2xs"
+                        }
+                      >
+                        <span>Enter</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </motion.div>
+                </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
-      {pendingLeague && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm space-y-4 shadow-xl">
-            <h2 className="text-lg font-semibold text-foreground">Room Password</h2>
-            <p className="text-sm text-muted-foreground">
-              <span className="text-foreground font-medium">{pendingLeague.name}</span>{" "}
-              {pendingAction === "spectate"
-                ? "requires a password to watch."
-                : "requires a password to join."}
-            </p>
-            <Input
-              ref={inputRef}
-              type="password"
-              placeholder="Enter room password"
-              value={passwordInput}
-              onChange={(e) => {
-                setPasswordInput(e.target.value);
-                setPasswordError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && submitPassword()}
-              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+      {/* Password Modal (Apple Surface + Motion) */}
+      <AnimatePresence>
+        {pendingLeague && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => setPendingLeague(null)}
             />
-            {passwordError && (
-              <p className="text-xs text-destructive">{passwordError}</p>
-            )}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setPendingLeague(null)}
-                variant="outline"
-                className="flex-1 border-border text-foreground hover:bg-muted cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={submitPassword}
-                disabled={!passwordInput.trim()}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer"
-              >
-                {pendingAction === "spectate" ? "Watch" : "Enter"}
-              </Button>
-            </div>
+            <motion.div
+              initial={shouldReduce ? false : { opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={shouldReduce ? undefined : { opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.25 }}
+              className="relative bg-card/95 border border-border/80 rounded-2xl p-6 sm:p-7 w-full max-w-sm space-y-4 shadow-2xl backdrop-blur-xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-foreground tracking-tight">Room Password</h2>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    <span className="text-foreground font-semibold">{pendingLeague.name}</span>{" "}
+                    {pendingAction === "spectate"
+                      ? "requires a password to spectate."
+                      : "requires a password to enter."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPendingLeague(null)}
+                  className="rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  ref={inputRef}
+                  type="password"
+                  placeholder="Enter room password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError("");
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && submitPassword()}
+                  className="rounded-xl bg-muted/40 border-border/70 text-foreground placeholder:text-muted-foreground h-10 px-3.5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                />
+                {passwordError && (
+                  <p className="text-xs font-medium text-destructive">{passwordError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-1">
+                <Button
+                  onClick={() => setPendingLeague(null)}
+                  variant="outline"
+                  className="flex-1 rounded-full border border-border/80 text-foreground hover:bg-muted font-medium h-9 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={submitPassword}
+                  disabled={!passwordInput.trim()}
+                  className="flex-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:brightness-105 active:scale-95 font-semibold h-9 text-xs shadow-xs transition-all"
+                >
+                  {pendingAction === "spectate" ? "Watch" : "Enter"}
+                </Button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Info, SlidersHorizontal, ClipboardList, X } from "lucide-react";
+import { Info, SlidersHorizontal, ClipboardList, X, ChevronUp } from "lucide-react";
 import { applyIndexToPlayers } from "@/lib/index-calculator";
 import { parseShortlist, type ShortlistMatch } from "@/lib/player-shortlist";
 import { cn } from "@/lib/utils";
@@ -255,9 +256,16 @@ const DEFAULT_WEIGHTS: Record<keyof WeightConfig, number> = Object.fromEntries(
   ALL_STAT_KEYS.map((k) => [k, 1]),
 ) as Record<keyof WeightConfig, number>;
 
+// ─── Spring presets ────────────────────────────────────────────────────────────
+const SPRING_DEFAULT = { type: "spring" as const, damping: 28, stiffness: 380, mass: 0.8 };
+const SPRING_DRAWER = { type: "spring" as const, damping: 32, stiffness: 320, mass: 0.9 };
+// Apple §4: Critically damped (bounce: 0), snappy 0.26s response for reordering without lag
+const SPRING_ROW = { type: "spring" as const, bounce: 0, duration: 0.26 };
+
 function InfoTip({ text }: Readonly<{ text: string }>) {
   const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
+  const shouldReduce = useReducedMotion();
 
   return (
     <>
@@ -276,18 +284,23 @@ function InfoTip({ text }: Readonly<{ text: string }>) {
       </span>
       {coords &&
         createPortal(
-          <div
+          <motion.div
+            initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 4 }}
+            animate={shouldReduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, y: 4 }}
+            transition={SPRING_DEFAULT}
             style={{
               position: "fixed",
               left: coords.x,
               top: coords.y - 8,
               transform: "translate(-50%, -100%)",
               zIndex: 9999,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
-            className="w-52 rounded bg-popover border border-border px-2 py-1.5 text-[11px] text-popover-foreground whitespace-normal text-center shadow-lg pointer-events-none"
+            className="w-52 rounded-lg bg-popover/90 backdrop-blur-xl border border-border/60 px-2.5 py-2 text-[11px] text-popover-foreground whitespace-normal text-center pointer-events-none"
           >
             {text}
-          </div>,
+          </motion.div>,
           document.body,
         )}
     </>
@@ -313,6 +326,8 @@ type ShortlistState = {
 export function IndexBuilderClient({
   players,
 }: Readonly<{ players: EnrichedPlayer[] }>) {
+  const shouldReduce = useReducedMotion();
+
   const [weights, setWeights] = useState<Record<keyof WeightConfig, number>>(
     () => ({
       ...DEFAULT_WEIGHTS,
@@ -402,12 +417,10 @@ export function IndexBuilderClient({
   }, [ranked.length]);
 
   function setWeight(key: keyof WeightConfig, val: number) {
-    setActivePreset("");
     setWeights((prev) => ({ ...prev, [key]: val }));
   }
 
   function toggleStat(key: keyof WeightConfig) {
-    setActivePreset("");
     setActiveStats((prev) => {
       if (prev.has(key) && prev.size <= 1) return prev;
       const next = new Set(prev);
@@ -465,87 +478,109 @@ export function IndexBuilderClient({
   const sidebarContent = (
     <>
       {/* Header row */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-foreground">Stat Weighting</h2>
-        <button
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-semibold text-foreground tracking-tight">Stat Weighting</h2>
+        <motion.button
           onClick={resetAll}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-primary/10 active:scale-95"
+          whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+          transition={SPRING_DEFAULT}
         >
           Reset
-        </button>
+        </motion.button>
       </div>
 
       {/* Presets */}
-      <div className="mb-4">
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+      <div className="mb-5">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2.5 font-medium">
           Presets
         </div>
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {PRESETS.map((preset) => (
-            <button
+            <motion.button
               key={preset.label}
               onClick={() => applyPreset(preset)}
-              className={`text-xs px-2.5 py-1 rounded border transition-colors ${
+              whileTap={shouldReduce ? undefined : { scale: 0.94 }}
+              transition={SPRING_DEFAULT}
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-full border transition-all duration-150 font-medium",
                 activePreset === preset.label
-                  ? "bg-primary text-primary-foreground border-primary font-medium"
-                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border",
+              )}
             >
               {preset.label}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
 
       {/* Metric picker toggle */}
-      <div ref={pickerRef} className="mb-4">
-        <button
+      <div ref={pickerRef} className="mb-5">
+        <motion.button
           onClick={() => setMetricPickerOpen((o) => !o)}
-          className="w-full flex items-center justify-between text-xs border border-border rounded px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          whileTap={shouldReduce ? undefined : { scale: 0.98 }}
+          transition={SPRING_DEFAULT}
+          className="w-full flex items-center justify-between text-xs border border-border/60 rounded-xl px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-150"
         >
           <span>Metrics ({activeStats.size} active)</span>
-          <span className="text-muted-foreground">{metricPickerOpen ? "▴" : "▾"}</span>
-        </button>
+          <motion.span
+            animate={{ rotate: metricPickerOpen ? 180 : 0 }}
+            transition={SPRING_DEFAULT}
+            className="text-muted-foreground opacity-70"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </motion.span>
+        </motion.button>
 
-        {metricPickerOpen && (
-          <div className="mt-2 border border-border rounded-lg bg-card p-3 shadow-md">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-              {STAT_GROUPS.map(({ group, stats }) => (
-                <div key={group} className="mb-3">
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 pb-0.5 border-b border-border">
-                    {group}
+        <AnimatePresence>
+          {metricPickerOpen && (
+            <motion.div
+              initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: -6 }}
+              animate={shouldReduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: -6 }}
+              transition={SPRING_DEFAULT}
+              className="mt-2 border border-border/60 rounded-xl bg-card/80 backdrop-blur-sm p-3.5 shadow-lg"
+              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06)" }}
+            >
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                {STAT_GROUPS.map(({ group, stats }) => (
+                  <div key={group} className="mb-3">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2 pb-0.5 border-b border-border/40 font-medium">
+                      {group}
+                    </div>
+                    <div className="space-y-1.5">
+                      {stats.map(({ key, label, inverted }) => (
+                        <label
+                          key={key}
+                          className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-primary transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-primary shrink-0"
+                            checked={activeStats.has(key)}
+                            onChange={() => toggleStat(key)}
+                          />
+                          <span className="leading-tight flex items-center gap-1">
+                            {label}
+                            {inverted && (
+                              <span className="text-[10px] text-muted-foreground">
+                                ↓
+                              </span>
+                            )}
+                            {METRIC_TOOLTIPS[key] && (
+                              <InfoTip text={METRIC_TOOLTIPS[key]} />
+                            )}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {stats.map(({ key, label, inverted }) => (
-                      <label
-                        key={key}
-                        className="flex items-center gap-2 cursor-pointer text-xs text-foreground hover:text-primary"
-                      >
-                        <input
-                          type="checkbox"
-                          className="accent-primary shrink-0"
-                          checked={activeStats.has(key)}
-                          onChange={() => toggleStat(key)}
-                        />
-                        <span className="leading-tight flex items-center gap-1">
-                          {label}
-                          {inverted && (
-                            <span className="text-[10px] text-muted-foreground">
-                              ↓
-                            </span>
-                          )}
-                          {METRIC_TOOLTIPS[key] && (
-                            <InfoTip text={METRIC_TOOLTIPS[key]} />
-                          )}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Sliders — only for active stats */}
@@ -553,16 +588,22 @@ export function IndexBuilderClient({
         {ALL_STATS.filter((s) => activeStats.has(s.key)).map(
           ({ key, label }) => (
             <div key={key}>
-              <div className="flex justify-between mb-1.5">
-                <span className="text-xs text-foreground flex items-center gap-1">
+              <div className="flex justify-between mb-2">
+                <span className="text-xs text-foreground flex items-center gap-1 tracking-tight">
                   {label}
                   {METRIC_TOOLTIPS[key] && (
                     <InfoTip text={METRIC_TOOLTIPS[key]} />
                   )}
                 </span>
-                <span className="text-xs font-mono text-primary font-semibold">
+                <motion.span
+                  key={weights[key]}
+                  initial={shouldReduce ? undefined : { scale: 1.3, opacity: 0.6 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={SPRING_DEFAULT}
+                  className="text-xs font-mono text-primary font-semibold tabular-nums"
+                >
                   {weights[key]}
-                </span>
+                </motion.span>
               </div>
               <Slider
                 min={1}
@@ -572,7 +613,7 @@ export function IndexBuilderClient({
                 onValueChange={(v) =>
                   setWeight(key, typeof v === "number" ? v : (v[0] ?? 1))
                 }
-                className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
+                className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_[role=slider]]:shadow-sm [&_[role=slider]]:transition-transform [&_[role=slider]]:active:scale-110"
               />
             </div>
           ),
@@ -583,11 +624,12 @@ export function IndexBuilderClient({
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 sm:px-6 py-4 sm:py-6 pb-14 lg:pb-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+      {/* Page header */}
+      <div className="mb-5 sm:mb-7">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
           Index Builder
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
           Select metrics and adjust weights (1–10) to generate a custom
           performance index for auction valuation.
         </p>
@@ -595,32 +637,39 @@ export function IndexBuilderClient({
 
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4 sm:gap-6">
         {/* Left: Weight sliders — desktop */}
-        <aside className="hidden lg:block rounded-lg border border-border bg-card p-4 sm:p-5 h-fit shadow-sm">
+        <aside className="hidden lg:block rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-5 h-fit shadow-sm"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.06)" }}
+        >
           {sidebarContent}
         </aside>
 
         {/* Right: Rankings */}
-        <div className="rounded-lg border border-border bg-card overflow-hidden shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-border">
-            <h2 className="font-semibold text-sm sm:text-base text-foreground">
+        <div className="rounded-2xl border border-border/60 bg-card overflow-hidden"
+          style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06)" }}
+        >
+          {/* Toolbar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 bg-muted/30">
+            <h2 className="font-semibold text-sm sm:text-base text-foreground tracking-tight">
               Rankings
             </h2>
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openShortlist}
-                className={cn(
-                  "text-[11px] text-muted-foreground",
-                  shortlistActive &&
-                    "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
-                )}
-              >
-                <ClipboardList className="size-3.5" />
-                {shortlistActive
-                  ? `Shortlist · ${shortlistCount}`
-                  : "Paste list"}
-              </Button>
+              <motion.div whileTap={shouldReduce ? undefined : { scale: 0.96 }} transition={SPRING_DEFAULT}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openShortlist}
+                  className={cn(
+                    "text-[11px] text-muted-foreground rounded-full border-border/60 transition-all duration-150",
+                    shortlistActive &&
+                      "border-primary/50 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+                  )}
+                >
+                  <ClipboardList className="size-3.5" />
+                  {shortlistActive
+                    ? `Shortlist · ${shortlistCount}`
+                    : "Paste list"}
+                </Button>
+              </motion.div>
               <span className="text-[11px] sm:text-xs text-muted-foreground">
                 {ranked.length} players
               </span>
@@ -631,68 +680,94 @@ export function IndexBuilderClient({
           </div>
 
           {/* Unmatched names from the active shortlist */}
-          {shortlist && shortlist.unmatched.length > 0 && (
-            <div className="flex items-start gap-2 border-b border-border bg-amber-500/10 px-4 sm:px-5 py-2 text-[11px] text-amber-700 dark:text-amber-400">
-              <span className="flex-1 leading-relaxed break-words">
-                {shortlist.unmatched.length === 1
-                  ? "1 pasted name matched nothing: "
-                  : `${shortlist.unmatched.length} pasted names matched nothing: `}
-                <span className="font-mono">
-                  {shortlist.unmatched.slice(0, 6).join(", ")}
-                  {shortlist.unmatched.length > 6
-                    ? ` +${shortlist.unmatched.length - 6} more`
-                    : ""}
-                </span>
-              </span>
-              <button
-                type="button"
-                aria-label="Dismiss unmatched names notice"
-                onClick={() =>
-                  setShortlist((s) => (s ? { ...s, unmatched: [] } : s))
-                }
-                className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+          <AnimatePresence>
+            {shortlist && shortlist.unmatched.length > 0 && (
+              <motion.div
+                initial={shouldReduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={shouldReduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                transition={SPRING_DEFAULT}
+                className="flex items-start gap-2 border-b border-border bg-amber-500/10 px-4 sm:px-5 py-2 text-[11px] text-amber-700 dark:text-amber-400"
               >
-                <X className="size-3.5" />
-              </button>
-            </div>
-          )}
+                <span className="flex-1 leading-relaxed break-words">
+                  {shortlist.unmatched.length === 1
+                    ? "1 pasted name matched nothing: "
+                    : `${shortlist.unmatched.length} pasted names matched nothing: `}
+                  <span className="font-mono">
+                    {shortlist.unmatched.slice(0, 6).join(", ")}
+                    {shortlist.unmatched.length > 6
+                      ? ` +${shortlist.unmatched.length - 6} more`
+                      : ""}
+                  </span>
+                </span>
+                <motion.button
+                  type="button"
+                  aria-label="Dismiss unmatched names notice"
+                  onClick={() =>
+                    setShortlist((s) => (s ? { ...s, unmatched: [] } : s))
+                  }
+                  whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                  transition={SPRING_DEFAULT}
+                  className="shrink-0 text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+                >
+                  <X className="size-3.5" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Desktop table */}
-          <div className="hidden lg:block overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto overflow-y-clip">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-muted/80 text-muted-foreground border-b border-border">
+              <thead className="bg-muted/60 text-muted-foreground border-b border-border/50">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-10">
+                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-medium w-10">
                     #
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] uppercase">
+                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-medium">
                     Player
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-14">
+                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-medium w-14">
                     Pos
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] uppercase w-16">
+                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-medium w-16">
                     Pts
                   </th>
-                  <th className="px-4 py-2.5 text-left text-[10px] uppercase">
+                  <th className="px-4 py-3 text-left text-[10px] uppercase tracking-widest font-medium">
                     Key Stats
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] uppercase w-20">
+                  <th className="px-4 py-3 text-right text-[10px] uppercase tracking-widest font-medium w-20">
                     Score
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {displayed.map((p, i) => (
-                  <tr
+                  <motion.tr
                     key={p.id}
-                    className={`border-b border-border/40 hover:bg-muted/50 transition-colors ${i % 2 === 0 ? "bg-card" : "bg-muted/30"}`}
+                    layout={shouldReduce ? false : "position"}
+                    initial={shouldReduce ? undefined : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={
+                      shouldReduce
+                        ? { duration: 0 }
+                        : {
+                            layout: SPRING_ROW,
+                            opacity: { duration: 0.15 },
+                          }
+                    }
+                    style={{ willChange: "transform" }}
+                    className={cn(
+                      "border-b border-border/30 transition-colors duration-100 transform-gpu",
+                      i % 2 === 0 ? "bg-card" : "bg-muted/20",
+                      "hover:bg-primary/5",
+                    )}
                   >
                     <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
                       {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">
+                      <div className="font-medium text-foreground tracking-tight">
                         {p.web_name}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
@@ -701,20 +776,20 @@ export function IndexBuilderClient({
                     </td>
                     <td className="px-4 py-3">
                       <Badge
-                        className={`text-[10px] ${POSITION_COLORS[p.position]}`}
+                        className={cn("text-[10px] rounded-full", POSITION_COLORS[p.position])}
                       >
                         {p.position}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-foreground">
+                    <td className="px-4 py-3 font-mono text-xs text-foreground tabular-nums">
                       {p.total_points}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      xGI:{" "}
+                      xGI{" "}
                       {Number.parseFloat(
                         p.expected_goal_involvements,
                       ).toFixed(2)}{" "}
-                      · PPG: {p.points_per_game} · ICT:{" "}
+                      · PPG {p.points_per_game} · ICT{" "}
                       {Number.parseFloat(p.ict_index).toFixed(1)}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -722,7 +797,7 @@ export function IndexBuilderClient({
                         {(p.index_score * 100).toFixed(1)}
                       </span>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -731,15 +806,27 @@ export function IndexBuilderClient({
           {/* Mobile card list */}
           <div className="lg:hidden">
             {displayed.map((p, i) => (
-              <div
+              <motion.div
                 key={p.id}
-                className="flex items-center gap-3 px-4 py-3 border-b border-border/40"
+                layout={shouldReduce ? false : "position"}
+                initial={shouldReduce ? undefined : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={
+                  shouldReduce
+                    ? { duration: 0 }
+                    : {
+                        layout: SPRING_ROW,
+                        opacity: { duration: 0.15 },
+                      }
+                }
+                style={{ willChange: "transform" }}
+                className="flex items-center gap-3 px-4 py-3.5 border-b border-border/30 active:bg-primary/5 transform-gpu"
               >
-                <span className="text-xs font-mono text-muted-foreground w-6 shrink-0">
+                <span className="text-xs font-mono text-muted-foreground w-6 shrink-0 tabular-nums">
                   {String(pageIndex * PAGE_SIZE + i + 1).padStart(2, "0")}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-foreground text-sm truncate">
+                  <div className="font-medium text-foreground text-sm truncate tracking-tight">
                     {p.web_name}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
@@ -747,43 +834,47 @@ export function IndexBuilderClient({
                   </div>
                 </div>
                 <Badge
-                  className={`text-[10px] shrink-0 ${POSITION_COLORS[p.position]}`}
+                  className={cn("text-[10px] shrink-0 rounded-full", POSITION_COLORS[p.position])}
                 >
                   {p.position}
                 </Badge>
                 <span className="font-mono font-bold text-primary text-sm tabular-nums w-14 text-right shrink-0">
                   {(p.index_score * 100).toFixed(1)}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 text-sm text-muted-foreground border-t border-border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-5 py-3 sm:py-4 text-sm text-muted-foreground border-t border-border/50 bg-muted/20">
             <span className="text-xs sm:text-sm">
               Showing {pageIndex * PAGE_SIZE + 1}–
               {Math.min((pageIndex + 1) * PAGE_SIZE, ranked.length)} of{" "}
               {ranked.length}
             </span>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-border text-foreground hover:bg-muted text-xs sm:text-sm"
-                disabled={pageIndex === 0}
-                onClick={() => setPageIndex((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-border text-foreground hover:bg-muted text-xs sm:text-sm"
-                disabled={pageIndex >= pageCount - 1}
-                onClick={() => setPageIndex((p) => p + 1)}
-              >
-                Next
-              </Button>
+              <motion.div whileTap={shouldReduce ? undefined : { scale: 0.95 }} transition={SPRING_DEFAULT}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border/60 text-foreground hover:bg-muted text-xs sm:text-sm rounded-full"
+                  disabled={pageIndex === 0}
+                  onClick={() => setPageIndex((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+              </motion.div>
+              <motion.div whileTap={shouldReduce ? undefined : { scale: 0.95 }} transition={SPRING_DEFAULT}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-border/60 text-foreground hover:bg-muted text-xs sm:text-sm rounded-full"
+                  disabled={pageIndex >= pageCount - 1}
+                  onClick={() => setPageIndex((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -810,23 +901,31 @@ export function IndexBuilderClient({
             aria-label="Player list, one player per line"
             spellCheck={false}
             placeholder={"Acheampong (CHE)\nAffengruber (FUL)\nAjer (BRE)"}
-            className="h-56 w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+            className="h-56 w-full resize-y rounded-xl border border-input bg-transparent px-3 py-2 font-mono text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           />
 
-          {shortlistFeedback && shortlistFeedback.ids.length === 0 && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400">
-              <p className="font-medium">
-                Nothing matched — check the spelling or club code.
-              </p>
-              {shortlistFeedback.unmatched.length > 0 && (
-                <ul className="mt-1.5 max-h-32 list-disc overflow-y-auto pl-4 font-mono">
-                  {shortlistFeedback.unmatched.map((entry, i) => (
-                    <li key={`${i}-${entry}`}>{entry}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+          <AnimatePresence>
+            {shortlistFeedback && shortlistFeedback.ids.length === 0 && (
+              <motion.div
+                initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                transition={SPRING_DEFAULT}
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-400"
+              >
+                <p className="font-medium">
+                  Nothing matched — check the spelling or club code.
+                </p>
+                {shortlistFeedback.unmatched.length > 0 && (
+                  <ul className="mt-1.5 max-h-32 list-disc overflow-y-auto pl-4 font-mono">
+                    {shortlistFeedback.unmatched.map((entry, i) => (
+                      <li key={`${i}-${entry}`}>{entry}</li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <DialogFooter>
             {shortlist && (
@@ -857,43 +956,68 @@ export function IndexBuilderClient({
       </Dialog>
 
       {/* Mobile weight sliders trigger */}
-      <button
-        className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-card border border-primary/60 rounded-full px-4 py-2.5 text-xs text-foreground hover:text-primary hover:border-primary shadow-lg transition-all"
+      <motion.button
+        className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-card/90 backdrop-blur-xl border border-primary/50 rounded-full px-4 py-2.5 text-xs text-foreground hover:text-primary hover:border-primary shadow-lg transition-colors"
+        style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)" }}
         onClick={() => setDrawerOpen(true)}
+        whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+        transition={SPRING_DEFAULT}
       >
         <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
         <span>Sliders ({activeStats.size})</span>
-        <span className="text-primary">▴</span>
-      </button>
+        <motion.span
+          animate={{ rotate: drawerOpen ? 180 : 0 }}
+          transition={SPRING_DEFAULT}
+          className="text-primary"
+        >
+          <ChevronUp className="w-3 h-3" />
+        </motion.span>
+      </motion.button>
 
       {/* Mobile weight sliders drawer */}
-      {drawerOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-            onClick={() => setDrawerOpen(false)}
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card rounded-t-xl border border-border max-h-[75vh] overflow-y-auto overscroll-contain shadow-2xl">
-            <div className="sticky top-0 bg-card z-10 rounded-t-xl">
-              <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-1 rounded-full bg-muted-foreground/40 mx-auto" />
-                  <h3 className="text-sm font-semibold text-foreground">
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduce ? 0.1 : 0.2 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <motion.div
+              initial={shouldReduce ? { opacity: 0 } : { y: "100%" }}
+              animate={shouldReduce ? { opacity: 1 } : { y: 0 }}
+              exit={shouldReduce ? { opacity: 0 } : { y: "100%" }}
+              transition={SPRING_DRAWER}
+              className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-3xl rounded-t-2xl border-t border-x border-border/60 max-h-[80vh] overflow-y-auto overscroll-contain"
+              style={{ boxShadow: "0 -8px 48px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08)" }}
+            >
+              {/* Drawer handle + header */}
+              <div className="sticky top-0 bg-card/80 backdrop-blur-xl z-10 rounded-t-2xl border-b border-border/40">
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-9 h-1 rounded-full bg-muted-foreground/30" />
+                </div>
+                <div className="flex items-center justify-between px-4 pt-1 pb-3">
+                  <h3 className="text-sm font-semibold text-foreground tracking-tight">
                     Stat Weighting
                   </h3>
+                  <motion.button
+                    onClick={() => setDrawerOpen(false)}
+                    whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                    transition={SPRING_DEFAULT}
+                    className="p-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/60 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
                 </div>
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="p-1 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
-            </div>
-            <div className="p-4">{sidebarContent}</div>
-          </div>
-        </>
-      )}
+              <div className="p-4 pb-8">{sidebarContent}</div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

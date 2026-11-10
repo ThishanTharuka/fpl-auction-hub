@@ -126,15 +126,15 @@ export function TournamentFixtures({
   return (
     <div className="space-y-4">
       {/* Control bar: Gameweek Quick Switcher & Group Filters */}
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:p-4 shadow-xs">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/90 dark:bg-card/80 backdrop-blur-md p-4 sm:p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Group Filter Tabs (if tournament has Group A & B) */}
           {hasGroups ? (
-            <div className="flex items-center rounded-md border border-border bg-muted p-0.5 text-xs font-medium">
+            <div className="inline-flex items-center rounded-full border border-border/50 bg-muted/60 p-1 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setGroupFilter("all")}
-                className={`rounded px-2.5 py-1 transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   groupFilter === "all"
                     ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -145,7 +145,7 @@ export function TournamentFixtures({
               <button
                 type="button"
                 onClick={() => setGroupFilter("A")}
-                className={`rounded px-2.5 py-1 transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   groupFilter === "A"
                     ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -156,7 +156,7 @@ export function TournamentFixtures({
               <button
                 type="button"
                 onClick={() => setGroupFilter("B")}
-                className={`rounded px-2.5 py-1 transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   groupFilter === "B"
                     ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:text-foreground"

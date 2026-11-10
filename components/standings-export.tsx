@@ -327,23 +327,23 @@ export function StandingsExport({
             <Button
               size="sm"
               variant="outline"
-              className="border-[#3b4b3d] text-[#849585] hover:bg-[#132030] hover:text-[#d6e4f9] aria-expanded:bg-[#132030] aria-expanded:text-[#d6e4f9] max-sm:size-8 max-sm:p-0"
+              className="rounded-full border-border/80 text-foreground hover:bg-muted/70 aria-expanded:bg-muted/70 max-sm:size-8 max-sm:p-0 h-8 px-3 text-xs font-medium gap-1.5"
             />
           }
         >
           <Camera className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only">Export as image</span>
         </PopoverTrigger>
-        <PopoverContent className="border-[#3b4b3d] bg-[#0f1c2c] text-[#d6e4f9]">
+        <PopoverContent className="rounded-2xl border-border/70 bg-card/95 backdrop-blur-xl text-foreground shadow-2xl p-4 w-64">
           <div className="space-y-3">
             <div>
-              <p className="mb-1.5 text-xs font-medium tracking-wide text-[#849585] uppercase">
+              <p className="mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Include
               </p>
               <div
                 role="group"
                 aria-label="Groups to include"
-                className="flex overflow-hidden rounded-md border border-[#3b4b3d] text-xs"
+                className="flex overflow-hidden rounded-xl border border-border/70 bg-muted/40 p-0.5 text-xs"
               >
                 {(["both", "A", "B"] as const).map((s) => (
                   <button
@@ -351,10 +351,10 @@ export function StandingsExport({
                     type="button"
                     onClick={() => setScope(s)}
                     aria-pressed={scope === s}
-                    className={`flex-1 px-2 py-1.5 font-medium transition-colors ${
+                    className={`flex-1 py-1.5 rounded-lg font-medium transition-colors ${
                       scope === s
-                        ? "bg-[#00e478] text-[#003919]"
-                        : "text-[#849585] hover:bg-[#132030] hover:text-[#d6e4f9]"
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {s === "both" ? "A + B" : `Group ${s}`}
@@ -369,7 +369,7 @@ export function StandingsExport({
                 variant="outline"
                 onClick={handleDownload}
                 disabled={busy !== null}
-                className="flex-1 border-[#3b4b3d] text-[#d6e4f9] hover:bg-[#132030]"
+                className="flex-1 rounded-full border-border/70 text-foreground hover:bg-muted/60 h-8 text-xs font-medium gap-1.5"
               >
                 {busy === "png" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -382,7 +382,7 @@ export function StandingsExport({
                 size="sm"
                 onClick={handleShare}
                 disabled={busy !== null}
-                className="flex-1 bg-[#00e478] font-semibold text-[#003919] hover:bg-[#00e478]/90"
+                className="flex-1 rounded-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90 h-8 text-xs gap-1.5"
               >
                 {busy === "share" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />

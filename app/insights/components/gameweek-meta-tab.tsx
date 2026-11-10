@@ -17,20 +17,20 @@ export function GameweekMetaTab({ meta, currentGw }: GameweekMetaTabProps) {
       {/* Top Banner */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Scoring benchmark */}
-        <div className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-muted-foreground uppercase font-semibold">
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-medium text-muted-foreground">
             <span>Gameweek {currentGw} Scoring</span>
             <Trophy className="w-4 h-4 text-amber-400" />
           </div>
           <div className="mt-3 flex items-baseline justify-between">
             <div>
-              <div className="text-2xl font-black text-foreground">
+              <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
                 {meta.averageScore} pts
               </div>
               <div className="text-[11px] text-muted-foreground">Average Entry Score</div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-black text-emerald-700 dark:text-primary">
+              <div className="text-2xl font-bold tracking-tight text-emerald-700 tabular-nums dark:text-primary">
                 {meta.highestScore || "N/A"}
               </div>
               <div className="text-[11px] text-muted-foreground">Highest World Score</div>
@@ -39,8 +39,8 @@ export function GameweekMetaTab({ meta, currentGw }: GameweekMetaTabProps) {
         </div>
 
         {/* Most Captained */}
-        <div className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-muted-foreground uppercase font-semibold">
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-medium text-muted-foreground">
             <span>Most Captained</span>
             <Crown className="w-4 h-4 text-amber-700 dark:text-amber-400" />
           </div>
@@ -75,13 +75,13 @@ export function GameweekMetaTab({ meta, currentGw }: GameweekMetaTabProps) {
         </div>
 
         {/* Transfer Volume */}
-        <div className="rounded-xl border border-border bg-card p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs text-muted-foreground uppercase font-semibold">
+        <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4.5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-medium text-muted-foreground">
             <span>Market Activity</span>
             <ArrowRightLeft className="w-4 h-4 text-sky-700 dark:text-sky-400" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-foreground">
+            <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
               {meta.totalTransfersMade ? meta.totalTransfersMade.toLocaleString() : "0"}
             </div>
             <div className="text-[11px] text-muted-foreground mt-0.5">
@@ -92,7 +92,7 @@ export function GameweekMetaTab({ meta, currentGw }: GameweekMetaTabProps) {
       </div>
 
       {/* Chip plays breakdown */}
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
+      <div className="rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-4.5 shadow-sm sm:p-5">
         <div className="flex items-center gap-2 mb-4">
           <Zap className="w-4 h-4 text-amber-700 dark:text-amber-400" />
           <h3 className="font-bold text-sm text-foreground">
