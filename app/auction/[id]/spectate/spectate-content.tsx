@@ -429,9 +429,6 @@ export function SpectateContent({
     }
   }
   const timerUnit = nomination?.is_paused ? "paused" : "left";
-  let timerHex = "#f87171";
-  if (secondsLeft > 15) timerHex = "#00e478";
-  else if (secondsLeft > 5) timerHex = "#facc15";
 
   const timerExpired =
     !!nomination &&
@@ -542,8 +539,7 @@ export function SpectateContent({
                   fplPlayer={fplPlayer}
                   timerDisplayValue={timerDisplayValue}
                   timerUnit={timerUnit}
-                  timerHex={timerHex}
-                  timerExpired={timerExpired}
+                                    timerExpired={timerExpired}
                   participantsById={participantsById}
                 />
                 <div className="rounded-xl border border-border bg-card flex flex-col overflow-hidden flex-1 min-h-0 max-h-87">
@@ -827,16 +823,14 @@ function LotCard({
   fplPlayer,
   timerDisplayValue,
   timerUnit,
-  timerHex,
-  timerExpired,
+    timerExpired,
   participantsById,
 }: {
   nomination: SpectateNomination;
   fplPlayer: EnrichedPlayer | null;
   timerDisplayValue: number | string;
   timerUnit: string;
-  timerHex: string;
-  timerExpired: boolean;
+    timerExpired: boolean;
   participantsById: Map<string, SpectateParticipant>;
 }) {
   const fullName = fplPlayer?.full_name ?? nomination.player_name;
@@ -899,10 +893,10 @@ function LotCard({
               <Counter
                 value={timerDisplayValue}
                 fontSize={40}
-                textColor={timerHex}
+                textColor="currentColor"
                 fontWeight={700}
-                gradientHeight={8}
-                gradientFrom="#132030"
+                gradientHeight={0}
+                gradientFrom="transparent"
                 gap={2}
                 horizontalPadding={0}
                 places={[...String(timerDisplayValue)].map(
@@ -929,10 +923,10 @@ function LotCard({
             <Counter
               value={nomination.current_bid}
               fontSize={40}
-              textColor="#00e478"
+              textColor="currentColor"
               fontWeight={700}
-              gradientHeight={6}
-              gradientFrom="#132030"
+              gradientHeight={0}
+              gradientFrom="transparent"
               gap={0}
               horizontalPadding={2}
             />
@@ -1133,10 +1127,10 @@ function StrikeCard({
           <Counter
             value={strike.price}
             fontSize={40}
-            textColor="#00e478"
+            textColor="currentColor"
             fontWeight={700}
-            gradientHeight={6}
-            gradientFrom="#132030"
+            gradientHeight={0}
+            gradientFrom="transparent"
             gap={0}
             horizontalPadding={2}
           />

@@ -17,7 +17,6 @@ const links = [
   { href: "/insights", label: "Insights" },
   { href: "/index-builder", label: "Index Builder" },
   { href: "/auction", label: "Auctions" },
-  { href: "/auction/setup", label: "New Auction" },
   { href: "/teams", label: "Teams" },
   { href: "/tournaments", label: "Tournaments" },
 ];
@@ -61,15 +60,8 @@ export function Nav() {
     return null;
   }
 
-  const isLinkActive = (href: string) => {
-    if (pathname === href) return true;
-    if (href === "/auction") {
-      return (
-        pathname.startsWith("/auction") && !pathname.startsWith("/auction/setup")
-      );
-    }
-    return pathname.startsWith(href);
-  };
+  const isLinkActive = (href: string) =>
+    pathname === href || pathname.startsWith(href);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 dark:border-white/[0.06] bg-background/70 dark:bg-[#061423]/75 backdrop-blur-xl backdrop-saturate-180 shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_2px_8px_-2px_rgba(0,0,0,0.04)] transition-colors">

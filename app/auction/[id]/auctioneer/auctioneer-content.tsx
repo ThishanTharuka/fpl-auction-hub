@@ -756,9 +756,8 @@ export function AuctioneerContent({
   }
 
   let timerColor = "text-red-400";
-  let timerHexColor = "#f87171";
-  if (secondsLeft > 15) { timerColor = "text-primary"; timerHexColor = "#00e478"; }
-  else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
+  if (secondsLeft > 15) { timerColor = "text-primary"; }
+  else if (secondsLeft > 5) { timerColor = "text-yellow-400"; }
   let timerDisplayValue: number | string = "—";
   if (nomination) {
     if (nomination.is_paused) {
@@ -1019,9 +1018,9 @@ export function AuctioneerContent({
                   </div>
                   {/* Timer */}
                   <div className="text-right">
-                    <div className="font-mono font-bold">
+                    <div className={`font-mono font-bold ${timerColor}`}>
                       {typeof timerDisplayValue === "number" ? (
-                        <Counter value={timerDisplayValue} fontSize={40} textColor={timerHexColor} fontWeight={700} gradientHeight={8} gradientFrom="#132030" gap={2} horizontalPadding={0} places={[...String(timerDisplayValue)].map((_, i, a) => 10 ** (a.length - i - 1))} />
+                        <Counter value={timerDisplayValue} fontSize={40} textColor="currentColor" fontWeight={700} gradientHeight={0} gradientFrom="transparent" gap={2} horizontalPadding={0} places={[...String(timerDisplayValue)].map((_, i, a) => 10 ** (a.length - i - 1))} />
                       ) : (
                         <span className={`text-3xl sm:text-5xl ${timerColor}`}>{timerDisplayValue}</span>
                       )}
@@ -1054,10 +1053,10 @@ export function AuctioneerContent({
                     <Counter
                       value={nomination.current_bid}
                       fontSize={34}
-                      textColor="#00e478"
+                      textColor="currentColor"
                       fontWeight={700}
-                      gradientHeight={5}
-                      gradientFrom="#132030"
+                      gradientHeight={0}
+                      gradientFrom="transparent"
                       gap={0}
                       horizontalPadding={2}
                     />

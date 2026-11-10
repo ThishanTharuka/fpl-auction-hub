@@ -29,7 +29,7 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 
 export default function AuctionBrowsePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const shouldReduce = useReducedMotion();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -44,7 +44,6 @@ export default function AuctionBrowsePage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function loadLeagues() {
-    setLoading(true);
     const { data, error } = await supabase
       .from("leagues")
       .select("id, name, status, room_password, created_by, created_at")
@@ -54,40 +53,47 @@ export default function AuctionBrowsePage() {
       return;
     }
 
-    const { data: partCounts } = await supabase
-      .from("participants")
-      .select("league_id");
+    const leagueIds = data.map((l) => l.id);
+    const [partCounts, myMembers] = await Promise.all([
+      leagueIds.length > 0
+        ? supabase
+            .from("participants")
+            .select("league_id")
+            .in("league_id", leagueIds)
+        : Promise.resolve({ data: [] as { league_id: string | null }[] }),
+      user
+        ? supabase
+            .from("team_members")
+            .select("league_id")
+            .eq("user_id", user.id)
+        : Promise.resolve({ data: [] as { league_id: string }[] }),
+    ]);
 
     const countMap: Record<string, number> = {};
-    for (const p of partCounts ?? []) {
+    for (const p of partCounts.data ?? []) {
       if (!p.league_id) continue;
       countMap[p.league_id] = (countMap[p.league_id] ?? 0) + 1;
     }
 
+    // Commit every update in one render: if the skeleton is still on screen
+    // when the cards mount, the list renders below it and jumps up after.
     setLeagues(
       data.map((l) => ({
         ...l,
         participant_count: countMap[l.id] ?? 0,
       })),
     );
-
-    if (user) {
-      const { data: myMembers } = await supabase
-        .from("team_members")
-        .select("league_id")
-        .eq("user_id", user.id);
-      setMemberLeagueIds(
-        new Set((myMembers ?? []).map((m) => m.league_id).filter(Boolean)),
-      );
-    }
-
+    setMemberLeagueIds(
+      new Set((myMembers.data ?? []).map((m) => m.league_id).filter(Boolean)),
+    );
     setLoading(false);
   }
 
-  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- intentional: loadLeagues calls setState; re-run when user changes */
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- intentional: loadLeagues calls setState; wait for auth so it runs once with the final user */
   useEffect(() => {
+    if (authLoading) return;
     loadLeagues().catch(() => {});
-  }, [user]);
+  }, [authLoading, user?.id]);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   /* eslint-disable react-hooks/set-state-in-effect -- intentional: reset password form when different league selected */
@@ -158,22 +164,23 @@ export default function AuctionBrowsePage() {
         </Link>
       </div>
 
-      {/* Loading Skeletons */}
-      {loading && (
-        <div className="space-y-3">
+      {/* Loading Skeletons — mirrors the real card geometry so the swap
+          doesn't shift the list. Only shown before the first load commits. */}
+      {loading && leagues.length === 0 && (
+        <div className="space-y-3.5">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border/60 bg-card/60 p-5 sm:p-6 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="rounded-2xl border border-border/60 bg-card/60 p-5 sm:p-6 animate-pulse flex flex-col sm:flex-row sm:items-center justify-between gap-5"
             >
-              <div className="space-y-2.5 min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-48 rounded-lg bg-muted/60" />
+              <div className="space-y-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-6 sm:h-7 w-48 rounded-lg bg-muted/60" />
                   <div className="h-5 w-16 rounded-full bg-muted/40" />
                 </div>
-                <div className="h-3.5 w-32 rounded bg-muted/40" />
+                <div className="h-4 w-32 rounded bg-muted/40" />
               </div>
-              <div className="h-9 w-24 rounded-full bg-muted/60 shrink-0" />
+              <div className="h-8.5 w-24 rounded-full bg-muted/60 shrink-0" />
             </div>
           ))}
         </div>

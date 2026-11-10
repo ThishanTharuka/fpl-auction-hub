@@ -812,10 +812,9 @@ export function BidContent({
       })
     : false;
 
-  let timerColor = "text-red-400";
-  let timerHexColor = "#f87171";
-  if (secondsLeft > 15) { timerColor = "text-primary"; timerHexColor = "#00e478"; }
-  else if (secondsLeft > 5) { timerColor = "text-yellow-400"; timerHexColor = "#facc15"; }
+  let timerColor = "text-rose-600 dark:text-rose-400";
+  if (secondsLeft > 15) { timerColor = "text-primary"; }
+  else if (secondsLeft > 5) { timerColor = "text-amber-600 dark:text-amber-400"; }
 
   return (
     <BidUI
@@ -836,8 +835,7 @@ export function BidContent({
       myPosCount={myPosCount}
       posLimit={posLimit}
       timerColor={timerColor}
-      timerHexColor={timerHexColor}
-      posRequirements={posRequirements}
+            posRequirements={posRequirements}
       totalMinAllocation={totalMinAllocation}
       totalRemainingSlots={totalRemainingSlots}
       totalMinAllocationAfterBid={totalMinAllocationAfterBid}
@@ -920,7 +918,7 @@ type BidUIProps = Readonly<{
   maxClub: number;
   nominatedClub: string;
   timerColor: string;
-  timerHexColor: string;
+  // timerHexColor?: string;
   posRequirements: PositionRequirement[];
   totalMinAllocation: number;
   totalRemainingSlots: number;
@@ -962,7 +960,7 @@ function BidUI({
   maxClub,
   nominatedClub,
   timerColor,
-  timerHexColor,
+  // timerHexColor,
   posRequirements,
   totalMinAllocation,
   totalRemainingSlots,
@@ -1062,10 +1060,10 @@ function BidUI({
                       <Counter
                         value={timerDisplayValue}
                         fontSize={36}
-                        textColor={timerHexColor}
+                        textColor="currentColor"
                         fontWeight={700}
-                        gradientHeight={8}
-                        gradientFrom="#132030"
+                        gradientHeight={0}
+                        gradientFrom="transparent"
                         gap={2}
                         horizontalPadding={0}
                         places={[...String(timerDisplayValue)].map(
@@ -1167,10 +1165,10 @@ function BidUI({
                     <Counter
                       value={nomination.current_bid}
                       fontSize={34}
-                      textColor="#00e478"
+                      textColor="currentColor"
                       fontWeight={700}
-                      gradientHeight={5}
-                      gradientFrom="#132030"
+                      gradientHeight={0}
+                      gradientFrom="transparent"
                       gap={0}
                       horizontalPadding={2}
                     />
