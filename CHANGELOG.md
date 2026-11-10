@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.35.0](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.34.1...v1.35.0) (2026-11-10)
+
+
+### Features
+
+* :art: changes to the design ([c9fadb8](https://github.com/ThishanTharuka/fpl-auction-hub/commit/c9fadb843c6f3b3d0a3f1b1893d46bcbeb10a6ec))
+* implement player shortlist functionality with parsing and normalization ([acadf09](https://github.com/ThishanTharuka/fpl-auction-hub/commit/acadf090dbd52135292774240c54c90d009b9d72))
+
 ## [1.34.1](https://github.com/ThishanTharuka/fpl-auction-hub/compare/v1.34.0...v1.34.1) (2026-10-27)
 
 
